@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { MilestonesDisplay } from "@/components/milestones-display"
 import Link from "next/link"
 
 export default async function DashboardPage() {
@@ -16,10 +17,8 @@ export default async function DashboardPage() {
     redirect("/auth/login")
   }
 
-  // Fetch user's profile
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
-  // Fetch active quit attempt
   const { data: quitAttempt } = await supabase
     .from("quit_attempts")
     .select("*")
@@ -29,11 +28,23 @@ export default async function DashboardPage() {
     .limit(1)
     .single()
 
+  if (!quitAttempt) {
+    redirect("/onboarding")
+  }
+
+  const smokeFreeMinutes = Math.floor((Date.now() - new Date(quitAttempt.quit_date).getTime()) / (1000 * 60))
+  const smokeFreeDays = Math.floor(smokeFreeMinutes / (60 * 24))
+  const smokeFreeHours = Math.floor((smokeFreeMinutes % (60 * 24)) / 60)
+
+  const moneySaved =
+    ((smokeFreeMinutes / (60 * 24)) * quitAttempt.cigarettes_per_day * Number(quitAttempt.cost_per_pack)) /
+    (quitAttempt.cigarettes_per_pack || 20)
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Quit Smoking Tracker</h1>
+          <h1 className="text-2xl font-bold">Your Smoke-Free Journey</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
             <form action="/auth/signout" method="post">
@@ -45,66 +56,58 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold">
+              {smokeFreeDays} {smokeFreeDays === 1 ? "Day" : "Days"} Smoke-Free
+            </h2>
+            <p className="text-muted-foreground mt-1">
+              {smokeFreeHours > 0 && `and ${smokeFreeHours} ${smokeFreeHours === 1 ? "hour" : "hours"}`}
+            </p>
+          </div>
+          <Button size="lg" asChild>
+            <Link href="/wellness">Wellness Center</Link>
+          </Button>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Welcome Back!</CardTitle>
-              <CardDescription>Track your progress and stay motivated</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {quitAttempt ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Quit Date: {new Date(quitAttempt.quit_date).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Days Smoke-Free:{" "}
-                    {Math.floor((Date.now() - new Date(quitAttempt.quit_date).getTime()) / (1000 * 60 * 60 * 24))}
-                  </p>
-                </div>
-              ) : (
-                <Button asChild>
-                  <Link href="/quit-attempt/new">Start Your Journey</Link>
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Health Benefits</CardTitle>
-              <CardDescription>Your body is healing</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Track the amazing health improvements happening in your body
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle>Money Saved</CardTitle>
-              <CardDescription>Financial progress</CardDescription>
+              <CardDescription>Your financial progress</CardDescription>
             </CardHeader>
             <CardContent>
-              {quitAttempt && quitAttempt.cost_per_pack && quitAttempt.cigarettes_per_day ? (
-                <div className="text-2xl font-bold">
-                  $
-                  {(
-                    (Math.floor((Date.now() - new Date(quitAttempt.quit_date).getTime()) / (1000 * 60 * 60 * 24)) *
-                      quitAttempt.cigarettes_per_day *
-                      Number(quitAttempt.cost_per_pack)) /
-                    (quitAttempt.cigarettes_per_pack || 20)
-                  ).toFixed(2)}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Start tracking to see your savings</p>
-              )}
+              <div className="text-3xl font-bold text-primary">${moneySaved.toFixed(2)}</div>
+              <p className="text-sm text-muted-foreground mt-2">Keep going! Every day adds to your savings.</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Cigarettes Not Smoked</CardTitle>
+              <CardDescription>Your health victory</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">
+                {Math.floor((smokeFreeMinutes / (60 * 24)) * quitAttempt.cigarettes_per_day)}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">That's a lot of clean breaths!</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Motivation</CardTitle>
+              <CardDescription>Why you started</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed">{quitAttempt.reason || "Stay strong and keep going!"}</p>
             </CardContent>
           </Card>
         </div>
+
+        <MilestonesDisplay quitDate={new Date(quitAttempt.quit_date)} />
       </main>
     </div>
   )

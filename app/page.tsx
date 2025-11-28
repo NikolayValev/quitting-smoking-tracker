@@ -12,7 +12,7 @@ export default function HomePage() {
               Your Journey to a Smoke-Free Life
             </h1>
             <p className="text-xl text-muted-foreground text-pretty max-w-2xl mx-auto">
-              Track your progress, celebrate milestones, and reclaim your health one day at a time
+              Track your progress, practice wellness techniques, and reclaim your health one day at a time
             </p>
           </div>
 
@@ -33,32 +33,28 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  See real-time updates on how your body is healing and recovering
+                  See real-time updates on your milestones and celebrate every achievement
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Save Money</CardTitle>
-                <CardDescription>Watch your savings grow day by day</CardDescription>
+                <CardTitle>Wellness Tools</CardTitle>
+                <CardDescription>Breathing exercises and coping strategies</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Calculate exactly how much money you're saving by quitting
-                </p>
+                <p className="text-sm text-muted-foreground">Access guided techniques to resist urges and stay calm</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Earn Milestones</CardTitle>
-                <CardDescription>Celebrate every achievement along the way</CardDescription>
+                <CardTitle>Daily Support</CardTitle>
+                <CardDescription>Personalized tips and motivation</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  From your first hour to your first year, track every victory
-                </p>
+                <p className="text-sm text-muted-foreground">Receive daily wellness tips tailored to your journey</p>
               </CardContent>
             </Card>
           </div>
