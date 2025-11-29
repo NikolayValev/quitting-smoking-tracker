@@ -48,7 +48,7 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
             <form action="/auth/signout" method="post">
-              <Button variant="outline" size="sm">
+              <Button type="submit" variant="outline" size="sm" className="gap-2 bg-transparent">
                 Sign Out
               </Button>
             </form>
