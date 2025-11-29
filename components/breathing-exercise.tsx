@@ -7,18 +7,20 @@ import { Play, Pause, RotateCcw } from "lucide-react"
 
 type BreathingPhase = "inhale" | "hold" | "exhale" | "rest"
 
+const phaseConfig = {
+  inhale: { duration: 4, next: "hold" as const, label: "Breathe In", color: "bg-primary" },
+  hold: { duration: 4, next: "exhale" as const, label: "Hold", color: "bg-accent" },
+  exhale: { duration: 6, next: "rest" as const, label: "Breathe Out", color: "bg-secondary" },
+  rest: { duration: 2, next: "inhale" as const, label: "Rest", color: "bg-muted" },
+}
+
+const TOTAL_CYCLES = 5
+
 export function BreathingExercise() {
   const [isActive, setIsActive] = useState(false)
   const [phase, setPhase] = useState<BreathingPhase>("inhale")
   const [countdown, setCountdown] = useState(4)
   const [cycle, setCycle] = useState(0)
-
-  const phaseConfig = {
-    inhale: { duration: 4, next: "hold", label: "Breathe In", color: "bg-primary" },
-    hold: { duration: 4, next: "exhale", label: "Hold", color: "bg-accent" },
-    exhale: { duration: 6, next: "rest", label: "Breathe Out", color: "bg-secondary" },
-    rest: { duration: 2, next: "inhale", label: "Rest", color: "bg-muted" },
-  }
 
   useEffect(() => {
     if (!isActive) return
@@ -30,13 +32,14 @@ export function BreathingExercise() {
 
     // Move to next phase
     const currentPhase = phaseConfig[phase]
-    const nextPhase = currentPhase.next as BreathingPhase
+    const nextPhase = currentPhase.next
     setPhase(nextPhase)
     setCountdown(phaseConfig[nextPhase].duration)
 
     if (nextPhase === "inhale") {
-      setCycle(cycle + 1)
-      if (cycle >= 4) {
+      const newCycle = cycle + 1
+      setCycle(newCycle)
+      if (newCycle >= TOTAL_CYCLES) {
         setIsActive(false)
         setCycle(0)
       }
@@ -77,6 +80,9 @@ export function BreathingExercise() {
               className={`w-48 h-48 rounded-full ${currentPhaseConfig.color} transition-all duration-1000 flex items-center justify-center ${
                 isActive && phase === "inhale" ? "scale-125" : phase === "exhale" ? "scale-75" : "scale-100"
               }`}
+              role="timer"
+              aria-live="polite"
+              aria-label={`${currentPhaseConfig.label}, ${countdown} seconds remaining`}
             >
               <div className="text-center">
                 <div className="text-5xl font-bold text-foreground">{countdown}</div>
@@ -87,10 +93,18 @@ export function BreathingExercise() {
 
           <div className="w-full max-w-xs space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Cycle {cycle + 1} of 5</span>
+              <span className="text-muted-foreground">
+                Cycle {cycle + 1} of {TOTAL_CYCLES}
+              </span>
               <span className="text-muted-foreground">{Math.round(progress)}%</span>
             </div>
-            <div className="w-full bg-muted rounded-full h-2">
+            <div
+              className="w-full bg-muted rounded-full h-2"
+              role="progressbar"
+              aria-valuenow={Math.round(progress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <div
                 className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -101,18 +115,30 @@ export function BreathingExercise() {
 
         <div className="flex items-center justify-center gap-3">
           {!isActive ? (
-            <Button onClick={handleStart} size="lg" className="gap-2">
-              <Play className="h-4 w-4" />
+            <Button onClick={handleStart} size="lg" className="gap-2" aria-label="Start breathing exercise">
+              <Play className="h-4 w-4" aria-hidden="true" />
               Start
             </Button>
           ) : (
-            <Button onClick={handlePause} size="lg" variant="outline" className="gap-2 bg-transparent">
-              <Pause className="h-4 w-4" />
+            <Button
+              onClick={handlePause}
+              size="lg"
+              variant="outline"
+              className="gap-2 bg-transparent"
+              aria-label="Pause breathing exercise"
+            >
+              <Pause className="h-4 w-4" aria-hidden="true" />
               Pause
             </Button>
           )}
-          <Button onClick={handleReset} size="lg" variant="outline" className="gap-2 bg-transparent">
-            <RotateCcw className="h-4 w-4" />
+          <Button
+            onClick={handleReset}
+            size="lg"
+            variant="outline"
+            className="gap-2 bg-transparent"
+            aria-label="Reset breathing exercise"
+          >
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
             Reset
           </Button>
         </div>

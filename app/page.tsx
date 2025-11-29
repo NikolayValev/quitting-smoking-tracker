@@ -20,9 +20,6 @@ export default function HomePage() {
             <Button size="lg" asChild>
               <Link href="/auth/login">Get Started</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="#features">Learn More</Link>
-            </Button>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3 mt-16" id="features">

@@ -4,6 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { MilestonesDisplay } from "@/components/milestones-display"
 import Link from "next/link"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Dashboard - Quit Smoking Tracker",
+  description: "Track your smoke-free progress, view milestones, and access wellness tools",
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -32,13 +38,19 @@ export default async function DashboardPage() {
     redirect("/onboarding")
   }
 
-  const smokeFreeMinutes = Math.floor((Date.now() - new Date(quitAttempt.quit_date).getTime()) / (1000 * 60))
+  const smokeFreeMinutes = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(quitAttempt.quit_date).getTime()) / (1000 * 60)),
+  )
   const smokeFreeDays = Math.floor(smokeFreeMinutes / (60 * 24))
   const smokeFreeHours = Math.floor((smokeFreeMinutes % (60 * 24)) / 60)
 
+  const cigarettesPerPack = quitAttempt.cigarettes_per_pack || 20
   const moneySaved =
     ((smokeFreeMinutes / (60 * 24)) * quitAttempt.cigarettes_per_day * Number(quitAttempt.cost_per_pack)) /
-    (quitAttempt.cigarettes_per_pack || 20)
+    cigarettesPerPack
+
+  const cigarettesNotSmoked = Math.floor((smokeFreeMinutes / (60 * 24)) * quitAttempt.cigarettes_per_day)
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,7 +60,13 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
             <form action="/auth/signout" method="post">
-              <Button type="submit" variant="outline" size="sm" className="gap-2 bg-transparent">
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+                className="gap-2 bg-transparent"
+                aria-label="Sign out of your account"
+              >
                 Sign Out
               </Button>
             </form>
@@ -78,7 +96,9 @@ export default async function DashboardPage() {
               <CardDescription>Your financial progress</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">${moneySaved.toFixed(2)}</div>
+              <div className="text-3xl font-bold text-primary" aria-label={`Money saved: $${moneySaved.toFixed(2)}`}>
+                ${moneySaved.toFixed(2)}
+              </div>
               <p className="text-sm text-muted-foreground mt-2">Keep going! Every day adds to your savings.</p>
             </CardContent>
           </Card>
@@ -89,8 +109,11 @@ export default async function DashboardPage() {
               <CardDescription>Your health victory</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {Math.floor((smokeFreeMinutes / (60 * 24)) * quitAttempt.cigarettes_per_day)}
+              <div
+                className="text-3xl font-bold text-primary"
+                aria-label={`Cigarettes not smoked: ${cigarettesNotSmoked}`}
+              >
+                {cigarettesNotSmoked}
               </div>
               <p className="text-sm text-muted-foreground mt-2">That's a lot of clean breaths!</p>
             </CardContent>
