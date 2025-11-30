@@ -31,15 +31,14 @@ export async function GET(request: NextRequest) {
       },
     )
 
-    // Exchange the code for a session
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Successful authentication - redirect to dashboard
       return NextResponse.redirect(`${origin}/dashboard`)
     }
+
+    console.error("[v0] OAuth callback error:", error)
   }
 
-  // If there's an error or no code, redirect to login
-  return NextResponse.redirect(`${origin}/auth/login`)
+  return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
 }

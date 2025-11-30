@@ -3,13 +3,11 @@
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
   const handleGoogleLogin = async () => {
     const supabase = createClient()
@@ -17,10 +15,18 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      const isDev = window.location.hostname === "localhost"
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://smoking.nikolayvalev.com"
+      const redirectTo = isDev ? `${window.location.origin}/auth/callback` : `${siteUrl}/auth/callback`
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+          redirectTo,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
       })
       if (error) throw error
@@ -40,9 +46,13 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
+              {error && (
+                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md" role="alert">
+                  {error}
+                </div>
+              )}
               <Button onClick={handleGoogleLogin} disabled={isLoading} className="w-full" size="lg">
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
