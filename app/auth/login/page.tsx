@@ -19,6 +19,8 @@ export default function LoginPage() {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://smoking.nikolayvalev.com"
       const redirectTo = isDev ? `${window.location.origin}/auth/callback` : `${siteUrl}/auth/callback`
 
+      console.log("[v0] OAuth redirect URL:", redirectTo)
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {

@@ -3,10 +3,14 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+// This completely hides the Supabase URL from Google OAuth
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get("code")
   const origin = requestUrl.origin
+
+  console.log("[v0] Callback received at:", requestUrl.href)
+  console.log("[v0] Authorization code present:", !!code)
 
   if (code) {
     const cookieStore = await cookies()
@@ -34,6 +38,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
+      console.log("[v0] Session established successfully")
       return NextResponse.redirect(`${origin}/dashboard`)
     }
 
