@@ -1,6 +1,5 @@
 "use client"
 
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState } from "react"
@@ -10,29 +9,27 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
 
   const handleGoogleLogin = async () => {
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     try {
-      const isDev = window.location.hostname === "localhost"
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://smoking.nikolayvalev.com"
-      const redirectTo = isDev ? `${window.location.origin}/auth/callback` : `${siteUrl}/auth/callback`
+      const isDev = window.location.hostname === "localhost"
+      const redirectUri = isDev ? `${window.location.origin}/auth/callback` : `${siteUrl}/auth/callback`
 
-      console.log("[v0] OAuth redirect URL:", redirectTo)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const googleAuthUrl = new URL(`${supabaseUrl}/auth/v1/authorize`)
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-        },
-      })
-      if (error) throw error
+      googleAuthUrl.searchParams.set("provider", "google")
+      googleAuthUrl.searchParams.set("redirect_to", redirectUri)
+
+      console.log("[v0] Redirecting to Google OAuth with callback:", redirectUri)
+      console.log("[v0] Full OAuth URL:", googleAuthUrl.toString())
+
+      // Redirect to Google OAuth
+      window.location.href = googleAuthUrl.toString()
     } catch (error: unknown) {
+      console.error("[v0] OAuth initialization error:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
       setIsLoading(false)
     }
