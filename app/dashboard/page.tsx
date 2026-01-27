@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { auth } from "@clerk/nextjs/server"
+import { getLogs } from "@/app/app/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { MilestonesDisplay } from "@/components/milestones-display"
+import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
 import type { Metadata } from "next"
 
@@ -12,45 +14,42 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const { userId } = await auth()
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    redirect("/auth/login")
+  if (!userId) {
+    redirect("/sign-in")
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  const result = await getLogs()
+  const logs = result.success ? result.data : []
 
-  const { data: quitAttempt } = await supabase
-    .from("quit_attempts")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .order("quit_date", { ascending: false })
-    .limit(1)
-    .single()
-
-  if (!quitAttempt) {
-    redirect("/onboarding")
+  if (logs.length === 0) {
+    redirect("/app")
   }
 
-  const smokeFreeMinutes = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(quitAttempt.quit_date).getTime()) / (1000 * 60)),
-  )
+  // Find the first smoke-free day (cigarettes === 0)
+  const smokeFreeLog = logs.find((log: any) => log.cigarettes === 0)
+  const quitDate = smokeFreeLog ? new Date(smokeFreeLog.ts) : null
+
+  // Calculate smoke-free time
+  const smokeFreeMinutes = quitDate 
+    ? Math.max(0, Math.floor((Date.now() - quitDate.getTime()) / (1000 * 60)))
+    : 0
   const smokeFreeDays = Math.floor(smokeFreeMinutes / (60 * 24))
   const smokeFreeHours = Math.floor((smokeFreeMinutes % (60 * 24)) / 60)
 
-  const cigarettesPerPack = quitAttempt.cigarettes_per_pack || 20
-  const moneySaved =
-    ((smokeFreeMinutes / (60 * 24)) * quitAttempt.cigarettes_per_day * Number(quitAttempt.cost_per_pack)) /
-    cigarettesPerPack
-
-  const cigarettesNotSmoked = Math.floor((smokeFreeMinutes / (60 * 24)) * quitAttempt.cigarettes_per_day)
+  // Calculate statistics from logs
+  const totalLogs = logs.length
+  const cigarettesPerDay = logs.length > 1 
+    ? Math.round(logs.slice(0, 7).reduce((sum: number, log: any) => sum + log.cigarettes, 0) / Math.min(7, logs.length))
+    : 15 // default estimate
+  
+  // Estimate cost savings (assuming $10 per pack of 20 cigarettes)
+  const costPerCigarette = 0.50
+  const cigarettesNotSmoked = smokeFreeMinutes > 0 
+    ? Math.floor((smokeFreeMinutes / (60 * 24)) * cigarettesPerDay)
+    : 0
+  const moneySaved = cigarettesNotSmoked * costPerCigarette
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,18 +57,7 @@ export default async function DashboardPage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Your Smoke-Free Journey</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
-            <form action="/auth/signout" method="post">
-              <Button
-                type="submit"
-                variant="outline"
-                size="sm"
-                className="gap-2 bg-transparent"
-                aria-label="Sign out of your account"
-              >
-                Sign Out
-              </Button>
-            </form>
+            <UserButton afterSignOutUrl="/" />
           </div>
         </div>
       </header>
@@ -78,10 +66,11 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold">
-              {smokeFreeDays} {smokeFreeDays === 1 ? "Day" : "Days"} Smoke-Free
+              {smokeFreeDays > 0 ? `${smokeFreeDays} ${smokeFreeDays === 1 ? "Day" : "Days"} Smoke-Free` : "Building Your Journey"}
             </h2>
             <p className="text-muted-foreground mt-1">
-              {smokeFreeHours > 0 && `and ${smokeFreeHours} ${smokeFreeHours === 1 ? "hour" : "hours"}`}
+              {smokeFreeHours > 0 && smokeFreeDays > 0 && `and ${smokeFreeHours} ${smokeFreeHours === 1 ? "hour" : "hours"}`}
+              {smokeFreeDays === 0 && "Keep tracking your progress!"}
             </p>
           </div>
           <Button size="lg" asChild>
@@ -121,16 +110,21 @@ export default async function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Your Motivation</CardTitle>
-              <CardDescription>Why you started</CardDescription>
+              <CardTitle>Your Progress</CardTitle>
+              <CardDescription>Logs tracked</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm leading-relaxed">{quitAttempt.reason || "Stay strong and keep going!"}</p>
+              <div className="text-3xl font-bold text-primary">
+                {totalLogs}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                {smokeFreeLog ? "Congratulations on going smoke-free!" : "Keep tracking your journey!"}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <MilestonesDisplay quitDate={new Date(quitAttempt.quit_date)} />
+        {quitDate && <MilestonesDisplay quitDate={quitDate} />}
       </main>
     </div>
   )
