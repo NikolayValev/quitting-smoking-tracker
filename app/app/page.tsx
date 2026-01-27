@@ -2,6 +2,8 @@ import { getLogs } from './actions';
 import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AppPage() {
   const result = await getLogs();
   const logs = result.success ? result.data : [];

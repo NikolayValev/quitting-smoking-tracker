@@ -8,6 +8,8 @@ import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
 import type { Metadata } from "next"
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Dashboard - Quit Smoking Tracker",
   description: "Track your smoke-free progress, view milestones, and access wellness tools",
