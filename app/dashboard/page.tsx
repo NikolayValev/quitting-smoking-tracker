@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   description: "Track your smoke-free progress, view milestones, and access wellness tools",
 }
 
+// Default estimates for calculations
+const DEFAULT_CIGARETTES_PER_DAY = 15;
+const COST_PER_CIGARETTE_USD = 0.50;
+
 export default async function DashboardPage() {
   const { userId } = await auth()
 
@@ -44,14 +48,13 @@ export default async function DashboardPage() {
   const totalLogs = logs.length
   const cigarettesPerDay = logs.length > 1 
     ? Math.round(logs.slice(0, 7).reduce((sum: number, log: any) => sum + log.cigarettes, 0) / Math.min(7, logs.length))
-    : 15 // default estimate
+    : DEFAULT_CIGARETTES_PER_DAY // default estimate if insufficient data
   
-  // Estimate cost savings (assuming $10 per pack of 20 cigarettes)
-  const costPerCigarette = 0.50
+  // Estimate cost savings
   const cigarettesNotSmoked = smokeFreeMinutes > 0 
     ? Math.floor((smokeFreeMinutes / (60 * 24)) * cigarettesPerDay)
     : 0
-  const moneySaved = cigarettesNotSmoked * costPerCigarette
+  const moneySaved = cigarettesNotSmoked * COST_PER_CIGARETTE_USD
 
   return (
     <div className="min-h-screen bg-background">

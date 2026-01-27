@@ -10,7 +10,7 @@ import { revalidatePath } from 'next/cache';
 const createLogSchema = z.object({
   cigarettes: z.number().int().min(0),
   note: z.string().optional(),
-  ts: z.string().datetime().optional(),
+  ts: z.union([z.string().datetime(), z.date()]).optional(),
 });
 
 const deleteLogSchema = z.object({
@@ -45,7 +45,7 @@ export async function createLog(data: unknown) {
         userId,
         cigarettes: validated.cigarettes,
         note: validated.note || null,
-        ts: validated.ts ? new Date(validated.ts) : new Date(),
+        ts: validated.ts ? (typeof validated.ts === 'string' ? new Date(validated.ts) : validated.ts) : new Date(),
       })
       .returning();
 

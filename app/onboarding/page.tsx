@@ -27,7 +27,9 @@ export default function OnboardingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.cigarettes || Number.parseInt(formData.cigarettes) < 0) {
+    const cigaretteCount = Number.parseInt(formData.cigarettes);
+    
+    if (isNaN(cigaretteCount) || cigaretteCount < 0) {
       setError("Please enter a valid number of cigarettes (0 or more)")
       return
     }
@@ -37,7 +39,7 @@ export default function OnboardingPage() {
 
     try {
       const result = await createLog({
-        cigarettes: Number.parseInt(formData.cigarettes),
+        cigarettes: cigaretteCount,
         note: formData.note || "First log entry",
       })
 
