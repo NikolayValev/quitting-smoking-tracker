@@ -18,7 +18,10 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
-              <Link href="/auth/login">Get Started</Link>
+              <Link href="/sign-in">Save My Progress</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/demo">Try Demo</Link>
             </Button>
           </div>
 
