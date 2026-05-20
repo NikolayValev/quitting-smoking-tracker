@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, act } from "@testing-library/react"
 import { BreathingExercise } from "@/components/breathing-exercise"
 
 describe("BreathingExercise", () => {
@@ -8,7 +8,7 @@ describe("BreathingExercise", () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   it("renders breathing exercise component", () => {
@@ -22,11 +22,12 @@ describe("BreathingExercise", () => {
     render(<BreathingExercise />)
 
     const startButton = screen.getByRole("button", { name: /start breathing exercise/i })
-    fireEvent.click(startButton)
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /pause breathing exercise/i })).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(startButton)
     })
+
+    expect(screen.getByRole("button", { name: /pause breathing exercise/i })).toBeInTheDocument()
   })
 
   it("displays correct initial phase", () => {
@@ -40,14 +41,18 @@ describe("BreathingExercise", () => {
     render(<BreathingExercise />)
 
     const startButton = screen.getByRole("button", { name: /start breathing exercise/i })
-    fireEvent.click(startButton)
+
+    await act(async () => {
+      fireEvent.click(startButton)
+    })
 
     const resetButton = screen.getByRole("button", { name: /reset breathing exercise/i })
-    fireEvent.click(resetButton)
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /start breathing exercise/i })).toBeInTheDocument()
-      expect(screen.getByText("Breathe In")).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(resetButton)
     })
+
+    expect(screen.getByRole("button", { name: /start breathing exercise/i })).toBeInTheDocument()
+    expect(screen.getByText("Breathe In")).toBeInTheDocument()
   })
 })

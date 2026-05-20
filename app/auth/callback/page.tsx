@@ -14,9 +14,6 @@ export default function CallbackPage() {
       const code = searchParams.get("code")
       const errorParam = searchParams.get("error")
 
-      console.log("[v0] Callback page - code present:", !!code)
-      console.log("[v0] Callback page - error:", errorParam)
-
       if (errorParam) {
         setError(errorParam)
         setTimeout(() => router.push("/auth/login"), 3000)
@@ -30,8 +27,6 @@ export default function CallbackPage() {
       }
 
       try {
-        console.log("[v0] Sending code to exchange endpoint")
-
         const response = await fetch("/api/auth/exchange-code", {
           method: "POST",
           headers: {
@@ -46,10 +41,9 @@ export default function CallbackPage() {
           throw new Error(data.error || "Failed to authenticate")
         }
 
-        console.log("[v0] Authentication successful, redirecting to dashboard")
         router.push("/dashboard")
       } catch (err) {
-        console.error("[v0] Callback error:", err)
+        console.error("Callback error:", err)
         setError(err instanceof Error ? err.message : "Authentication failed")
         setTimeout(() => router.push("/auth/login"), 3000)
       }
@@ -69,7 +63,7 @@ export default function CallbackPage() {
           </>
         ) : (
           <>
-            <Spinner size="lg" />
+            <Spinner className="size-8" />
             <p className="text-lg font-medium">Completing sign in...</p>
             <p className="text-sm text-muted-foreground">Please wait while we authenticate you</p>
           </>

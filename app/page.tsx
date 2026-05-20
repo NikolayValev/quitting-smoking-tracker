@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
+import { Separator } from "@/components/ui/separator"
 
 export default function HomePage() {
   return (
@@ -56,6 +57,15 @@ export default function HomePage() {
             </Card>
           </div>
         </div>
+
+        <Separator className="mt-16" />
+        <footer className="flex flex-col sm:flex-row items-center justify-center gap-4 py-6 text-sm text-muted-foreground">
+          <span>© {new Date().getFullYear()} Quit Smoking Tracker</span>
+          <span className="hidden sm:inline">·</span>
+          <Link href="/privacy" className="hover:text-primary">Privacy Policy</Link>
+          <span className="hidden sm:inline">·</span>
+          <Link href="/terms" className="hover:text-primary">Terms of Service</Link>
+        </footer>
       </div>
     </div>
   )

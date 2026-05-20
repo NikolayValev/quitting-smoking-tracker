@@ -59,6 +59,9 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-bold">Your Smoke-Free Journey</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/account">Account</Link>
+            </Button>
             <form action="/auth/signout" method="post">
               <Button
                 type="submit"
