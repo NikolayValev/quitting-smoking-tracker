@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { auth } from "@clerk/nextjs/server"
 import { BreathingExercise } from "@/components/breathing-exercise"
 import { UrgeResistance } from "@/components/urge-resistance"
 import { TipLibrary } from "@/components/tip-library"
@@ -11,16 +11,13 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
+export const dynamic = 'force-dynamic';
+
 export default async function WellnessPage() {
-  const supabase = await createClient()
+  const { userId } = await auth()
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    redirect("/auth/login")
+  if (!userId) {
+    redirect("/sign-in")
   }
 
   return (

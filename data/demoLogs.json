@@ -1,0 +1,248 @@
+[
+  {
+    "id": "demo-1",
+    "ts": "2024-10-01T08:30:00.000Z",
+    "cigarettes": 15,
+    "note": "First day trying to quit. Feeling nervous but determined."
+  },
+  {
+    "id": "demo-2",
+    "ts": "2024-10-02T09:15:00.000Z",
+    "cigarettes": 12,
+    "note": "Down to 12 today. Morning was tough."
+  },
+  {
+    "id": "demo-3",
+    "ts": "2024-10-03T10:00:00.000Z",
+    "cigarettes": 10,
+    "note": "Making progress! Used breathing exercises."
+  },
+  {
+    "id": "demo-4",
+    "ts": "2024-10-04T08:45:00.000Z",
+    "cigarettes": 10,
+    "note": "Stayed at 10 cigarettes. Small victory."
+  },
+  {
+    "id": "demo-5",
+    "ts": "2024-10-05T11:20:00.000Z",
+    "cigarettes": 8,
+    "note": "Weekend is always harder, but I'm doing it!"
+  },
+  {
+    "id": "demo-6",
+    "ts": "2024-10-06T09:30:00.000Z",
+    "cigarettes": 8,
+    "note": "Consistent progress. Feeling good."
+  },
+  {
+    "id": "demo-7",
+    "ts": "2024-10-07T10:15:00.000Z",
+    "cigarettes": 7,
+    "note": "One week in! Down to 7 cigarettes per day."
+  },
+  {
+    "id": "demo-8",
+    "ts": "2024-10-08T08:00:00.000Z",
+    "cigarettes": 6,
+    "note": "Cravings are getting easier to manage."
+  },
+  {
+    "id": "demo-9",
+    "ts": "2024-10-09T09:45:00.000Z",
+    "cigarettes": 6,
+    "note": "Maintained 6 cigarettes. Very proud."
+  },
+  {
+    "id": "demo-10",
+    "ts": "2024-10-10T11:00:00.000Z",
+    "cigarettes": 5,
+    "note": "Half of where I started! This is real progress."
+  },
+  {
+    "id": "demo-11",
+    "ts": "2024-10-11T08:30:00.000Z",
+    "cigarettes": 5,
+    "note": "Staying strong at 5 per day."
+  },
+  {
+    "id": "demo-12",
+    "ts": "2024-10-12T10:20:00.000Z",
+    "cigarettes": 4,
+    "note": "Down to 4! Never thought I could do this."
+  },
+  {
+    "id": "demo-13",
+    "ts": "2024-10-13T09:00:00.000Z",
+    "cigarettes": 4,
+    "note": "Steady progress continues."
+  },
+  {
+    "id": "demo-14",
+    "ts": "2024-10-14T11:30:00.000Z",
+    "cigarettes": 3,
+    "note": "Two weeks in! Down to just 3 cigarettes."
+  },
+  {
+    "id": "demo-15",
+    "ts": "2024-10-15T08:15:00.000Z",
+    "cigarettes": 3,
+    "note": "Cravings are much more manageable now."
+  },
+  {
+    "id": "demo-16",
+    "ts": "2024-10-16T10:00:00.000Z",
+    "cigarettes": 2,
+    "note": "Just 2 today! Almost there."
+  },
+  {
+    "id": "demo-17",
+    "ts": "2024-10-17T09:30:00.000Z",
+    "cigarettes": 2,
+    "note": "Staying at 2. Feeling confident."
+  },
+  {
+    "id": "demo-18",
+    "ts": "2024-10-18T11:15:00.000Z",
+    "cigarettes": 1,
+    "note": "Only 1 cigarette today! Tomorrow is the day."
+  },
+  {
+    "id": "demo-19",
+    "ts": "2024-10-19T08:00:00.000Z",
+    "cigarettes": 1,
+    "note": "Last one. Tomorrow I'm quitting for good."
+  },
+  {
+    "id": "demo-20",
+    "ts": "2024-10-20T09:00:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 1 smoke-free! I did it!"
+  },
+  {
+    "id": "demo-21",
+    "ts": "2024-10-21T10:30:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 2 smoke-free. Feeling amazing!"
+  },
+  {
+    "id": "demo-22",
+    "ts": "2024-10-22T08:45:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 3 smoke-free. This is my new life."
+  },
+  {
+    "id": "demo-23",
+    "ts": "2024-10-23T11:00:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 4 smoke-free. Breathing feels so much better."
+  },
+  {
+    "id": "demo-24",
+    "ts": "2024-10-24T09:20:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 5 smoke-free. No looking back!"
+  },
+  {
+    "id": "demo-25",
+    "ts": "2024-10-25T10:15:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 6 smoke-free. Proud of myself!"
+  },
+  {
+    "id": "demo-26",
+    "ts": "2024-10-26T08:30:00.000Z",
+    "cigarettes": 0,
+    "note": "One week smoke-free! Major milestone!"
+  },
+  {
+    "id": "demo-27",
+    "ts": "2024-10-27T11:45:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 8 smoke-free. Life is better without cigarettes."
+  },
+  {
+    "id": "demo-28",
+    "ts": "2024-10-28T09:00:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 9 smoke-free. Feeling healthier every day."
+  },
+  {
+    "id": "demo-29",
+    "ts": "2024-10-29T10:30:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 10 smoke-free. Double digits!"
+  },
+  {
+    "id": "demo-30",
+    "ts": "2024-10-30T08:15:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 11 smoke-free. Never going back."
+  },
+  {
+    "id": "demo-31",
+    "ts": "2024-10-31T11:20:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 12 smoke-free. I'm a non-smoker now!"
+  },
+  {
+    "id": "demo-32",
+    "ts": "2024-11-01T09:30:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 13 smoke-free. New month, new me!"
+  },
+  {
+    "id": "demo-33",
+    "ts": "2024-11-02T10:00:00.000Z",
+    "cigarettes": 0,
+    "note": "Two weeks smoke-free! So grateful for this journey."
+  },
+  {
+    "id": "demo-34",
+    "ts": "2024-11-03T08:45:00.000Z",
+    "cigarettes": 0,
+    "note": "Day 15 smoke-free. Feeling incredible!"
+  },
+  {
+    "id": "demo-35",
+    "ts": "2024-11-10T10:30:00.000Z",
+    "cigarettes": 0,
+    "note": "Three weeks smoke-free! Health improvements are noticeable."
+  },
+  {
+    "id": "demo-36",
+    "ts": "2024-11-17T09:15:00.000Z",
+    "cigarettes": 0,
+    "note": "Four weeks smoke-free! One month milestone achieved!"
+  },
+  {
+    "id": "demo-37",
+    "ts": "2024-11-24T11:00:00.000Z",
+    "cigarettes": 0,
+    "note": "35 days smoke-free. This is my new normal."
+  },
+  {
+    "id": "demo-38",
+    "ts": "2024-12-01T10:00:00.000Z",
+    "cigarettes": 0,
+    "note": "Over 40 days smoke-free! Saved so much money!"
+  },
+  {
+    "id": "demo-39",
+    "ts": "2024-12-10T09:30:00.000Z",
+    "cigarettes": 0,
+    "note": "50 days smoke-free! Life is so much better."
+  },
+  {
+    "id": "demo-40",
+    "ts": "2024-12-20T11:15:00.000Z",
+    "cigarettes": 0,
+    "note": "Two months smoke-free! Never thought I'd make it this far!"
+  },
+  {
+    "id": "demo-41",
+    "ts": "2024-12-27T10:30:00.000Z",
+    "cigarettes": 0,
+    "note": "Almost 70 days smoke-free. Best decision ever!"
+  }
+]

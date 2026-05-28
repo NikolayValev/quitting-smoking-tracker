@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
@@ -12,20 +12,13 @@ export const metadata: Metadata = {
 }
 
 export default async function AccountPage() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const { userId } = await auth()
 
-  if (error || !user) {
-    redirect("/auth/login")
+  if (!userId) {
+    redirect("/sign-in")
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-  const { data: quitAttempt } = await supabase
-    .from("quit_attempts")
-    .select("quit_date, reason")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .single()
+  const user = await currentUser()
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,20 +38,16 @@ export default async function AccountPage() {
             <CardDescription>Your profile information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Name</span>
-              <span>{profile?.full_name ?? "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Email</span>
-              <span>{user.email}</span>
-            </div>
-            {quitAttempt && (
+            {user?.firstName && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Quit date</span>
-                <span>{new Date(quitAttempt.quit_date).toLocaleDateString()}</span>
+                <span className="text-muted-foreground">Name</span>
+                <span>{user.firstName} {user.lastName}</span>
               </div>
             )}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Email</span>
+              <span>{user?.emailAddresses[0]?.emailAddress ?? "—"}</span>
+            </div>
           </CardContent>
         </Card>
 

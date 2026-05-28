@@ -1,7 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(),
+vi.mock("@/db", () => ({
+  db: {
+    select: vi.fn(),
+  },
+}))
+
+vi.mock("@/db/schema", () => ({
+  users: {},
+}))
+
+vi.mock("drizzle-orm", () => ({
+  sql: vi.fn(() => ({})),
 }))
 
 describe("GET /api/health", () => {
@@ -10,13 +20,9 @@ describe("GET /api/health", () => {
   })
 
   it("returns ok when database is reachable", async () => {
-    const { createClient } = await import("@/lib/supabase/server")
-    vi.mocked(createClient).mockResolvedValue({
-      from: () => ({
-        select: () => ({
-          limit: () => Promise.resolve({ data: [], error: null }),
-        }),
-      }),
+    const { db } = await import("@/db")
+    vi.mocked(db.select).mockReturnValue({
+      from: () => ({ limit: () => Promise.resolve([{ one: 1 }]) }),
     } as never)
 
     const { GET } = await import("@/app/api/health/route")
@@ -29,13 +35,9 @@ describe("GET /api/health", () => {
   })
 
   it("returns degraded when database is unreachable", async () => {
-    const { createClient } = await import("@/lib/supabase/server")
-    vi.mocked(createClient).mockResolvedValue({
-      from: () => ({
-        select: () => ({
-          limit: () => Promise.resolve({ data: null, error: new Error("Connection refused") }),
-        }),
-      }),
+    const { db } = await import("@/db")
+    vi.mocked(db.select).mockReturnValue({
+      from: () => ({ limit: () => Promise.reject(new Error("Connection refused")) }),
     } as never)
 
     const { GET } = await import("@/app/api/health/route")
