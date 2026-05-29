@@ -2,11 +2,11 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
 
 if (!databaseUrl) {
   if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
-    throw new Error('DATABASE_URL environment variable must be set');
+    throw new Error('DATABASE_URL or POSTGRES_URL environment variable must be set');
   }
 }
 

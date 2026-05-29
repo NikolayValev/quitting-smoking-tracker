@@ -11,7 +11,7 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx db/migrate.ts",
+    "db:migrate": "tsx --env-file=.env db/migrate.ts",
     "db:seed": "tsx db/seed.ts"
   },
   "dependencies": {

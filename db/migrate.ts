@@ -3,11 +3,12 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 
 async function main() {
-  if (!process.env.DATABASE_URL) {
+  const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL_NON_POOLING ?? process.env.POSTGRES_URL;
+  if (!url) {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
-  const migrationClient = postgres(process.env.DATABASE_URL, { max: 1 });
+  const migrationClient = postgres(url, { max: 1 });
   const db = drizzle(migrationClient);
 
   console.log('Running migrations...');
