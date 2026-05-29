@@ -24,7 +24,7 @@ export default async function AppPage() {
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
             Your Journey
           </h1>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
 
         {totalLogs === 0 ? (
