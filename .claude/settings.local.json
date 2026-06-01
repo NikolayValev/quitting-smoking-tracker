@@ -3,7 +3,9 @@
     "allow": [
       "Bash(pnpm tsc *)",
       "Bash(pnpm exec *)",
-      "Bash(.\\\\node_modules\\\\.bin\\\\tsc --noEmit)"
+      "Bash(.\\\\node_modules\\\\.bin\\\\tsc --noEmit)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Nikolay\\\\Code\\\\quitting-smoking-tracker\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)"
     ]
   }
 }

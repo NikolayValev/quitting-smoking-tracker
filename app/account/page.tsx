@@ -2,9 +2,8 @@ import { redirect } from "next/navigation"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
+import { AppHeader } from "@/components/app-header"
 import { DeleteAccountButton } from "./delete-account-button"
-import Link from "next/link"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -22,20 +21,15 @@ export default async function AccountPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Account Settings</h1>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard">← Dashboard</Link>
-          </Button>
-        </div>
-      </header>
+      <AppHeader currentPage="account" />
 
       <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
+        <h1 className="text-2xl font-bold tracking-tight">Account Settings</h1>
+
         <Card>
           <CardHeader>
-            <CardTitle>Your account</CardTitle>
-            <CardDescription>Your profile information</CardDescription>
+            <CardTitle>Your profile</CardTitle>
+            <CardDescription>Your account information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {user?.firstName && (

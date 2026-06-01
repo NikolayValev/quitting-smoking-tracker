@@ -2,10 +2,11 @@ import { redirect } from "next/navigation"
 import { auth } from "@clerk/nextjs/server"
 import { getLogs } from "@/app/app/actions"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MilestonesDisplay } from "@/components/milestones-display"
-import { UserButton } from "@clerk/nextjs"
+import { AppHeader } from "@/components/app-header"
 import Link from "next/link"
+import { DollarSign, Wind, CalendarDays, PlusCircle } from "lucide-react"
 import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic';
@@ -30,18 +31,8 @@ export default async function DashboardPage() {
   if (logs.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b bg-card">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Your Smoke-Free Journey</h1>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/account">Account</Link>
-              </Button>
-              <UserButton />
-            </div>
-          </div>
-        </header>
-        <main className="container mx-auto px-4 py-16 text-center max-w-md">
+        <AppHeader currentPage="dashboard" />
+        <main className="container mx-auto px-4 py-20 text-center max-w-md">
           <h2 className="text-2xl font-bold mb-3">Ready to start?</h2>
           <p className="text-muted-foreground mb-6">
             Log your first day to begin tracking your smoke-free journey.
@@ -54,7 +45,6 @@ export default async function DashboardPage() {
     )
   }
 
-  // Logs are sorted newest-first. Find the EARLIEST smoke-free log to get true quit date.
   const smokeFreeEntries = logs.filter((log: { cigarettes: number }) => log.cigarettes === 0)
   const earliestSmokeFreeLog = smokeFreeEntries[smokeFreeEntries.length - 1]
   const quitDate = earliestSmokeFreeLog ? new Date(earliestSmokeFreeLog.ts) : null
@@ -65,7 +55,6 @@ export default async function DashboardPage() {
   const smokeFreeDays = Math.floor(smokeFreeMinutes / (60 * 24))
   const smokeFreeHours = Math.floor((smokeFreeMinutes % (60 * 24)) / 60)
 
-  // Use average from the most recent 7 logs to estimate cigarettes/day for savings calc
   const recentLogs = logs.slice(0, 7)
   const avgCigarettesPerDay = recentLogs.length > 0
     ? recentLogs.reduce((sum: number, log: { cigarettes: number }) => sum + log.cigarettes, 0) / recentLogs.length
@@ -78,84 +67,76 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Your Smoke-Free Journey</h1>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/account">Account</Link>
-            </Button>
-            <UserButton />
-          </div>
-        </div>
-      </header>
+      <AppHeader currentPage="dashboard" />
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold">
+            <h1 className="text-3xl font-bold tracking-tight">
               {smokeFreeDays > 0
                 ? `${smokeFreeDays} ${smokeFreeDays === 1 ? "Day" : "Days"} Smoke-Free`
                 : quitDate
                   ? "Smoke-Free Today!"
-                  : "Building Your Journey"}
-            </h2>
+                  : "Your Journey"}
+            </h1>
             <p className="text-muted-foreground mt-1">
-              {smokeFreeDays > 0 && smokeFreeHours > 0 && `and ${smokeFreeHours} ${smokeFreeHours === 1 ? "hour" : "hours"}`}
-              {!quitDate && "Log a smoke-free day to start your counter"}
+              {smokeFreeDays > 0 && smokeFreeHours > 0
+                ? `and ${smokeFreeHours} ${smokeFreeHours === 1 ? "hour" : "hours"}`
+                : !quitDate
+                  ? "Log a smoke-free day to start your counter"
+                  : null}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" asChild>
-              <Link href="/app">Log today</Link>
-            </Button>
-            <Button size="lg" asChild>
-              <Link href="/wellness">Wellness Center</Link>
-            </Button>
-          </div>
+          <Button asChild>
+            <Link href="/onboarding" className="flex items-center gap-1.5">
+              <PlusCircle className="h-4 w-4" />
+              Log today
+            </Link>
+          </Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
-            <CardHeader>
-              <CardTitle>Money Saved</CardTitle>
-              <CardDescription>Based on your average daily count</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Money Saved</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary" aria-label={`Money saved: $${moneySaved.toFixed(2)}`}>
+              <div
+                className="text-3xl font-bold"
+                aria-label={`Money saved: $${moneySaved.toFixed(2)}`}
+              >
                 ${moneySaved.toFixed(2)}
               </div>
-              <p className="text-sm text-muted-foreground mt-2">Keep going! Every day adds to your savings.</p>
+              <p className="text-xs text-muted-foreground mt-1">Based on your average daily count</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Cigarettes Not Smoked</CardTitle>
-              <CardDescription>Since your first smoke-free day</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Cigarettes Not Smoked</CardTitle>
+              <Wind className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
-                className="text-3xl font-bold text-primary"
+                className="text-3xl font-bold"
                 aria-label={`Cigarettes not smoked: ${cigarettesNotSmoked}`}
               >
                 {cigarettesNotSmoked}
               </div>
-              <p className="text-sm text-muted-foreground mt-2">That&apos;s a lot of clean breaths!</p>
+              <p className="text-xs text-muted-foreground mt-1">Since your first smoke-free day</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Total Logs</CardTitle>
-              <CardDescription>Days you&apos;ve tracked</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Days Tracked</CardTitle>
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {logs.length}
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                {quitDate ? "Congratulations on going smoke-free!" : "Keep tracking your journey!"}
+              <div className="text-3xl font-bold">{logs.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {quitDate ? "Keep going — every day counts" : "Keep tracking your journey"}
               </p>
             </CardContent>
           </Card>
