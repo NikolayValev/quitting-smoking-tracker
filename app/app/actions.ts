@@ -50,6 +50,7 @@ export async function createLog(data: unknown) {
       .returning();
 
     revalidatePath('/app');
+    revalidatePath('/dashboard');
     return { success: true, data: newLog[0] };
   } catch (error) {
     console.error('Error creating log:', error);

@@ -55,9 +55,9 @@ export function TipLibrary() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+          <TabsList className="flex w-full overflow-x-auto h-auto [&::-webkit-scrollbar]:hidden">
             {categories.map((category) => (
-              <TabsTrigger key={category} value={category} className="text-xs">
+              <TabsTrigger key={category} value={category} className="text-xs flex-none">
                 {getCategoryLabel(category)}
               </TabsTrigger>
             ))}

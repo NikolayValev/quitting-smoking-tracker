@@ -40,7 +40,7 @@ export default function OnboardingPage() {
     try {
       const result = await createLog({
         cigarettes: cigaretteCount,
-        note: formData.note || "First log entry",
+        note: formData.note || undefined,
       })
 
       if (!result.success) {
@@ -60,15 +60,15 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">Welcome to Your Smoke-Free Journey</h1>
-          <p className="text-muted-foreground">Let's start tracking your progress</p>
+          <h1 className="text-3xl font-bold mb-2">Log Today</h1>
+          <p className="text-muted-foreground">Keep your streak going — every entry counts</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Create Your First Log</CardTitle>
+            <CardTitle>How did today go?</CardTitle>
             <CardDescription>
-              Track how many cigarettes you smoked today to establish a baseline
+              Enter the number of cigarettes you smoked today, or 0 if you stayed smoke-free.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -92,7 +92,7 @@ export default function OnboardingPage() {
                   aria-required="true"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Enter 0 if you're already smoke-free! 🎉
+                  Enter 0 if you stayed smoke-free today.
                 </p>
               </div>
 
@@ -108,7 +108,7 @@ export default function OnboardingPage() {
               </div>
 
               <Button type="submit" disabled={loading} className="w-full gap-2">
-                {loading ? "Creating log..." : "Start Tracking"}
+                {loading ? "Saving…" : "Save log"}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </form>

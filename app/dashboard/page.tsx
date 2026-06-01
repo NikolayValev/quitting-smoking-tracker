@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MilestonesDisplay } from "@/components/milestones-display"
 import { AppHeader } from "@/components/app-header"
+import { DailyLogDialog } from "@/components/daily-log-dialog"
 import Link from "next/link"
 import { DollarSign, Wind, CalendarDays, PlusCircle } from "lucide-react"
 import type { Metadata } from "next"
@@ -44,6 +45,9 @@ export default async function DashboardPage() {
       </div>
     )
   }
+
+  const today = new Date().toDateString()
+  const hasLoggedToday = logs.length > 0 && new Date(logs[0].ts).toDateString() === today
 
   const smokeFreeEntries = logs.filter((log: { cigarettes: number }) => log.cigarettes === 0)
   const earliestSmokeFreeLog = smokeFreeEntries[smokeFreeEntries.length - 1]
@@ -144,6 +148,8 @@ export default async function DashboardPage() {
 
         {quitDate && <MilestonesDisplay quitDate={quitDate} />}
       </main>
+
+      <DailyLogDialog defaultOpen={!hasLoggedToday} />
     </div>
   )
 }
