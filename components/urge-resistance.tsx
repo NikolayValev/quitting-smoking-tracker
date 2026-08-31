@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { copingStrategies } from "@/lib/data/wellness-tips"
+import { captureCraving } from "@/lib/analytics/posthog"
 import { ChevronRight, CheckCircle2 } from "lucide-react"
 
 export function UrgeResistance() {
@@ -78,7 +79,12 @@ export function UrgeResistance() {
           {copingStrategies.map((strategy) => (
             <button
               key={strategy.id}
-              onClick={() => setSelectedStrategy(strategy.id)}
+              onClick={() => {
+                // Reaching for a strategy is the craving signal. The id is
+                // app-defined content, not anything the user wrote.
+                captureCraving(strategy.id)
+                setSelectedStrategy(strategy.id)
+              }}
               className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left group"
             >
               <div className="flex-1">

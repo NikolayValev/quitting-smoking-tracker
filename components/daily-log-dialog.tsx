@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createLog } from "@/app/app/actions"
+import { captureDailyLog } from "@/lib/analytics/posthog"
 
 export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
   const router = useRouter()
@@ -39,6 +40,8 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
     try {
       const result = await createLog({ cigarettes: count, note: note || undefined })
       if (!result.success) throw new Error(result.error || "Failed to save log")
+      // Bucketed count and whether a note was written -- never the note itself.
+      captureDailyLog(count, note.trim().length > 0)
       setOpen(false)
       router.refresh()
     } catch (err) {
