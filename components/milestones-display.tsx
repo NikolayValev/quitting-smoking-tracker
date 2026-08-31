@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Circle } from "lucide-react"
 import { milestoneDefinitions } from "@/lib/data/wellness-tips"
+import { MilestoneTracker } from "@/components/milestone-tracker"
 
 type MilestonesDisplayProps = {
   quitDate: Date
@@ -38,9 +39,13 @@ export function MilestonesDisplay({ quitDate }: MilestonesDisplayProps) {
   }
 
   const nextMilestone = getNextMilestone()
+  const achievedMilestoneTypes = milestoneDefinitions
+    .filter((m) => isMilestoneAchieved(m.type))
+    .map((m) => m.type)
 
   return (
     <div className="space-y-4">
+      <MilestoneTracker achieved={achievedMilestoneTypes} />
       <Card>
         <CardHeader>
           <CardTitle>Your Milestones</CardTitle>
