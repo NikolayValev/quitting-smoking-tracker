@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -27,7 +28,7 @@ export default function OnboardingError({
             Try again
           </Button>
           <Button variant="outline" className="w-full" asChild>
-            <a href="/">Go home</a>
+            <Link href="/">Go home</Link>
           </Button>
         </CardContent>
       </Card>
