@@ -1,4 +1,5 @@
 import posthog from "posthog-js"
+import { ANALYTICS_APP, ANALYTICS_DATA_CLASS } from "@/lib/analytics/tags"
 
 /**
  * PostHog wiring for the quit tracker.
@@ -12,8 +13,6 @@ import posthog from "posthog-js"
  * The privacy posture is enforced in SDK config below rather than left to
  * discipline at call sites.
  */
-const APP_NAME = "quitting-smoking-tracker"
-
 let enabled = false
 
 /** Coarse buckets. The exact count is deliberately never sent: per-person daily
@@ -60,7 +59,7 @@ export function initPostHog(): void {
     }),
   })
 
-  posthog.register({ app: APP_NAME, data_class: "health" })
+  posthog.register({ app: ANALYTICS_APP, data_class: ANALYTICS_DATA_CLASS })
   enabled = true
 }
 

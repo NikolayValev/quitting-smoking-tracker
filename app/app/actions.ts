@@ -3,6 +3,7 @@
 import { db } from '@/db';
 import { smokeLogs } from '@/db/schema';
 import { getOrCreateUser } from '@/lib/auth/getOrCreateUser';
+import { logError } from '@/lib/observability/logger';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
@@ -18,8 +19,9 @@ const deleteLogSchema = z.object({
 });
 
 export async function getLogs() {
+  let userId: string | undefined;
   try {
-    const userId = await getOrCreateUser();
+    userId = await getOrCreateUser();
 
     const logs = await db
       .select()
@@ -29,14 +31,15 @@ export async function getLogs() {
 
     return { success: true, data: logs };
   } catch (error) {
-    console.error('Error fetching logs:', error);
+    logError('get_logs_failed', error, { userId });
     return { success: false, error: 'Failed to fetch logs' };
   }
 }
 
 export async function createLog(data: unknown) {
+  let userId: string | undefined;
   try {
-    const userId = await getOrCreateUser();
+    userId = await getOrCreateUser();
     const validated = createLogSchema.parse(data);
 
     const newLog = await db
@@ -53,7 +56,7 @@ export async function createLog(data: unknown) {
     revalidatePath('/dashboard');
     return { success: true, data: newLog[0] };
   } catch (error) {
-    console.error('Error creating log:', error);
+    logError('create_log_failed', error, { userId });
     if (error instanceof z.ZodError) {
       return { success: false, error: 'Invalid input data', details: error.errors };
     }
@@ -62,8 +65,9 @@ export async function createLog(data: unknown) {
 }
 
 export async function deleteLog(data: unknown) {
+  let userId: string | undefined;
   try {
-    const userId = await getOrCreateUser();
+    userId = await getOrCreateUser();
     const validated = deleteLogSchema.parse(data);
 
     // Ensure the log belongs to the user before deleting
@@ -79,7 +83,7 @@ export async function deleteLog(data: unknown) {
     revalidatePath('/app');
     return { success: true, data: result[0] };
   } catch (error) {
-    console.error('Error deleting log:', error);
+    logError('delete_log_failed', error, { userId });
     if (error instanceof z.ZodError) {
       return { success: false, error: 'Invalid input data', details: error.errors };
     }
