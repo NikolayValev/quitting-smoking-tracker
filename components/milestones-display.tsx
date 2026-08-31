@@ -8,7 +8,7 @@ type MilestonesDisplayProps = {
   achievedMilestones?: string[]
 }
 
-export function MilestonesDisplay({ quitDate, achievedMilestones = [] }: MilestonesDisplayProps) {
+export function MilestonesDisplay({ quitDate }: MilestonesDisplayProps) {
   const now = new Date()
   const smokeFreeMinutes = Math.floor((now.getTime() - quitDate.getTime()) / (1000 * 60))
   const smokeFreeDays = Math.floor(smokeFreeMinutes / (60 * 24))

@@ -1,5 +1,3 @@
-import { db } from './index';
-import { users, smokeLogs } from './schema';
 
 async function seed() {
   console.log('Seeding database...');

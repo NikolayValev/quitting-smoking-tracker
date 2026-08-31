@@ -94,7 +94,7 @@ export function RelaxationPreview() {
         </div>
         <CardContent className="relative z-10 p-8 text-center">
           <blockquote className="text-lg font-medium italic text-muted-foreground">
-            "Breath is the bridge which connects life to consciousness, which unites your body to your thoughts."
+            &ldquo;Breath is the bridge which connects life to consciousness, which unites your body to your thoughts.&rdquo;
           </blockquote>
           <p className="mt-2 text-sm text-muted-foreground">— Thích Nhất Hạnh</p>
         </CardContent>
