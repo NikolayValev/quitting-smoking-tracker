@@ -51,28 +51,28 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/app
 
 ### Locally:
 ```bash
-npm install --legacy-peer-deps
-npm run db:generate  # Generate migration files
-npm run db:migrate   # Apply migrations to database
+pnpm install
+pnpm db:generate  # Generate migration files
+pnpm db:migrate   # Apply migrations to database
 ```
 
 ### On Vercel:
 Migrations will need to be run manually after first deployment:
 ```bash
 # Set DATABASE_URL to your production database
-DATABASE_URL="your_production_url" npm run db:migrate
+DATABASE_URL="your_production_url" pnpm db:migrate
 ```
 
 Or use Vercel CLI:
 ```bash
 vercel env pull .env.production
-npm run db:migrate
+pnpm db:migrate
 ```
 
 ## 5. Test Locally
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Visit:
@@ -92,7 +92,7 @@ Visit:
 
 ### Option B: Vercel CLI
 ```bash
-npm install -g vercel
+pnpm add -g vercel
 vercel login
 vercel --prod
 ```

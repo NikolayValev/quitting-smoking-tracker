@@ -16,17 +16,17 @@ This application requires the following environment variables to be set before b
 
 1. Copy `.env.example` to `.env`
 2. Fill in your actual Clerk and Neon credentials
-3. Run `npm install --legacy-peer-deps`
-4. Run `npm run db:generate` to generate migrations
-5. Run `npm run db:migrate` to apply migrations
-6. Run `npm run dev` to start development server
+3. Run `pnpm install`
+4. Run `pnpm db:generate` to generate migrations
+5. Run `pnpm db:migrate` to apply migrations
+6. Run `pnpm dev` to start development server
 
 ## Production Build
 
 The build process requires valid Clerk credentials to complete successfully. Ensure all environment variables are properly configured in your deployment platform (e.g., Vercel, Railway, etc.).
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ## Known Build Issues

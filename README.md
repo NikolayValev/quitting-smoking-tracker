@@ -46,7 +46,7 @@ This application supports two distinct modes of operation:
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+ and pnpm 9 (`corepack enable` will pick up the pinned version)
 - Neon database account (or compatible PostgreSQL)
 - Clerk account for authentication
 
@@ -56,7 +56,7 @@ This application supports two distinct modes of operation:
 
 2. Install dependencies:
    ```bash
-   npm install --legacy-peer-deps
+   pnpm install
    ```
 
 3. Set up environment variables:
@@ -79,18 +79,18 @@ This application supports two distinct modes of operation:
 4. Set up the database:
    ```bash
    # Generate migration files
-   npm run db:generate
+   pnpm db:generate
 
    # Run migrations
-   npm run db:migrate
+   pnpm db:migrate
 
    # (Optional) Seed with initial data
-   npm run db:seed
+   pnpm db:seed
    ```
 
 5. Start the development server:
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 6. Visit the application:
@@ -102,17 +102,17 @@ This application supports two distinct modes of operation:
 
 Run tests:
 ```bash
-npm test
+pnpm test
 ```
 
 Run tests with UI:
 ```bash
-npm test:ui
+pnpm test:ui
 ```
 
 Generate coverage report:
 ```bash
-npm test:coverage
+pnpm test:coverage
 ```
 
 ## Project Structure
@@ -202,7 +202,7 @@ This app is optimized for deployment on Vercel:
 4. Vercel will auto-detect Next.js and deploy
 5. Run migrations on production database:
    ```bash
-   DATABASE_URL="<production-url>" npm run db:migrate
+   DATABASE_URL="<production-url>" pnpm db:migrate
    ```
 
 ## Accessibility
