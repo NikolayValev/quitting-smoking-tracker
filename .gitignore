@@ -37,3 +37,6 @@ next-env.d.ts
 drizzle/
 
 .vercel
+
+# npm lockfile — this project is pnpm-only (see NIK-103)
+package-lock.json
