@@ -17,6 +17,11 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // "ingest" is excluded deliberately: it is the same-origin reverse proxy for
+    // PostHog (see rewrites in next.config.mjs). Running Clerk middleware on those
+    // requests breaks ingestion — the SDK loads its config and static assets fine,
+    // but capture POSTs never arrive, so the app reports a $pageleave on unload
+    // and nothing else.
+    "/((?!_next/static|_next/image|favicon.ico|ingest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
