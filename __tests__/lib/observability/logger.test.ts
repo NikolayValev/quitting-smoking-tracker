@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { PostHog } from 'posthog-node';
 
 const captureException = vi.fn();
 const capture = vi.fn();
 
 vi.mock('posthog-node', () => ({
-  PostHog: vi.fn().mockImplementation(() => ({
-    captureException,
-    capture,
-  })),
+  PostHog: vi.fn(),
 }));
 
 describe('lib/observability/logger', () => {
@@ -18,6 +16,12 @@ describe('lib/observability/logger', () => {
     vi.resetModules();
     captureException.mockClear();
     capture.mockClear();
+    // vi.restoreAllMocks() in afterEach also restores plain vi.fn() mocks (not just
+    // vi.spyOn spies), wiping this mockImplementation after the first test. Re-set it
+    // every test rather than only once in the vi.mock factory above.
+    vi.mocked(PostHog).mockImplementation(
+      () => ({ captureException, capture }) as unknown as PostHog
+    );
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
