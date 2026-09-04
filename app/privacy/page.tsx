@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         </div>
 
         <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
-        <p className="text-muted-foreground mb-8">Last updated: May 2026</p>
+        <p className="text-muted-foreground mb-8">Last updated: September 2026</p>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-6">
           <section>
@@ -39,8 +39,9 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">Where your data is stored</h2>
             <p className="text-muted-foreground">
-              Your data is stored securely in Supabase (PostgreSQL). Row-level security policies ensure only you can
-              access your own data. Authentication is handled by Supabase Auth with Google OAuth.
+              Your data is stored securely in Neon (PostgreSQL), accessed through Drizzle ORM. Every database query
+              is scoped to your account at the application level, so only your own records are ever read or written.
+              Authentication is handled by Clerk.
             </p>
           </section>
 
@@ -59,8 +60,11 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">Analytics</h2>
             <p className="text-muted-foreground">
-              We use Vercel Analytics to understand aggregate usage patterns (page views, performance). Vercel
-              Analytics does not use cookies or collect personally identifiable information.
+              We use Vercel Analytics to understand aggregate usage patterns (page views, performance); it does not
+              use cookies or collect personally identifiable information. We also use PostHog to understand product
+              usage — sign-ins, daily logs, craving strategies, and milestones reached. PostHog events are tied to
+              your Clerk user ID, never your name or email, and never include your notes or exact cigarette counts
+              (only coarse ranges). Session recording and click-content capture are disabled.
             </p>
           </section>
 
