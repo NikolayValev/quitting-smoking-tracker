@@ -8,7 +8,7 @@ export const users = pgTable('users', {
 
 export const smokeLogs = pgTable('smoke_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   ts: timestamp('ts', { withTimezone: true }).defaultNow().notNull(),
   cigarettes: integer('cigarettes').notNull(),
   note: text('note'),

@@ -104,9 +104,32 @@ This implementation follows security best practices for a Next.js application wi
 5. **Dependency Scanning**: Run `npm audit` regularly
 6. **Update Dependencies**: Keep Clerk, Drizzle, Next.js up to date
 
+## Account Deletion
+
+Deleting an account erases both the Clerk identity and every local row, through
+two paths that converge on the same idempotent helper,
+`lib/auth/deleteUserByClerkId.ts`:
+
+1. `POST /api/account/delete` deletes the Clerk user, then erases that user's
+   `users` and `smoke_logs` rows in one transaction. Clerk is deleted first so
+   an interrupted request cannot strand a signed-in user with no data.
+2. `POST /api/webhooks/clerk` handles Clerk's `user.deleted` event and performs
+   the same erasure. This covers deletions that never reach the route — a user
+   deleting themselves in Clerk, or an admin doing it from the dashboard — and
+   retries step 1's cleanup if it failed.
+
+`smoke_logs.user_id` also carries `ON DELETE CASCADE` (migration `0001`) as a
+database-level backstop for any deletion that bypasses both paths.
+
+Requires `CLERK_WEBHOOK_SIGNING_SECRET` and a Clerk webhook endpoint pointed at
+`/api/webhooks/clerk` subscribed to `user.deleted`. Unsigned or badly signed
+deliveries are rejected with 400; the endpoint has no session auth, since
+signature verification is what authenticates it.
+
 ## Compliance Considerations
 
-- **GDPR**: User data isolated, deletable via Clerk
+- **GDPR**: User data isolated; deletion erases the Clerk identity and all local
+  rows (see Account Deletion above)
 - **Data Retention**: Logs can be deleted by users
 - **Privacy**: No tracking in demo mode
 - **Transparency**: README documents data usage

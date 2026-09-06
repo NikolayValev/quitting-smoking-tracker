@@ -33,9 +33,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Drizzle
-drizzle/
-
 .vercel
 
 # npm lockfile — this project is pnpm-only (see NIK-103)
