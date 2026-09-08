@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle2, Cigarette } from 'lucide-react';
 
+// This page derives "days smoke-free" from Date.now(). Without a revalidate
+// window it is prerendered once at build time, which freezes that number at
+// whatever it was when the build ran — it would then drift further from the
+// truth every day until the next deploy. Regenerating hourly keeps the counter
+// honest while still serving a cached page.
+export const revalidate = 3600;
+
 type DemoLog = {
   id: string;
   ts: string;

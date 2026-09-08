@@ -17,14 +17,26 @@ const config = [
       // no longer pick their content in an effect).
       "react-hooks/set-state-in-effect": "error",
 
-      // purity is still a warning for one reason: it fires on Date.now() during
-      // render in app/app, app/dashboard and app/demo, which are Server
-      // Components. Per-request Date.now() on the server is idiomatic and
-      // carries no hydration risk, so the rule is firing outside the context it
-      // was written for. The real question there is caching, not purity —
-      // Date.now() opts those routes out of static rendering. Left as "warn"
-      // pending that decision. See NIK-108.
-      "react-hooks/purity": "warn",
+      "react-hooks/purity": "error",
+    },
+  },
+  {
+    // Server Components that read the clock while rendering. This rule is a
+    // React Compiler rule aimed at client render purity, where calling
+    // Date.now() causes hydration mismatches; on the server there is no
+    // hydration and reading the clock per request is idiomatic.
+    //
+    // Each of these is deliberately not statically prerendered, so the value is
+    // computed fresh rather than frozen: /app and /dashboard are
+    // force-dynamic, and /demo revalidates hourly (its counter was in fact
+    // frozen at build time until that was added — see NIK-108).
+    //
+    // Scoped to these three files rather than app/**, so a new page that reads
+    // the clock has to make this decision consciously instead of inheriting an
+    // exemption.
+    files: ["app/app/page.tsx", "app/dashboard/page.tsx", "app/demo/page.tsx"],
+    rules: {
+      "react-hooks/purity": "off",
     },
   },
   {
