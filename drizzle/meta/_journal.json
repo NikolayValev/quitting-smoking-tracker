@@ -15,6 +15,13 @@
       "when": 1788734798255,
       "tag": "0001_thick_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788887989806,
+      "tag": "0002_square_korg",
+      "breakpoints": true
     }
   ]
 }

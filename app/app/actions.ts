@@ -3,6 +3,7 @@
 import { db } from '@/db';
 import { smokeLogs } from '@/db/schema';
 import { getOrCreateUser } from '@/lib/auth/getOrCreateUser';
+import { consumeRateLimit } from '@/lib/rate-limit';
 import { logError } from '@/lib/observability/logger';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
@@ -17,6 +18,10 @@ const createLogSchema = z.object({
 const deleteLogSchema = z.object({
   id: z.string().uuid(),
 });
+
+// Writes only. getLogs runs on every page render, so metering it would spend a
+// user's budget just by them looking at their own data.
+const RATE_LIMITED = 'Too many requests. Please wait a moment and try again.';
 
 export async function getLogs() {
   let userId: string | undefined;
@@ -40,6 +45,12 @@ export async function createLog(data: unknown) {
   let userId: string | undefined;
   try {
     userId = await getOrCreateUser();
+
+    const rate = await consumeRateLimit(`user:${userId}`);
+    if (!rate.allowed) {
+      return { success: false, error: RATE_LIMITED };
+    }
+
     const validated = createLogSchema.parse(data);
 
     const newLog = await db
@@ -68,6 +79,12 @@ export async function deleteLog(data: unknown) {
   let userId: string | undefined;
   try {
     userId = await getOrCreateUser();
+
+    const rate = await consumeRateLimit(`user:${userId}`);
+    if (!rate.allowed) {
+      return { success: false, error: RATE_LIMITED };
+    }
+
     const validated = deleteLogSchema.parse(data);
 
     // Ensure the log belongs to the user before deleting
