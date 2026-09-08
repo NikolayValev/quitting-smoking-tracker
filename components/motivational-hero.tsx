@@ -1,41 +1,12 @@
-"use client"
+import type { MotivationalQuote } from "@/lib/data/motivational-quotes"
 
-import { useEffect, useState } from "react"
-
-const motivationalQuotes = [
-  {
-    quote: "You are stronger than your cravings",
-    author: "Your Future Self",
-  },
-  {
-    quote: "Every moment smoke-free is a victory worth celebrating",
-    author: "Wellness Wisdom",
-  },
-  {
-    quote: "The best time to quit was yesterday. The second best time is now.",
-    author: "Ancient Proverb",
-  },
-  {
-    quote: "Your health is an investment, not an expense",
-    author: "Wellness Guide",
-  },
-  {
-    quote: "Each day smoke-free brings you closer to the person you want to be",
-    author: "Your Journey",
-  },
-]
-
-export function MotivationalHero() {
-  const [quote, setQuote] = useState(motivationalQuotes[0])
-
-  useEffect(() => {
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
-    )
-    const quoteIndex = dayOfYear % motivationalQuotes.length
-    setQuote(motivationalQuotes[quoteIndex])
-  }, [])
-
+/**
+ * Presentational. The quote is chosen by the server (see app/wellness/page.tsx)
+ * rather than in an effect here — picking it on the client meant rendering the
+ * first quote, then swapping it in after mount, which is the hydration mismatch
+ * the old effect existed to paper over.
+ */
+export function MotivationalHero({ quote }: { quote: MotivationalQuote }) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 md:p-12">
       <div className="relative z-10 max-w-3xl">

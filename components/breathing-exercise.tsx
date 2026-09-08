@@ -25,25 +25,33 @@ export function BreathingExercise() {
   useEffect(() => {
     if (!isActive) return
 
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-
-    // Move to next phase
-    const currentPhase = phaseConfig[phase]
-    const nextPhase = currentPhase.next
-    setPhase(nextPhase)
-    setCountdown(phaseConfig[nextPhase].duration)
-
-    if (nextPhase === "inhale") {
-      const newCycle = cycle + 1
-      setCycle(newCycle)
-      if (newCycle >= TOTAL_CYCLES) {
-        setIsActive(false)
-        setCycle(0)
+    // Everything happens inside the timer callback. The previous version let
+    // the countdown reach 0 and then advanced the phase in the effect body,
+    // which is a setState during render-commit and cost an extra render pass
+    // per phase (react-hooks/set-state-in-effect). The 0 was never visible: it
+    // was replaced in the immediately-following cascading render.
+    const timer = setTimeout(() => {
+      if (countdown > 1) {
+        setCountdown(countdown - 1)
+        return
       }
-    }
+
+      const nextPhase = phaseConfig[phase].next
+      setPhase(nextPhase)
+      setCountdown(phaseConfig[nextPhase].duration)
+
+      if (nextPhase === "inhale") {
+        const completedCycles = cycle + 1
+        if (completedCycles >= TOTAL_CYCLES) {
+          setIsActive(false)
+          setCycle(0)
+        } else {
+          setCycle(completedCycles)
+        }
+      }
+    }, 1000)
+
+    return () => clearTimeout(timer)
   }, [countdown, isActive, phase, cycle])
 
   const handleStart = () => {

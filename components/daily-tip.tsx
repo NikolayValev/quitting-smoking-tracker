@@ -1,34 +1,23 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { wellnessTips } from "@/lib/data/wellness-tips"
+import type { WellnessTip } from "@/lib/data/wellness-tips"
 import { Sparkles } from "lucide-react"
 
-export function DailyTip() {
-  const [tip, setTip] = useState(wellnessTips[0])
+const categoryColors: Record<string, string> = {
+  health: "bg-primary/10 text-primary",
+  motivation: "bg-accent/10 text-accent-foreground",
+  coping: "bg-secondary/10 text-secondary-foreground",
+  financial: "bg-muted text-muted-foreground",
+  lifestyle: "bg-primary/20 text-primary",
+}
 
-  useEffect(() => {
-    // Select a tip based on the day of the year to ensure consistency
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
-    )
-    const tipIndex = dayOfYear % wellnessTips.length
-    setTip(wellnessTips[tipIndex])
-  }, [])
-
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      health: "bg-primary/10 text-primary",
-      motivation: "bg-accent/10 text-accent-foreground",
-      coping: "bg-secondary/10 text-secondary-foreground",
-      financial: "bg-muted text-muted-foreground",
-      lifestyle: "bg-primary/20 text-primary",
-    }
-    return colors[category] || "bg-muted text-muted-foreground"
-  }
-
+/**
+ * Presentational. The tip is chosen by the server (see app/wellness/page.tsx)
+ * rather than in an effect here — picking it on the client meant rendering the
+ * first tip, then swapping it in after mount, which is the hydration mismatch
+ * the old effect existed to paper over.
+ */
+export function DailyTip({ tip }: { tip: WellnessTip }) {
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
       <CardHeader>
@@ -39,7 +28,7 @@ export function DailyTip() {
         <CardDescription>Your personalized tip for today</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Badge className={getCategoryColor(tip.category)}>
+        <Badge className={categoryColors[tip.category] || "bg-muted text-muted-foreground"}>
           {tip.category.charAt(0).toUpperCase() + tip.category.slice(1)}
         </Badge>
         <h3 className="font-semibold text-xl text-balance">{tip.title}</h3>

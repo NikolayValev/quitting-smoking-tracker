@@ -6,7 +6,6 @@ import { MilestoneTracker } from "@/components/milestone-tracker"
 
 type MilestonesDisplayProps = {
   quitDate: Date
-  achievedMilestones?: string[]
 }
 
 export function MilestonesDisplay({ quitDate }: MilestonesDisplayProps) {

@@ -8,6 +8,9 @@ import { DailyTip } from "@/components/daily-tip"
 import { MotivationalHero } from "@/components/motivational-hero"
 import { AppHeader } from "@/components/app-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { pickForToday } from "@/lib/daily"
+import { wellnessTips } from "@/lib/data/wellness-tips"
+import { motivationalQuotes } from "@/lib/data/motivational-quotes"
 
 export const dynamic = 'force-dynamic';
 
@@ -18,12 +21,17 @@ export default async function WellnessPage() {
     redirect("/sign-in")
   }
 
+  // Chosen here rather than inside the components: the server picks once and
+  // the client renders exactly what was sent, so there is no post-mount swap.
+  const tipOfTheDay = pickForToday(wellnessTips)
+  const quoteOfTheDay = pickForToday(motivationalQuotes)
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="wellness" />
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <MotivationalHero />
+        <MotivationalHero quote={quoteOfTheDay} />
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
@@ -46,7 +54,7 @@ export default async function WellnessPage() {
           </div>
 
           <div>
-            <DailyTip />
+            <DailyTip tip={tipOfTheDay} />
           </div>
         </div>
 
