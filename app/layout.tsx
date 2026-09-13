@@ -1,14 +1,11 @@
 import type React from "react"
 import type { Metadata } from "next"
-// Fonts temporarily disabled due to network restrictions
-// import { Geist, Geist_Mono } from "next/font/google"
+import { GeistSans } from "geist/font/sans"
+import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { ClerkProvider } from '@clerk/nextjs'
 import { PostHogProvider } from "@/components/posthog-provider"
 import "./globals.css"
-
-// const _geist = Geist({ subsets: ["latin"] })
-// const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Quit Smoking Tracker - Your Smoke-Free Journey",
@@ -74,7 +71,7 @@ export default function RootLayout({
       afterSignInUrl="/app"
       afterSignUpUrl="/app"
     >
-      <html lang="en">
+      <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
         <body className={`font-sans antialiased`}>
           <PostHogProvider>
             {children}

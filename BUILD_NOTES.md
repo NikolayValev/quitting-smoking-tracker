@@ -31,7 +31,7 @@ pnpm build
 
 ## Known Build Issues
 
-1. **Google Fonts**: The build may fail if Google Fonts cannot be accessed. This is resolved by commenting out unused font imports in `app/layout.tsx`.
+1. **Fonts**: Geist and Geist Mono are self-hosted via the `geist` package, so the build does not contact Google Fonts and works without network access. Do not reintroduce `next/font/google` imports; they require build-time connectivity.
 
 2. **Clerk Validation**: Clerk validates the publishable key format during build time. Dummy keys will not work - you must use real credentials from your Clerk dashboard.
 
