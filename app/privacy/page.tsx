@@ -46,14 +46,19 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3">Data retention and deletion</h2>
+            <h2 className="text-xl font-semibold mb-3">Your data: access and deletion</h2>
             <p className="text-muted-foreground">
-              You can delete your account at any time from your{" "}
+              You can download a copy of everything we hold about you at any time from your{" "}
               <Link href="/account" className="underline underline-offset-4">
                 Account Settings
               </Link>
-              . Deleting your account permanently removes all your data from our systems, including your profile,
-              quit attempts, and milestones.
+              . The export is a JSON file containing your profile and every log you have recorded.
+            </p>
+            <p className="text-muted-foreground mt-3">
+              You can also delete your account from the same page. Deleting your account permanently removes all your
+              data from our systems, including your profile, quit attempts, and milestones. We show you a deletion
+              receipt when it completes, noting how many logs were erased; the receipt is yours alone and is not
+              stored by us, so save it if you want a record.
             </p>
           </section>
 
