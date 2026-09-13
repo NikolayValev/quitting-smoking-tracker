@@ -8,6 +8,9 @@ import { PostHogProvider } from "@/components/posthog-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
+  // Social crawlers need absolute image URLs; without this the og:image
+  // resolves relative and link previews come back blank.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://smoking.nikolayvalev.com"),
   title: "Quit Smoking Tracker - Your Smoke-Free Journey",
   description:
     "Track your progress, celebrate milestones, and reclaim your health on your smoke-free journey. Featuring breathing exercises, wellness tips, and personalized support.",
@@ -18,32 +21,22 @@ export const metadata: Metadata = {
     description: "Track your progress, celebrate milestones, and reclaim your health on your smoke-free journey",
     type: "website",
     locale: "en_US",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SmokeFree" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Quit Smoking Tracker - Your Smoke-Free Journey",
     description: "Track your progress, celebrate milestones, and reclaim your health on your smoke-free journey",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
     follow: true,
   },
   generator: "v0.app",
+  // The browser-tab icon is app/favicon.ico, picked up by Next's file
+  // convention; only the touch icon needs declaring.
   icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
     apple: "/apple-icon.png",
   },
 }

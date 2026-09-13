@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { UserButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/logo"
 import { LayoutDashboard, BookOpen, Heart } from "lucide-react"
 
 type AppHeaderProps = {
@@ -12,8 +13,8 @@ export function AppHeader({ currentPage }: AppHeaderProps) {
     <header className="border-b bg-card sticky top-0 z-10">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-base font-semibold tracking-tight">
-            Smoke<span className="text-primary">Free</span>
+          <Link href="/dashboard" aria-label="SmokeFree home">
+            <Logo />
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
             <Button
