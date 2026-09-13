@@ -1,101 +1,96 @@
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { Separator } from "@/components/ui/separator"
 import { Logo } from "@/components/logo"
 import { BarChart2, Wind, Lightbulb } from "lucide-react"
+
+const features = [
+  {
+    icon: BarChart2,
+    title: "See the line come down",
+    body: "Log what you smoke and watch the count fall. Milestones from twenty minutes to ten years mark themselves off as you pass them.",
+  },
+  {
+    icon: Wind,
+    title: "Something to do at 3pm",
+    body: "A 4-4-6-2 breathing exercise and step-by-step urge guides, for the moments a craving arrives and willpower alone is thin.",
+  },
+  {
+    icon: Lightbulb,
+    title: "A reason to come back",
+    body: "A rotating library of advice on health, motivation and the ordinary practicalities of not smoking.",
+  },
+]
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="border-b border-border/60">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <Logo />
-          <Button size="sm" asChild>
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/demo">See a demo</Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href="/sign-in">Sign in</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="py-20 text-center space-y-6">
-            <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
-              Your smoke-free journey starts here
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance">
-              Every smoke-free day<br className="hidden md:block" /> is a win worth tracking
-            </h1>
-            <p className="text-lg text-muted-foreground text-pretty max-w-xl mx-auto">
-              Log your progress, practice calming techniques, and watch your health milestones add up — one day at a time.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <Button size="lg" asChild>
-                <Link href="/sign-in">Get Started Free</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/demo">See a Demo</Link>
-              </Button>
-            </div>
+        {/* Left-aligned rather than a centred stack: the page reads as a
+            document with a spine, and it is the same shape on a phone. */}
+        <section className="mx-auto max-w-3xl py-20 sm:py-28">
+          <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+            Quitting is a lot of small days.
+            <span className="block text-muted-foreground">This counts them.</span>
+          </h1>
+          <p className="mt-6 max-w-[58ch] text-lg text-muted-foreground">
+            Log a check-in a day, get something to do when a craving hits, and keep a
+            streak worth protecting.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button size="lg" asChild>
+              <Link href="/sign-up">Create an account</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/demo">See a sample journey</Link>
+            </Button>
           </div>
+        </section>
 
-          <div className="grid gap-5 md:grid-cols-3 pb-20">
-            <Card>
-              <CardHeader>
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-1">
-                  <BarChart2 className="h-4.5 w-4.5 text-primary" />
+        {/* Rules rather than cards. Three identical boxes would say these are
+            three products; they are three parts of one. */}
+        <section className="mx-auto max-w-3xl border-t border-border/60 pb-24">
+          <ul>
+            {features.map(({ icon: Icon, title, body }) => (
+              <li
+                key={title}
+                className="flex gap-5 border-b border-border/60 py-8 last:border-b-0"
+              >
+                <Icon className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden />
+                <div>
+                  <h2 className="text-lg font-medium tracking-tight">{title}</h2>
+                  <p className="mt-2 max-w-[62ch] text-muted-foreground">{body}</p>
                 </div>
-                <CardTitle className="text-base">Track Progress</CardTitle>
-                <CardDescription>Monitor smoke-free days and health improvements in real time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Celebrate milestones from 20 minutes to 10 years smoke-free.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-1">
-                  <Wind className="h-4.5 w-4.5 text-primary" />
-                </div>
-                <CardTitle className="text-base">Wellness Tools</CardTitle>
-                <CardDescription>Guided breathing and coping strategies for tough moments</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  A 4-4-6-2 breathing exercise and step-by-step urge resistance guides.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-1">
-                  <Lightbulb className="h-4.5 w-4.5 text-primary" />
-                </div>
-                <CardTitle className="text-base">Daily Support</CardTitle>
-                <CardDescription>Fresh tips and motivation updated every day</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  A rotating library of wellness advice across health, motivation, and lifestyle.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       </main>
 
-      <Separator />
-      <footer className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-6 text-sm text-muted-foreground">
+      <footer className="border-t border-border/60">
+        <div className="container mx-auto flex flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} SmokeFree</span>
-          <span className="hidden sm:inline">·</span>
-          <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-          <span className="hidden sm:inline">·</span>
-          <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+          <div className="flex gap-6">
+            <Link href="/privacy" className="transition-colors hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-foreground">
+              Terms
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
