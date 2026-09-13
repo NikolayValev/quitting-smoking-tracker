@@ -32,7 +32,7 @@ describe("POST /api/webhooks/clerk", () => {
       type: "user.deleted",
       data: { id: CLERK_USER_ID, deleted: true },
     } as never)
-    vi.mocked(deleteUserByClerkId).mockResolvedValue({ deleted: true })
+    vi.mocked(deleteUserByClerkId).mockResolvedValue({ deleted: true, smokeLogsErased: 4 })
 
     const { POST } = await import("@/app/api/webhooks/clerk/route")
     const response = await POST(request())
@@ -75,7 +75,7 @@ describe("POST /api/webhooks/clerk", () => {
       type: "user.deleted",
       data: { id: "user_never_logged_in", deleted: true },
     } as never)
-    vi.mocked(deleteUserByClerkId).mockResolvedValue({ deleted: false })
+    vi.mocked(deleteUserByClerkId).mockResolvedValue({ deleted: false, smokeLogsErased: 0 })
 
     const { POST } = await import("@/app/api/webhooks/clerk/route")
     const response = await POST(request())
