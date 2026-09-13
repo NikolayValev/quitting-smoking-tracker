@@ -205,6 +205,13 @@ This app is optimized for deployment on Vercel:
    DATABASE_URL="<production-url>" pnpm db:migrate
    ```
 
+### Running this for real
+
+The deployed instance is configured as a **portfolio demo** — notably it runs a Clerk
+development instance rather than a production one. See
+[PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) for what would need to change
+before taking real users, and which of the current choices are deliberate.
+
 ## Accessibility
 
 - ARIA labels and roles throughout
