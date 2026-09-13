@@ -19,6 +19,7 @@ import { useTheme } from "next-themes"
  */
 export function ClerkThemeProvider({ children }: { children: React.ReactNode }) {
   const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
   return (
     <ClerkProvider
@@ -26,7 +27,15 @@ export function ClerkThemeProvider({ children }: { children: React.ReactNode }) 
       signUpUrl="/sign-up"
       afterSignInUrl="/app"
       afterSignUpUrl="/app"
-      appearance={resolvedTheme === "dark" ? { baseTheme: dark } : undefined}
+      appearance={{
+        ...(isDark ? { baseTheme: dark } : {}),
+        layout: {
+          // Overrides the logo uploaded in the Clerk dashboard, which can only
+          // be one file and so cannot suit both card colours. The lockup is
+          // monochrome, so a recoloured copy serves the dark card.
+          logoImageUrl: isDark ? "/logo-lockup-cream.png" : "/logo-lockup-green.png",
+        },
+      }}
     >
       {children}
     </ClerkProvider>
