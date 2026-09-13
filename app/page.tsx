@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
+import { Logo } from "@/components/logo"
 import { BarChart2, Wind, Lightbulb } from "lucide-react"
 
 export default function HomePage() {
@@ -9,9 +10,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <span className="text-base font-semibold tracking-tight">
-            Smoke<span className="text-primary">Free</span>
-          </span>
+          <Logo />
           <Button size="sm" asChild>
             <Link href="/sign-in">Sign in</Link>
           </Button>
