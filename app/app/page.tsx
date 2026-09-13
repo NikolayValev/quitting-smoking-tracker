@@ -13,7 +13,7 @@ export default async function AppPage() {
   const logs = result.success ? result.data ?? [] : [];
 
   const totalLogs = logs.length;
-  const smokeFreeLog = logs.find((log: any) => log.cigarettes === 0);
+  const smokeFreeLog = logs.find((log) => log.cigarettes === 0);
   const smokeFreeDate = smokeFreeLog ? new Date(smokeFreeLog.ts) : null;
   const daysSmokeFree = smokeFreeDate
     ? Math.floor((Date.now() - smokeFreeDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -93,7 +93,7 @@ export default async function AppPage() {
               </CardHeader>
               <CardContent className="px-0">
                 <div className="divide-y max-h-[560px] overflow-y-auto">
-                  {logs.map((log: any) => {
+                  {logs.map((log) => {
                     const date = new Date(log.ts);
                     const isSmokeFree = log.cigarettes === 0;
 

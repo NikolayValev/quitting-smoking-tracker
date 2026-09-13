@@ -3,8 +3,9 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
-import { ClerkProvider } from '@clerk/nextjs'
 import { PostHogProvider } from "@/components/posthog-provider"
+import { ThemeProvider } from "@/components/theme-provider"
+import { ClerkThemeProvider } from "@/components/clerk-theme-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -58,20 +59,26 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      afterSignInUrl="/app"
-      afterSignUpUrl="/app"
-    >
-      <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-        <body className={`font-sans antialiased`}>
-          <PostHogProvider>
-            {children}
-            <Analytics />
-          </PostHogProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    // suppressHydrationWarning: next-themes sets the class on <html> before
+    // React hydrates, so the server and client markup deliberately differ.
+    <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {/* Clerk sits inside ThemeProvider so it can read the resolved theme
+              and tint its own components to match. */}
+          <ClerkThemeProvider>
+            <PostHogProvider>
+              {children}
+              <Analytics />
+            </PostHogProvider>
+          </ClerkThemeProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   )
 }
