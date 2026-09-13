@@ -20,9 +20,6 @@ Do not take real users without these.
   `user.deleted` backstop in `app/api/webhooks/clerk/route.ts` rejects every
   delivery. Deleting through the app UI still erases everything — that route does
   the work in-request — but deletions started anywhere else do not propagate. — NIK-116
-- **Server-side error tracking.** `POSTHOG_API_KEY` is unset, so `logError` falls
-  back to `console.error` and server errors never leave Vercel's function logs.
-  Client-side analytics are unaffected and do work. — NIK-119
 - **Exercise the GDPR paths against real data.** The export and deletion receipt
   have unit coverage but have never run against a real database. Log some entries,
   download the export, delete the account, and confirm the receipt's count matches
@@ -39,6 +36,13 @@ Do not take real users without these.
 - **Confirm Neon backup / PITR retention.** Know the restore window before there is
   data worth restoring.
 - **React / Clerk peer skew.** `react@19.2.0` sits just under Clerk's `~19.2.3`. — NIK-114
+
+## Resolved
+
+- **Server-side error tracking** — NIK-119. The server logger had no key in
+  production, so every `logError` fell back to `console.error`. It now falls back
+  to the shared `NEXT_PUBLIC_POSTHOG_*` pair, which is valid server-side because a
+  PostHog project key is capture-only. `POSTHOG_API_KEY` still wins if set.
 
 ## Deliberate choices, not oversights
 

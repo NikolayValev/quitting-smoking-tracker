@@ -11,9 +11,17 @@ vi.mock('posthog-node', () => ({
 describe('lib/observability/logger', () => {
   const originalKey = process.env.POSTHOG_API_KEY;
   const originalHost = process.env.POSTHOG_HOST;
+  const originalPublicKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  const originalPublicHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
   beforeEach(() => {
     vi.resetModules();
+    // Every test declares the key state it wants; start from none so a value
+    // leaking in from the real environment cannot mask a regression.
+    delete process.env.POSTHOG_API_KEY;
+    delete process.env.POSTHOG_HOST;
+    delete process.env.NEXT_PUBLIC_POSTHOG_KEY;
+    delete process.env.NEXT_PUBLIC_POSTHOG_HOST;
     captureException.mockClear();
     capture.mockClear();
     // vi.restoreAllMocks() in afterEach also restores plain vi.fn() mocks (not just
@@ -29,6 +37,8 @@ describe('lib/observability/logger', () => {
   afterEach(() => {
     process.env.POSTHOG_API_KEY = originalKey;
     process.env.POSTHOG_HOST = originalHost;
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = originalPublicKey;
+    process.env.NEXT_PUBLIC_POSTHOG_HOST = originalPublicHost;
     vi.restoreAllMocks();
   });
 
@@ -52,8 +62,7 @@ describe('lib/observability/logger', () => {
     expect(console.error).not.toHaveBeenCalled();
   });
 
-  it('falls back to console.error when POSTHOG_API_KEY is unset', async () => {
-    delete process.env.POSTHOG_API_KEY;
+  it('falls back to console.error when no PostHog key is configured at all', async () => {
     const { logError } = await import('@/lib/observability/logger');
 
     const err = new Error('boom');
@@ -65,6 +74,65 @@ describe('lib/observability/logger', () => {
       err,
       { userId: 'user-123' }
     );
+  });
+
+  it('uses the shared NEXT_PUBLIC_POSTHOG_KEY when no server-only key is set', async () => {
+    // The project key is capture-only, so the same one the browser uses is a
+    // legitimate server credential — it cannot read anything back out.
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_shared';
+    const { logError } = await import('@/lib/observability/logger');
+
+    logError('create_log_failed', new Error('boom'), { userId: 'user-123' });
+
+    expect(vi.mocked(PostHog).mock.calls[0][0]).toBe('phc_shared');
+    expect(captureException).toHaveBeenCalledTimes(1);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it('prefers a server-only POSTHOG_API_KEY over the shared one', async () => {
+    process.env.POSTHOG_API_KEY = 'phc_server_only';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_shared';
+    const { logError } = await import('@/lib/observability/logger');
+
+    logError('create_log_failed', new Error('boom'));
+
+    expect(vi.mocked(PostHog).mock.calls[0][0]).toBe('phc_server_only');
+  });
+
+  it('takes the host from NEXT_PUBLIC_POSTHOG_HOST when no server host is set', async () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_shared';
+    process.env.NEXT_PUBLIC_POSTHOG_HOST = 'https://eu.i.posthog.com';
+    const { logError } = await import('@/lib/observability/logger');
+
+    logError('create_log_failed', new Error('boom'));
+
+    expect(vi.mocked(PostHog).mock.calls[0][1]).toMatchObject({
+      host: 'https://eu.i.posthog.com',
+    });
+  });
+
+  it('prefers a server-only POSTHOG_HOST over the shared one', async () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_shared';
+    process.env.POSTHOG_HOST = 'https://self-hosted.example.com';
+    process.env.NEXT_PUBLIC_POSTHOG_HOST = 'https://eu.i.posthog.com';
+    const { logError } = await import('@/lib/observability/logger');
+
+    logError('create_log_failed', new Error('boom'));
+
+    expect(vi.mocked(PostHog).mock.calls[0][1]).toMatchObject({
+      host: 'https://self-hosted.example.com',
+    });
+  });
+
+  it('defaults to US cloud when a key is set but no host is', async () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_shared';
+    const { logError } = await import('@/lib/observability/logger');
+
+    logError('create_log_failed', new Error('boom'));
+
+    expect(vi.mocked(PostHog).mock.calls[0][1]).toMatchObject({
+      host: 'https://us.i.posthog.com',
+    });
   });
 
   it('coerces non-Error values into Error before capturing', async () => {
