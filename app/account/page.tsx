@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { AppHeader } from "@/components/app-header"
 import { DeleteAccountButton } from "./delete-account-button"
+import { ExportDataButton } from "./export-data-button"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -42,6 +43,19 @@ export default async function AccountPage() {
               <span className="text-muted-foreground">Email</span>
               <span>{user?.emailAddresses[0]?.emailAddress ?? "—"}</span>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Your data</CardTitle>
+            <CardDescription>
+              Download everything we hold about you — your profile and every log you have recorded —
+              as a JSON file.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExportDataButton />
           </CardContent>
         </Card>
 
