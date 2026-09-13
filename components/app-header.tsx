@@ -1,59 +1,62 @@
 import Link from "next/link"
 import { UserButton } from "@clerk/nextjs"
-import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
-import { LayoutDashboard, BookOpen, Heart } from "lucide-react"
+import { MobileNav } from "@/components/mobile-nav"
+import { NAV_ITEMS, type NavKey } from "@/lib/nav"
+import { cn } from "@/lib/utils"
 
 type AppHeaderProps = {
-  currentPage?: "dashboard" | "journey" | "wellness" | "account"
+  currentPage?: NavKey
 }
 
 export function AppHeader({ currentPage }: AppHeaderProps) {
   return (
-    <header className="border-b bg-card sticky top-0 z-10">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" aria-label="SmokeFree home">
-            <Logo />
+    <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="container mx-auto flex h-14 items-center gap-4 px-4">
+        <Link href="/dashboard" aria-label="SmokeFree home" className="shrink-0">
+          <Logo />
+        </Link>
+
+        {/* Below `sm` this is replaced by MobileNav, not dropped. */}
+        <nav className="hidden flex-1 items-center gap-1 sm:flex">
+          {NAV_ITEMS.filter((item) => item.key !== "account").map(
+            ({ key, href, label, icon: Icon }) => {
+              const active = currentPage === key
+              return (
+                <Link
+                  key={key}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors",
+                    active
+                      ? "bg-primary/10 font-medium text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </Link>
+              )
+            },
+          )}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-1 sm:ml-0">
+          <Link
+            href="/account"
+            aria-current={currentPage === "account" ? "page" : undefined}
+            className={cn(
+              "hidden rounded-full px-3 py-1.5 text-sm transition-colors sm:block",
+              currentPage === "account"
+                ? "bg-primary/10 font-medium text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            Account
           </Link>
-          <nav className="hidden sm:flex items-center gap-1">
-            <Button
-              variant={currentPage === "dashboard" ? "secondary" : "ghost"}
-              size="sm"
-              asChild
-            >
-              <Link href="/dashboard" className="flex items-center gap-1.5">
-                <LayoutDashboard className="h-3.5 w-3.5" />
-                Dashboard
-              </Link>
-            </Button>
-            <Button
-              variant={currentPage === "journey" ? "secondary" : "ghost"}
-              size="sm"
-              asChild
-            >
-              <Link href="/app" className="flex items-center gap-1.5">
-                <BookOpen className="h-3.5 w-3.5" />
-                Journey
-              </Link>
-            </Button>
-            <Button
-              variant={currentPage === "wellness" ? "secondary" : "ghost"}
-              size="sm"
-              asChild
-            >
-              <Link href="/wellness" className="flex items-center gap-1.5">
-                <Heart className="h-3.5 w-3.5" />
-                Wellness
-              </Link>
-            </Button>
-          </nav>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/account">Account</Link>
-          </Button>
           <UserButton />
+          <MobileNav currentPage={currentPage} />
         </div>
       </div>
     </header>
