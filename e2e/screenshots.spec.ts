@@ -21,6 +21,7 @@ const SCREENS = [
   { name: "terms", path: "/terms" },
   { name: "dashboard", path: "/dev/dashboard" },
   { name: "dashboard-empty", path: "/dev/dashboard-empty" },
+  { name: "wellness", path: "/dev/wellness" },
 ]
 
 const outDir = (project: string, name: string) =>
@@ -29,6 +30,12 @@ const outDir = (project: string, name: string) =>
 for (const screen of SCREENS) {
   test(`capture ${screen.name}`, async ({ page }, testInfo) => {
     await page.goto(screen.path, { waitUntil: "networkidle" })
+
+    // Wait for real content, not just a quiet network. In dev the first hit on
+    // a route compiles it on demand, so networkidle can fire while the document
+    // is still empty — which silently produced a blank screenshot that the test
+    // still reported as passing.
+    await expect(page.locator("main, h1").first()).toBeVisible({ timeout: 30_000 })
 
     // Fonts settle after first paint; a screenshot taken before they do shows
     // the fallback face and misreports the type.
