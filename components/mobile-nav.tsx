@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/logo"
 import { NAV_ITEMS, type NavKey } from "@/lib/nav"
 import { cn } from "@/lib/utils"
 
@@ -36,14 +37,17 @@ export function MobileNav({ currentPage }: { currentPage?: NavKey }) {
       </SheetTrigger>
       <SheetContent side="right" className="w-72">
         <SheetHeader className="text-left">
-          <SheetTitle>Menu</SheetTitle>
-          {/* Radix announces this with the dialog. Hidden visually because the
-              links below say the same thing to anyone who can see them. */}
+          {/* The brand rather than the word "Menu": the links below already say
+              it is a menu, and this keeps the drawer anchored to the app. */}
+          <Logo />
+          {/* Both announced by Radix, both redundant to anyone who can see the
+              links, so both are hidden visually. */}
+          <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">
             Links to the main sections of SmokeFree.
           </SheetDescription>
         </SheetHeader>
-        <nav className="mt-6 flex flex-col gap-1">
+        <nav className="mt-4 flex flex-col gap-1">
           {NAV_ITEMS.map(({ key, href, label, icon: Icon }) => {
             const active = currentPage === key
             return (

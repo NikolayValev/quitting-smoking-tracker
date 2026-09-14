@@ -37,3 +37,9 @@ next-env.d.ts
 
 # npm lockfile — this project is pnpm-only (see NIK-103)
 package-lock.json
+
+# Playwright artifacts
+e2e/.artifacts/
+e2e/screens/
+test-results/
+playwright-report/
