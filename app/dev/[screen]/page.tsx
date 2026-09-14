@@ -2,6 +2,9 @@ import { notFound } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
 import { DashboardView } from "@/components/dashboard-view"
 import type { DashboardLog } from "@/lib/dashboard-stats"
+import { WellnessView } from "@/components/wellness-view"
+import { wellnessTips } from "@/lib/data/wellness-tips"
+import { motivationalQuotes } from "@/lib/data/motivational-quotes"
 
 /**
  * Dev-only preview of the signed-in screens.
@@ -47,6 +50,14 @@ const SCREENS = {
     title: "Dashboard, no logs yet",
     render: () => <DashboardView logs={[]} now={NOW} />,
   },
+  wellness: {
+    title: "Wellness",
+    // Fixed picks rather than pickForToday, so the screen is the same shot to
+    // shot instead of rotating with the date.
+    render: () => (
+      <WellnessView quote={motivationalQuotes[0]} tip={wellnessTips[0]} />
+    ),
+  },
 } as const
 
 type Screen = keyof typeof SCREENS
@@ -68,7 +79,7 @@ export default async function DevPreviewPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader currentPage="dashboard" />
+      <AppHeader currentPage={screen === "wellness" ? "wellness" : "dashboard"} />
       {entry.render()}
     </div>
   )

@@ -1,104 +1,111 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { relaxationTechniques } from "@/lib/data/wellness-tips"
-import { Play, Sparkles } from "lucide-react"
-import Image from "next/image"
-import { useState } from "react"
+import { Play, Square } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-const techniqueImages: Record<string, string> = {
-  "1": "https://images.unsplash.com/photo-1743767587847-08c42b31cdec?q=80&w=1655&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "2": "https://images.unsplash.com/photo-1507120410856-1f35574c3b45?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "3": "https://images.unsplash.com/photo-1669988021819-f4117fafeb29?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  "4": "https://images.unsplash.com/photo-1625121035770-d894ff02ca86?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-}
+const mmss = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
 
+/**
+ * Longer relaxation sessions, each one an actual timer.
+ *
+ * "Start session" previously toggled a dot and nothing else — the screen
+ * offered a ten-minute guided session and delivered a change of button label.
+ * It now counts the stated time down and says when it is done, which is the
+ * smallest version of this that is not a promise the app fails to keep.
+ *
+ * The four stock photographs are gone. They were fetched from Unsplash at
+ * render time, which made a screen someone opens mid-craving depend on a third
+ * party being reachable, and they had no visual relationship to each other — a
+ * pair of lungs, a neon sign, a seascape and some Scrabble tiles. The cards
+ * carry their own quiet weighting instead.
+ */
 export function RelaxationPreview() {
-  const [activeSession, setActiveSession] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [remaining, setRemaining] = useState(0)
+
+  useEffect(() => {
+    if (!activeId || remaining <= 0) return
+    const timer = setTimeout(() => setRemaining(remaining - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [activeId, remaining])
+
+  const finished = activeId !== null && remaining === 0
+
+  const start = (id: string, minutes: number) => {
+    setActiveId(id)
+    setRemaining(minutes * 60)
+  }
+
+  const stop = () => {
+    setActiveId(null)
+    setRemaining(0)
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center">
-        <div className="absolute inset-0 opacity-20">
-          <Image
-            src="https://images.unsplash.com/photo-1743767587847-08c42b31cdec?q=80&w=1655&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="Peaceful zen garden"
-            fill
-            className="object-cover"
-          />
-        </div>
-        <div className="relative z-10">
-          <Sparkles className="h-8 w-8 mx-auto mb-4 text-primary" />
-          <h2 className="text-2xl font-bold mb-2">Find Your Calm</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Choose a relaxation technique to help manage stress and cravings. Each session is designed to bring peace
-            and clarity to your smoke-free journey.
-          </p>
-        </div>
-      </div>
+    <ul className="grid gap-3 sm:grid-cols-2">
+      {relaxationTechniques.map((technique) => {
+        const isActive = activeId === technique.id
+        const total = technique.minutes * 60
+        const progress = isActive && total > 0 ? ((total - remaining) / total) * 100 : 0
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {relaxationTechniques.map((technique) => (
-          <Card
+        return (
+          <li
             key={technique.id}
-            className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 border-2 hover:border-primary/50"
+            className={cn(
+              "relative overflow-hidden rounded-xl border p-5 transition-colors",
+              isActive ? "border-primary/40 bg-primary/5" : "border-border/60 bg-card",
+            )}
           >
-            <div className="relative h-48 w-full bg-gradient-to-br from-primary/10 to-muted">
-              <Image
-                src={techniqueImages[technique.id] || "/placeholder.svg"}
-                alt={technique.title}
-                fill
-                className="object-cover"
+            {/* The session's progress, drawn as the card filling up rather than
+                as another bar competing with the breathing exercise above. */}
+            {isActive && (
+              <div
+                aria-hidden
+                className="absolute inset-y-0 left-0 bg-primary/10 transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
+                style={{ width: `${progress}%` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <Badge className="absolute top-4 right-4 bg-background/90 text-foreground" variant="secondary">
-                {technique.duration}
-              </Badge>
-            </div>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {technique.title}
-                {activeSession === technique.id && (
-                  <span className="flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                  </span>
-                )}
-              </CardTitle>
-              <CardDescription className="leading-relaxed">{technique.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                className="w-full gap-2"
-                variant={activeSession === technique.id ? "secondary" : "default"}
-                onClick={() => setActiveSession(activeSession === technique.id ? null : technique.id)}
-              >
-                <Play className="h-4 w-4" />
-                {activeSession === technique.id ? "End Session" : "Start Session"}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            )}
 
-      <Card className="relative overflow-hidden border-2">
-        <div className="absolute inset-0 opacity-10">
-          <Image
-            src="https://images.unsplash.com/photo-1625121035770-d894ff02ca86?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="Serene forest"
-            fill
-            className="object-cover"
-          />
-        </div>
-        <CardContent className="relative z-10 p-8 text-center">
-          <blockquote className="text-lg font-medium italic text-muted-foreground">
-            &ldquo;Breath is the bridge which connects life to consciousness, which unites your body to your thoughts.&rdquo;
-          </blockquote>
-          <p className="mt-2 text-sm text-muted-foreground">— Thích Nhất Hạnh</p>
-        </CardContent>
-      </Card>
-    </div>
+            <div className="relative">
+              <p className="text-xs text-muted-foreground">{technique.duration}</p>
+              <h3 className="mt-1 text-base font-medium tracking-tight">{technique.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{technique.description}</p>
+
+              <div className="mt-4 flex items-center gap-3">
+                {isActive ? (
+                  <>
+                    <Button variant="outline" size="sm" className="gap-2" onClick={stop}>
+                      <Square className="h-3.5 w-3.5" aria-hidden />
+                      Stop
+                    </Button>
+                    <span
+                      className="text-sm tabular-nums text-muted-foreground"
+                      role="timer"
+                      aria-live="off"
+                    >
+                      {finished ? "Done" : `${mmss(remaining)} left`}
+                    </span>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => start(technique.id, technique.minutes)}
+                    aria-label={`Start ${technique.title}`}
+                  >
+                    <Play className="h-3.5 w-3.5" aria-hidden />
+                    Start
+                  </Button>
+                )}
+              </div>
+            </div>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
