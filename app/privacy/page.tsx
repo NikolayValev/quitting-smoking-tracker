@@ -63,6 +63,23 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-semibold mb-3">Sharing with a buddy</h2>
+            <p className="text-muted-foreground">
+              You can invite one or more people to follow your progress. If you do, they
+              can see only two things: how many days you have been smoke-free, and how many
+              health milestones you have reached. They cannot see your individual check-ins,
+              your daily cigarette counts, or any note you have written — those never leave
+              your account.
+            </p>
+            <p className="text-muted-foreground mt-3">
+              Sharing is off unless you create an invite. Invite links expire after seven
+              days if unused, work once, and either of you can end the share at any time from
+              the Buddies page. Ending it takes effect immediately. Deleting your account
+              removes every share on both sides.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-semibold mb-3">Analytics</h2>
             <p className="text-muted-foreground">
               We use Vercel Analytics to understand aggregate usage patterns (page views, performance); it does not

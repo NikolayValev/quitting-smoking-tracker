@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { users, smokeLogs } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { users, smokeLogs, buddyLinks } from '@/db/schema';
+import { eq, desc, or } from 'drizzle-orm';
 
 /**
  * Bumped whenever the shape below changes, so an old file stays interpretable.
@@ -31,7 +31,14 @@ export type UserDataExport = {
     cigarettes: number;
     note: string | null;
   }>;
-  counts: { smokeLogs: number };
+  /** Who this person shares their streak with, and whose they can see. */
+  shares: Array<{
+    role: 'owner' | 'buddy';
+    state: 'active' | 'pending';
+    createdAt: string;
+    acceptedAt: string | null;
+  }>;
+  counts: { smokeLogs: number; shares: number };
 };
 
 /**
@@ -42,6 +49,11 @@ export type UserDataExport = {
  * that omitted their email would not be the copy of their data they asked for.
  * It arrives as an argument so this module stays free of Clerk, matching how the
  * rest of the codebase keeps that dependency at the route boundary.
+ *
+ * Shares are included because a relationship this person created is theirs to
+ * see. The other party's identity is not: their user id would tell the reader
+ * nothing, and exporting it would hand one person a record about another who
+ * never agreed to that.
  *
  * `rate_limits` is deliberately left out. It holds a request count for the
  * current 60-second window and is overwritten in place, so it is operational
@@ -79,6 +91,17 @@ export async function exportUserData(
         .orderBy(desc(smokeLogs.ts))
     : [];
 
+  const shares = account
+    ? await db
+        .select()
+        .from(buddyLinks)
+        .where(
+          or(eq(buddyLinks.ownerUserId, account.id), eq(buddyLinks.buddyUserId, account.id)),
+        )
+    : [];
+
+  const activeShares = shares.filter((s) => !s.revokedAt);
+
   return {
     format: EXPORT_FORMAT_VERSION,
     exportedAt: new Date().toISOString(),
@@ -96,6 +119,12 @@ export async function exportUserData(
       cigarettes: log.cigarettes,
       note: log.note,
     })),
-    counts: { smokeLogs: logs.length },
+    shares: activeShares.map((share) => ({
+      role: share.ownerUserId === account?.id ? ('owner' as const) : ('buddy' as const),
+      state: share.acceptedAt ? ('active' as const) : ('pending' as const),
+      createdAt: share.createdAt.toISOString(),
+      acceptedAt: share.acceptedAt ? share.acceptedAt.toISOString() : null,
+    })),
+    counts: { smokeLogs: logs.length, shares: activeShares.length },
   };
 }

@@ -9,4 +9,7 @@ export const SCREENS = [
   { name: "wellness", path: "/dev/wellness" },
   { name: "journey", path: "/dev/journey" },
   { name: "account", path: "/dev/account" },
+  { name: "buddies", path: "/dev/buddies" },
+  { name: "buddies-empty", path: "/dev/buddies-empty" },
+  { name: "buddies-invite", path: "/dev/buddies-invite" },
 ]
