@@ -68,34 +68,35 @@ export function UrgeResistance() {
     )
   }
 
+  // No card and no heading of its own: the page already labels this section,
+  // and wrapping bordered rows in a bordered card inside a bordered section put
+  // three frames around a list of four links.
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Resist the Urge</CardTitle>
-        <CardDescription>Choose a coping strategy to help you through this craving</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-3">
-          {copingStrategies.map((strategy) => (
-            <button
-              key={strategy.id}
-              onClick={() => {
-                // Reaching for a strategy is the craving signal. The id is
-                // app-defined content, not anything the user wrote.
-                captureCraving(strategy.id)
-                setSelectedStrategy(strategy.id)
-              }}
-              className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left group"
-            >
-              <div className="flex-1">
-                <h3 className="font-semibold">{strategy.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <ul className="grid gap-2">
+      {copingStrategies.map((strategy) => (
+        <li key={strategy.id}>
+          <button
+            onClick={() => {
+              // Reaching for a strategy is the craving signal. The id is
+              // app-defined content, not anything the user wrote.
+              captureCraving(strategy.id)
+              setSelectedStrategy(strategy.id)
+            }}
+            className="group flex w-full items-center justify-between gap-4 rounded-xl border border-border/60 bg-card px-5 py-4 text-left transition-colors hover:border-border hover:bg-muted/40"
+          >
+            <span>
+              <span className="block font-medium tracking-tight">{strategy.title}</span>
+              <span className="mt-0.5 block text-sm text-muted-foreground">
+                {strategy.description}
+              </span>
+            </span>
+            <ChevronRight
+              className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+              aria-hidden
+            />
+          </button>
+        </li>
+      ))}
+    </ul>
   )
 }

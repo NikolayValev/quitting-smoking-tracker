@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { TipCategory } from "@/components/tip-category"
 import { wellnessTips, type WellnessTip } from "@/lib/data/wellness-tips"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -15,24 +15,13 @@ export function TipLibrary() {
     return category.charAt(0).toUpperCase() + category.slice(1)
   }
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      health: "bg-primary/10 text-primary",
-      motivation: "bg-accent/10 text-accent-foreground",
-      coping: "bg-secondary/10 text-secondary-foreground",
-      financial: "bg-muted text-muted-foreground",
-      lifestyle: "bg-primary/20 text-primary",
-    }
-    return colors[category] || "bg-muted text-muted-foreground"
-  }
-
   if (selectedTip) {
     return (
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <Badge className={getCategoryColor(selectedTip.category)}>{getCategoryLabel(selectedTip.category)}</Badge>
+              <TipCategory category={selectedTip.category} />
               <CardTitle className="text-2xl">{selectedTip.title}</CardTitle>
             </div>
             <button onClick={() => setSelectedTip(null)} className="text-sm text-primary hover:underline">
@@ -74,7 +63,7 @@ export function TipLibrary() {
                     className="w-full p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left group"
                   >
                     <div className="flex items-start gap-3">
-                      <Badge className={getCategoryColor(tip.category)}>{getCategoryLabel(tip.category)}</Badge>
+                      <TipCategory category={tip.category} />
                       <div className="flex-1">
                         <h3 className="font-semibold group-hover:text-primary transition-colors">{tip.title}</h3>
                         <p className="text-sm text-muted-foreground mt-1">{tip.description}</p>

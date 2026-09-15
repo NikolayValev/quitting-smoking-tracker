@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test"
 import path from "path"
+import { SCREENS } from "./screens"
 
 /** Next's dev overlay floats over the page and is not part of the design. */
 const HIDE_DEV_CHROME = `
@@ -14,15 +15,6 @@ const HIDE_DEV_CHROME = `
  * and no approval step to babysit. They exist to produce artifacts a human (or
  * whoever is working on the design) can open.
  */
-const SCREENS = [
-  { name: "landing", path: "/" },
-  { name: "demo", path: "/demo" },
-  { name: "privacy", path: "/privacy" },
-  { name: "terms", path: "/terms" },
-  { name: "dashboard", path: "/dev/dashboard" },
-  { name: "dashboard-empty", path: "/dev/dashboard-empty" },
-  { name: "wellness", path: "/dev/wellness" },
-]
 
 const outDir = (project: string, name: string) =>
   path.join("e2e", "screens", `${name}-${project}.png`)
