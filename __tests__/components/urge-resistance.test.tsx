@@ -3,11 +3,14 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import { UrgeResistance } from "@/components/urge-resistance"
 
 describe("UrgeResistance", () => {
-  it("renders urge resistance component", () => {
+  it("offers every strategy as a choice", () => {
+    // The component no longer carries a heading or blurb of its own: the page
+    // labels the section, and a card-inside-a-card put three borders around
+    // four links. What it owes the page is the choices themselves.
     render(<UrgeResistance />)
 
-    expect(screen.getByText("Resist the Urge")).toBeInTheDocument()
-    expect(screen.getByText("Choose a coping strategy to help you through this craving")).toBeInTheDocument()
+    const choices = screen.getAllByRole("button")
+    expect(choices.length).toBeGreaterThanOrEqual(4)
   })
 
   it("displays coping strategies", () => {

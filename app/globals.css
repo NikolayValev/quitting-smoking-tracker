@@ -13,11 +13,15 @@
   --popover-foreground: oklch(0.2 0 0);
   --primary: oklch(0.4 0.08 155);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.92 0.02 50);
+  --secondary: oklch(0.94 0.005 70);
   --secondary-foreground: oklch(0.2 0 0);
   --muted: oklch(0.96 0.005 70);
   --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.7 0.08 60);
+  /* A hover surface, not a statement colour. The UI kit paints every hover
+     with this (hover:bg-accent), so a saturated hue here tints the whole app
+     on contact — it used to be a mid orange, at odds with the green brand and
+     with --sidebar-accent, which had the neutral it was supposed to match. */
+  --accent: oklch(0.945 0.006 155);
   --accent-foreground: oklch(0.2 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
@@ -47,19 +51,23 @@
   --card-foreground: oklch(0.985 0.005 85);
   --popover: oklch(0.25 0 0);
   --popover-foreground: oklch(0.985 0.005 85);
-  --primary: oklch(0.5 0.08 155);
+  /* Lifted from 0.5/0.08, which sat only 3.15:1 against this background and so
+     read as a murky olive rather than a button. This is the brightest step that
+     still keeps white label text at 4.60:1, i.e. AA for normal text; going
+     brighter looks better and fails it (0.58 -> 4.06:1). */
+  --primary: oklch(0.55 0.1 155);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.3 0.01 50);
+  --secondary: oklch(0.28 0.005 155);
   --secondary-foreground: oklch(0.985 0.005 85);
   --muted: oklch(0.28 0 0);
   --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.7 0.08 60);
-  --accent-foreground: oklch(0.2 0 0);
+  --accent: oklch(0.29 0.008 155);
+  --accent-foreground: oklch(0.985 0.005 85);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.3 0 0);
   --input: oklch(0.3 0 0);
-  --ring: oklch(0.5 0.08 155);
+  --ring: oklch(0.55 0.1 155);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -118,9 +126,19 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* One focus ring for the whole app, drawn explicitly. The previous rule set
+     an outline colour at half opacity and left width and style to the browser,
+     so keyboard focus looked different per element and per engine, and was
+     faint on the dark surface. Offset so the ring sits clear of rounded edges
+     rather than tracing them. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }

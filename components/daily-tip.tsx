@@ -1,15 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import type { WellnessTip } from "@/lib/data/wellness-tips"
-import { Sparkles } from "lucide-react"
-
-const categoryColors: Record<string, string> = {
-  health: "bg-primary/10 text-primary",
-  motivation: "bg-accent/10 text-accent-foreground",
-  coping: "bg-secondary/10 text-secondary-foreground",
-  financial: "bg-muted text-muted-foreground",
-  lifestyle: "bg-primary/20 text-primary",
-}
+import { TipCategory } from "@/components/tip-category"
 
 /**
  * Presentational. The tip is chosen by the server (see app/wellness/page.tsx)
@@ -19,21 +9,13 @@ const categoryColors: Record<string, string> = {
  */
 export function DailyTip({ tip }: { tip: WellnessTip }) {
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Daily Wellness Tip</CardTitle>
-        </div>
-        <CardDescription>Your personalized tip for today</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Badge className={categoryColors[tip.category] || "bg-muted text-muted-foreground"}>
-          {tip.category.charAt(0).toUpperCase() + tip.category.slice(1)}
-        </Badge>
-        <h3 className="font-semibold text-xl text-balance">{tip.title}</h3>
-        <p className="text-muted-foreground leading-relaxed">{tip.description}</p>
-      </CardContent>
-    </Card>
+    <section>
+      <h2 className="text-sm font-medium text-muted-foreground">Today&rsquo;s tip</h2>
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-2">
+        <h3 className="text-xl font-medium tracking-tight text-balance">{tip.title}</h3>
+        <TipCategory category={tip.category} />
+      </div>
+      <p className="mt-2 max-w-[62ch] text-muted-foreground">{tip.description}</p>
+    </section>
   )
 }

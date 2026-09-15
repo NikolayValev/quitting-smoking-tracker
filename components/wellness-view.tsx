@@ -47,7 +47,7 @@ export function WellnessView({
       </div>
 
       <section className="mt-14">
-        <h2 className="text-sm font-medium text-muted-foreground">If breathing is not it</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">Other ways through</h2>
         <div className="mt-4">
           <UrgeResistance />
         </div>
