@@ -31,7 +31,8 @@ const EXPORT_PAYLOAD = {
     lastName: "Rivera",
   },
   smokeLogs: [],
-  counts: { smokeLogs: 0 },
+  shares: [],
+  counts: { smokeLogs: 0, shares: 0 },
 }
 
 /** Signs the caller in and lets the rate limiter through. */

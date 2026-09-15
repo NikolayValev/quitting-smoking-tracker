@@ -1,31 +1,13 @@
 import { Check } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { milestoneDefinitions } from "@/lib/data/wellness-tips"
+import { MILESTONE_THRESHOLDS } from "@/lib/milestones"
 import { MilestoneTracker } from "@/components/milestone-tracker"
-
-const MINUTE = 1
-const HOUR = 60
-const DAY = 24 * HOUR
-
-/** Minutes smoke-free at which each milestone is reached. */
-const THRESHOLDS: Record<string, number> = {
-  "20_minutes": 20 * MINUTE,
-  "12_hours": 12 * HOUR,
-  "24_hours": 1 * DAY,
-  "48_hours": 2 * DAY,
-  "72_hours": 3 * DAY,
-  "1_week": 7 * DAY,
-  "2_weeks": 14 * DAY,
-  "1_month": 30 * DAY,
-  "3_months": 90 * DAY,
-  "6_months": 180 * DAY,
-  "1_year": 365 * DAY,
-  "5_years": 5 * 365 * DAY,
-  "10_years": 10 * 365 * DAY,
-}
 
 /** Minutes to a single, roughly-worded unit: "3 months", "12 days", "5 hours". */
 function humanise(minutes: number): string {
+  const HOUR = 60
+  const DAY = 24 * HOUR
   const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"}`
   if (minutes >= 365 * DAY) return plural(Math.round(minutes / (365 * DAY)), "year")
   if (minutes >= 30 * DAY) return plural(Math.round(minutes / (30 * DAY)), "month")
@@ -57,19 +39,19 @@ export function MilestonesDisplay({
   const elapsed = Math.max(0, Math.floor((now.getTime() - quitDate.getTime()) / 60000))
 
   const reached = milestoneDefinitions.filter(
-    (m) => elapsed >= (THRESHOLDS[m.type] ?? Number.POSITIVE_INFINITY),
+    (m) => elapsed >= (MILESTONE_THRESHOLDS[m.type] ?? Number.POSITIVE_INFINITY),
   )
   const next = milestoneDefinitions.find(
-    (m) => elapsed < (THRESHOLDS[m.type] ?? Number.POSITIVE_INFINITY),
+    (m) => elapsed < (MILESTONE_THRESHOLDS[m.type] ?? Number.POSITIVE_INFINITY),
   )
 
   // Progress runs from the previous milestone to the next, not from zero: at
   // eighteen months, "most of the way to five years" is both truer and more
   // encouraging than "a third of the way".
   const previousThreshold = reached.length
-    ? THRESHOLDS[reached[reached.length - 1].type]
+    ? MILESTONE_THRESHOLDS[reached[reached.length - 1].type]
     : 0
-  const nextThreshold = next ? THRESHOLDS[next.type] : 0
+  const nextThreshold = next ? MILESTONE_THRESHOLDS[next.type] : 0
   const span = nextThreshold - previousThreshold
   const progress = next && span > 0
     ? Math.min(100, Math.max(0, ((elapsed - previousThreshold) / span) * 100))

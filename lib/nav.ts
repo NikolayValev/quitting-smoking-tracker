@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react"
-import { LayoutDashboard, BookOpen, Heart, UserRound } from "lucide-react"
+import { LayoutDashboard, BookOpen, Heart, Users, UserRound } from "lucide-react"
 
-export type NavKey = "dashboard" | "journey" | "wellness" | "account"
+export type NavKey = "dashboard" | "journey" | "wellness" | "buddies" | "account"
 
 export type NavItem = {
   key: NavKey
@@ -21,5 +21,6 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "dashboard", href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "journey", href: "/app", label: "Journey", icon: BookOpen },
   { key: "wellness", href: "/wellness", label: "Wellness", icon: Heart },
+  { key: "buddies", href: "/buddies", label: "Buddies", icon: Users },
   { key: "account", href: "/account", label: "Account", icon: UserRound },
 ]

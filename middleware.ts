@@ -12,6 +12,11 @@ const isProtectedPage = createRouteMatcher([
   '/dashboard(.*)',
   '/onboarding(.*)',
   '/account(.*)',
+  '/buddies(.*)',
+  // Protected on purpose: an invite code must never be enough on its own to
+  // reach anything. Accepting requires an account, so a forwarded link cannot
+  // quietly hand someone's streak to a stranger.
+  '/join(.*)',
 ]);
 
 /**

@@ -17,7 +17,7 @@ const PROFILE = {
 }
 
 /** Queues the account lookup, then the smoke-log lookup, in call order. */
-async function mockQueries(accountRows: unknown[], logRows: unknown[]) {
+async function mockQueries(accountRows: unknown[], logRows: unknown[], shareRows: unknown[] = []) {
   const { db } = await import("@/db")
 
   vi.mocked(db.select)
@@ -26,6 +26,9 @@ async function mockQueries(accountRows: unknown[], logRows: unknown[]) {
     } as never)
     .mockReturnValueOnce({
       from: () => ({ where: () => ({ orderBy: () => Promise.resolve(logRows) }) }),
+    } as never)
+    .mockReturnValueOnce({
+      from: () => ({ where: () => Promise.resolve(shareRows) }),
     } as never)
 }
 
@@ -56,7 +59,7 @@ describe("exportUserData", () => {
     expect(result.smokeLogs).toEqual([
       { id: LOG_ID, ts: ts.toISOString(), cigarettes: 3, note: "after lunch" },
     ])
-    expect(result.counts).toEqual({ smokeLogs: 1 })
+    expect(result.counts).toEqual({ smokeLogs: 1, shares: 0 })
   })
 
   it("is self-describing so the file makes sense away from the app", async () => {
@@ -84,7 +87,8 @@ describe("exportUserData", () => {
     expect(result.account.createdAt).toBeNull()
     expect(result.account.email).toBe(PROFILE.email)
     expect(result.smokeLogs).toEqual([])
-    expect(result.counts).toEqual({ smokeLogs: 0 })
+    expect(result.shares).toEqual([])
+    expect(result.counts).toEqual({ smokeLogs: 0, shares: 0 })
   })
 
   it("does not query for logs when there is no local account", async () => {

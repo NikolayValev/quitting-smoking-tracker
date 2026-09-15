@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { users, smokeLogs } from '@/db/schema';
-import { eq, count } from 'drizzle-orm';
+import { users, smokeLogs, buddyLinks } from '@/db/schema';
+import { eq, count, or } from 'drizzle-orm';
 
 /**
  * Removes a user and all of their smoke logs, keyed by Clerk user ID.
@@ -47,6 +47,15 @@ export async function deleteUserByClerkId(
     const smokeLogsErased = Number(counted[0]?.value ?? 0);
 
     await tx.delete(smokeLogs).where(eq(smokeLogs.userId, userId));
+
+    // Both sides of every share. The foreign keys cascade, but this function
+    // deliberately does not depend on that (see above) — and a share outliving
+    // the person who granted it is exactly the failure worth being explicit
+    // about: it would leave a buddy pointed at a deleted account.
+    await tx
+      .delete(buddyLinks)
+      .where(or(eq(buddyLinks.ownerUserId, userId), eq(buddyLinks.buddyUserId, userId)));
+
     await tx.delete(users).where(eq(users.id, userId));
 
     return { deleted: true, smokeLogsErased };

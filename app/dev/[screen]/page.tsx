@@ -6,6 +6,8 @@ import type { DashboardLog } from "@/lib/dashboard-stats"
 import { WellnessView } from "@/components/wellness-view"
 import { JourneyView } from "@/components/journey-view"
 import { AccountView } from "@/components/account-view"
+import { BuddiesView } from "@/components/buddies-view"
+import { InvitePanel } from "@/components/invite-panel"
 import { wellnessTips } from "@/lib/data/wellness-tips"
 import { motivationalQuotes } from "@/lib/data/motivational-quotes"
 
@@ -81,6 +83,38 @@ const SCREENS = {
     title: "Account",
     render: () => <AccountView name="Sam Rivera" email="sam@example.com" />,
   },
+  buddies: {
+    title: "Buddies",
+    render: () => (
+      <BuddiesView
+        buddies={[
+          { linkId: "a", name: "Priya Raman", state: "active" },
+          { linkId: "b", name: null, state: "pending" },
+        ]}
+        supporting={[
+          {
+            linkId: "c",
+            name: "Tom Okafor",
+            state: "active",
+            summary: { smokeFreeDays: 212, milestonesReached: 10, milestoneCount: 13 },
+          },
+        ]}
+      />
+    ),
+  },
+  "buddies-invite": {
+    title: "Buddies, invite created",
+    render: () => (
+      <main className="container mx-auto max-w-2xl px-4 py-12">
+        <h1 className="text-3xl font-semibold tracking-tight">Buddies</h1>
+        <InvitePanel code="7KQ2MBXN4TVCJ3HRGPWD" origin="https://smoking.nikolayvalev.com" />
+      </main>
+    ),
+  },
+  "buddies-empty": {
+    title: "Buddies, none yet",
+    render: () => <BuddiesView buddies={[]} supporting={[]} />,
+  },
   wellness: {
     title: "Wellness",
     // Fixed picks rather than pickForToday, so the screen is the same shot to
@@ -110,7 +144,7 @@ export default async function DevPreviewPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader currentPage={(["wellness", "journey", "account"].includes(screen) ? screen : "dashboard") as NavKey} />
+      <AppHeader currentPage={(["wellness", "journey", "account", "buddies"].includes(screen) ? screen : "dashboard") as NavKey} />
       {entry.render()}
     </div>
   )
