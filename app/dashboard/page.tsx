@@ -4,6 +4,8 @@ import { getLogs } from "@/app/app/actions"
 import { AppHeader } from "@/components/app-header"
 import { DashboardView } from "@/components/dashboard-view"
 import { DailyLogDialog } from "@/components/daily-log-dialog"
+import { Button } from "@/components/ui/button"
+import { PlusCircle } from "lucide-react"
 import { deriveDashboardStats } from "@/lib/dashboard-stats"
 import { pickForToday } from "@/lib/daily"
 import { wellnessTips } from "@/lib/data/wellness-tips"
@@ -40,8 +42,22 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="dashboard" />
-      <DashboardView logs={logs} tip={tipOfTheDay} settings={settings} />
-      {logs.length > 0 && <DailyLogDialog defaultOpen={!hasLoggedToday} />}
+      <DashboardView
+        logs={logs}
+        tip={tipOfTheDay}
+        settings={settings}
+        action={
+          <DailyLogDialog
+            defaultOpen={logs.length > 0 && !hasLoggedToday}
+            trigger={
+              <Button className="shrink-0 gap-1.5">
+                <PlusCircle className="h-4 w-4" />
+                Log today
+              </Button>
+            }
+          />
+        }
+      />
     </div>
   )
 }

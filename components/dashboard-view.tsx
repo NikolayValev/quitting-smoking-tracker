@@ -1,5 +1,5 @@
+import type { ReactNode } from "react"
 import Link from "next/link"
-import { PlusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MilestonesDisplay } from "@/components/milestones-display"
 import { DailyTip } from "@/components/daily-tip"
@@ -29,8 +29,12 @@ export function DashboardView({
   tip,
   now,
   settings = EMPTY_SETTINGS,
+  action,
 }: {
   logs: DashboardLog[]
+  /** The "log today" control. Supplied by the route so this stays renderable
+   *  from fixtures, and so the control opens a dialog rather than navigating. */
+  action?: ReactNode
   /** The day's wellness tip. Optional so the empty state need not pick one. */
   tip?: WellnessTip
   now?: Date
@@ -76,12 +80,7 @@ export function DashboardView({
               : "Log a smoke-free day to start your counter."}
           </p>
         </div>
-        <Button asChild className="shrink-0">
-          <Link href="/onboarding" className="flex items-center gap-1.5">
-            <PlusCircle className="h-4 w-4" />
-            Log today
-          </Link>
-        </Button>
+        {action}
       </div>
 
       <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-6 border-t border-border/60 pt-6 sm:grid-cols-3">

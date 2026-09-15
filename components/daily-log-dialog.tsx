@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import type { ReactNode } from "react"
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,7 +33,21 @@ function localToday(): string {
     .slice(0, 10)
 }
 
-export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
+/**
+ * Logging a check-in.
+ *
+ * Takes a trigger, because until it had one the only way to reach it was the
+ * automatic prompt on page load — and every "Log today" button linked to
+ * /onboarding instead, walking people through the pricing questions every time
+ * they wanted to record a day.
+ */
+export function DailyLogDialog({
+  defaultOpen = false,
+  trigger,
+}: {
+  defaultOpen?: boolean
+  trigger?: ReactNode
+}) {
   const router = useRouter()
   const [open, setOpen] = useState(defaultOpen)
   const [loading, setLoading] = useState(false)
@@ -58,6 +74,9 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
       // Bucketed count and whether a note was written -- never the note itself.
       captureDailyLog(count, note.trim().length > 0)
       setOpen(false)
+      setCigarettes("")
+      setNote("")
+      setDate(localToday())
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
@@ -68,6 +87,7 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Log a check-in</DialogTitle>
@@ -133,10 +153,13 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              Log later
+              {/* "Log later" answers the prompt that opened itself. Somebody who
+                  pressed "Log today" is not putting it off, they are backing
+                  out. */}
+              {defaultOpen ? "Log later" : "Cancel"}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving…" : "Save log"}
+              {loading ? "Saving…" : "Save check-in"}
             </Button>
           </DialogFooter>
         </form>
