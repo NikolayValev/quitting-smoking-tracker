@@ -1,120 +1,21 @@
-"use client"
+import { redirect } from "next/navigation"
+import { auth } from "@clerk/nextjs/server"
+import { OnboardingFlow } from "@/components/onboarding-flow"
+import { getOrCreateUser } from "@/lib/auth/getOrCreateUser"
+import { getUserSettings } from "@/lib/user-settings.server"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { ChevronRight } from "lucide-react"
-import { createLog } from "@/app/app/actions"
+export const dynamic = "force-dynamic"
 
-export default function OnboardingPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    cigarettes: "",
-    note: "",
-  })
+export default async function OnboardingPage() {
+  const { userId: clerkUserId } = await auth()
+  if (!clerkUserId) redirect("/sign-in")
 
-  const handleChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value })
-    setError(null)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    const cigaretteCount = Number.parseInt(formData.cigarettes);
-    
-    if (isNaN(cigaretteCount) || cigaretteCount < 0) {
-      setError("Please enter a valid number of cigarettes (0 or more)")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const result = await createLog({
-        cigarettes: cigaretteCount,
-        note: formData.note || undefined,
-      })
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to create log")
-      }
-
-      router.push("/dashboard")
-    } catch (err) {
-      console.error("Onboarding error:", err)
-      setError(err instanceof Error ? err.message : "Failed to save your information. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const userId = await getOrCreateUser()
+  const settings = await getUserSettings(userId)
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">Log Today</h1>
-          <p className="text-muted-foreground">Keep your streak going — every entry counts</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>How did today go?</CardTitle>
-            <CardDescription>
-              Enter the number of cigarettes you smoked today, or 0 if you stayed smoke-free.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm" role="alert">
-                  {error}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="cigarettes">Cigarettes smoked today</Label>
-                <Input
-                  id="cigarettes"
-                  type="number"
-                  min="0"
-                  placeholder="e.g., 10"
-                  value={formData.cigarettes}
-                  onChange={(e) => handleChange("cigarettes", e.target.value)}
-                  required
-                  aria-required="true"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Enter 0 if you stayed smoke-free today.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="note">Note (optional)</Label>
-                <Textarea
-                  id="note"
-                  placeholder="e.g., Feeling determined to quit..."
-                  rows={4}
-                  value={formData.note}
-                  onChange={(e) => handleChange("note", e.target.value)}
-                />
-              </div>
-
-              <Button type="submit" disabled={loading} className="w-full gap-2">
-                {loading ? "Saving…" : "Save log"}
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="min-h-screen bg-background">
+      <OnboardingFlow settings={settings} />
     </div>
   )
 }

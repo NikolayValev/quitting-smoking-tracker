@@ -1,9 +1,25 @@
-import { pgTable, uuid, text, timestamp, integer, index, date, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, index, date, uniqueIndex, numeric } from 'drizzle-orm/pg-core';
 
+/**
+ * Settings are all nullable. Someone who never finishes onboarding still gets a
+ * working app on the documented fallbacks, so the absence of a setting has to be
+ * a legible state rather than a hole to guard against at every call site.
+ *
+ * There is deliberately no quit date here. The streak comes from the current
+ * unbroken run of smoke-free check-ins; a stored date would be a second source
+ * of truth for the one number this app must not get wrong.
+ */
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   clerkUserId: text('clerk_user_id').unique().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  /** Cigarettes a day before quitting, as stated rather than inferred. */
+  baselinePerDay: integer('baseline_per_day'),
+  /** Numeric, not a float: money should not be stored in binary floating point. */
+  pricePerPack: numeric('price_per_pack', { precision: 10, scale: 2 }),
+  cigarettesPerPack: integer('cigarettes_per_pack').default(20),
+  /** ISO 4217, e.g. GBP. Drives Intl.NumberFormat, not a hardcoded symbol. */
+  currency: text('currency'),
 });
 
 /**

@@ -18,8 +18,20 @@ export type DashboardStats = {
   baselinePerDay: number
 }
 
-/** Rough US pack price divided by twenty. */
+/** Rough US pack price divided by twenty, used until someone states their own. */
 export const COST_PER_CIGARETTE_USD = 0.5
+
+/**
+ * What the person told us, where they have told us anything.
+ *
+ * Both are optional and both fall back to the existing inference, so a half
+ * finished onboarding degrades to the old behaviour rather than to zero.
+ */
+export type StatsSettings = {
+  /** Cigarettes a day before quitting, as stated rather than inferred. */
+  baselinePerDay?: number | null
+  pricePerCigarette?: number | null
+}
 
 /** Fallback daily rate before there is enough history to average. */
 const ASSUMED_DAILY_COUNT = 15
@@ -36,6 +48,7 @@ const ASSUMED_DAILY_COUNT = 15
 export function deriveDashboardStats(
   logs: DashboardLog[],
   now: Date = new Date(),
+  settings: StatsSettings = {},
 ): DashboardStats {
   const at = (log: DashboardLog) => new Date(log.ts)
 
@@ -58,11 +71,25 @@ export function deriveDashboardStats(
   // recent week instead made this zero the moment someone had been clean for a
   // week, so the savings stopped growing exactly when they started to mean
   // something.
+  // A stated baseline wins over the inferred one. Someone who smoked twenty a
+  // day for years but only logged the week they spent tapering off would
+  // otherwise have their savings measured against the taper.
   const smokingDays = logs.filter((log) => log.cigarettes > 0)
-  const avgPerDay =
+  const inferred =
     smokingDays.length > 0
       ? smokingDays.reduce((sum, log) => sum + log.cigarettes, 0) / smokingDays.length
       : ASSUMED_DAILY_COUNT
+  const avgPerDay =
+    settings.baselinePerDay && settings.baselinePerDay > 0
+      ? settings.baselinePerDay
+      : inferred
+
+  // A negative or zero price is not a discount; fall back rather than render a
+  // saving of nothing, or worse, a negative one.
+  const pricePerCigarette =
+    settings.pricePerCigarette && settings.pricePerCigarette > 0
+      ? settings.pricePerCigarette
+      : COST_PER_CIGARETTE_USD
 
   const cigarettesNotSmoked =
     smokeFreeMinutes > 0 ? Math.floor((smokeFreeMinutes / 1440) * avgPerDay) : 0
@@ -72,7 +99,7 @@ export function deriveDashboardStats(
     smokeFreeDays: Math.floor(smokeFreeMinutes / 1440),
     smokeFreeHours: Math.floor((smokeFreeMinutes % 1440) / 60),
     cigarettesNotSmoked,
-    moneySaved: cigarettesNotSmoked * COST_PER_CIGARETTE_USD,
+    moneySaved: cigarettesNotSmoked * pricePerCigarette,
     baselinePerDay: Math.round(avgPerDay),
     daysTracked: logs.length,
     hasLoggedToday:

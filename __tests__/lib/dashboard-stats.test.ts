@@ -85,6 +85,48 @@ describe("deriveDashboardStats", () => {
     expect(deriveDashboardStats(stale, NOW).hasLoggedToday).toBe(false)
   })
 
+  it("prefers a stated baseline over the average of the smoking days", () => {
+    // Someone who smoked 20 a day for years but only logged the tapering-off
+    // week would otherwise have their savings reckoned against the taper, which
+    // understates what quitting is actually worth to them.
+    const log = logs([0, 0, 0, 4, 4])
+    const inferred = deriveDashboardStats(log, NOW)
+    const stated = deriveDashboardStats(log, NOW, { baselinePerDay: 20 })
+
+    expect(inferred.baselinePerDay).toBe(4)
+    expect(stated.baselinePerDay).toBe(20)
+    expect(stated.cigarettesNotSmoked).toBeGreaterThan(inferred.cigarettesNotSmoked)
+  })
+
+  it("still infers a baseline when none was stated", () => {
+    const stats = deriveDashboardStats(logs([0, 0, 10, 10]), NOW, {})
+    expect(stats.baselinePerDay).toBe(10)
+  })
+
+  it("reckons savings at the price the person actually pays", () => {
+    // 2 days clean at 10 a day = 20 cigarettes. At 0.75 each that is 15.
+    const stats = deriveDashboardStats(logs([0, 0, 0, 10]), NOW, {
+      baselinePerDay: 10,
+      pricePerCigarette: 0.75,
+    })
+
+    expect(stats.cigarettesNotSmoked).toBe(20)
+    expect(stats.moneySaved).toBeCloseTo(15, 5)
+  })
+
+  it("falls back to the documented price when none is set", () => {
+    const stats = deriveDashboardStats(logs([0, 0, 0, 10]), NOW, { baselinePerDay: 10 })
+    expect(stats.moneySaved).toBeCloseTo(20 * 0.5, 5)
+  })
+
+  it("ignores a nonsensical price rather than showing a negative saving", () => {
+    const stats = deriveDashboardStats(logs([0, 0, 0, 10]), NOW, {
+      baselinePerDay: 10,
+      pricePerCigarette: -3,
+    })
+    expect(stats.moneySaved).toBeGreaterThanOrEqual(0)
+  })
+
   it("counts nothing for an empty log", () => {
     const stats = deriveDashboardStats([], NOW)
 

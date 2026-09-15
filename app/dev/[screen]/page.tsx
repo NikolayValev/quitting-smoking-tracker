@@ -7,6 +7,8 @@ import { WellnessView } from "@/components/wellness-view"
 import { JourneyView } from "@/components/journey-view"
 import { AccountView } from "@/components/account-view"
 import { BuddiesView } from "@/components/buddies-view"
+import { OnboardingFlow } from "@/components/onboarding-flow"
+import type { UserSettings } from "@/lib/user-settings"
 import { InvitePanel } from "@/components/invite-panel"
 import { wellnessTips } from "@/lib/data/wellness-tips"
 import { motivationalQuotes } from "@/lib/data/motivational-quotes"
@@ -60,10 +62,20 @@ function fixtureLogs(): DashboardLog[] {
   return logs
 }
 
+/** A person who has finished onboarding, so money renders in a real currency. */
+const SETTINGS: UserSettings = {
+  baselinePerDay: 15,
+  pricePerPack: 12.5,
+  cigarettesPerPack: 20,
+  currency: "GBP",
+}
+
 const SCREENS = {
   dashboard: {
     title: "Dashboard",
-    render: () => <DashboardView logs={fixtureLogs()} tip={wellnessTips[0]} now={NOW} />,
+    render: () => (
+      <DashboardView logs={fixtureLogs()} tip={wellnessTips[0]} now={NOW} settings={SETTINGS} />
+    ),
   },
   "dashboard-empty": {
     title: "Dashboard, no logs yet",
@@ -82,7 +94,9 @@ const SCREENS = {
   },
   account: {
     title: "Account",
-    render: () => <AccountView name="Sam Rivera" email="sam@example.com" />,
+    render: () => (
+      <AccountView name="Sam Rivera" email="sam@example.com" settings={SETTINGS} />
+    ),
   },
   buddies: {
     title: "Buddies",
@@ -100,6 +114,22 @@ const SCREENS = {
             summary: { smokeFreeDays: 212, milestonesReached: 10, milestoneCount: 13 },
           },
         ]}
+      />
+    ),
+  },
+  onboarding: {
+    title: "Onboarding",
+    // The real route has no app header — it is reached before there is anything
+    // to navigate to. A preview that adds one is not a preview of it.
+    chrome: false,
+    render: () => (
+      <OnboardingFlow
+        settings={{
+          baselinePerDay: null,
+          pricePerPack: null,
+          cigarettesPerPack: 20,
+          currency: "GBP",
+        }}
       />
     ),
   },
@@ -143,9 +173,19 @@ export default async function DevPreviewPage({
   const entry = SCREENS[screen as Screen]
   if (!entry) notFound()
 
+  const chrome = (entry as { chrome?: boolean }).chrome !== false
+
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader currentPage={(["wellness", "journey", "account", "buddies"].includes(screen) ? screen : "dashboard") as NavKey} />
+      {chrome && (
+        <AppHeader
+          currentPage={
+            (["wellness", "journey", "account", "buddies"].includes(screen)
+              ? screen
+              : "dashboard") as NavKey
+          }
+        />
+      )}
       {entry.render()}
     </div>
   )
