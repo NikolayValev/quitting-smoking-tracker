@@ -2,7 +2,9 @@ import Link from "next/link"
 import { PlusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MilestonesDisplay } from "@/components/milestones-display"
+import { DailyTip } from "@/components/daily-tip"
 import { deriveDashboardStats, type DashboardLog } from "@/lib/dashboard-stats"
+import type { WellnessTip } from "@/lib/data/wellness-tips"
 
 /**
  * The dashboard body, given a log list.
@@ -18,9 +20,12 @@ import { deriveDashboardStats, type DashboardLog } from "@/lib/dashboard-stats"
  */
 export function DashboardView({
   logs,
+  tip,
   now,
 }: {
   logs: DashboardLog[]
+  /** The day's wellness tip. Optional so the empty state need not pick one. */
+  tip?: WellnessTip
   now?: Date
 }) {
   const stats = deriveDashboardStats(logs, now)
@@ -100,6 +105,12 @@ export function DashboardView({
       {quitDate && (
         <div className="mt-12">
           <MilestonesDisplay quitDate={quitDate} now={now} />
+        </div>
+      )}
+
+      {tip && (
+        <div className="mt-12 border-t border-border/60 pt-8">
+          <DailyTip tip={tip} />
         </div>
       )}
     </main>

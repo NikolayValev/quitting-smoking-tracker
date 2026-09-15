@@ -7,4 +7,6 @@ export const SCREENS = [
   { name: "dashboard", path: "/dev/dashboard" },
   { name: "dashboard-empty", path: "/dev/dashboard-empty" },
   { name: "wellness", path: "/dev/wellness" },
+  { name: "journey", path: "/dev/journey" },
+  { name: "account", path: "/dev/account" },
 ]

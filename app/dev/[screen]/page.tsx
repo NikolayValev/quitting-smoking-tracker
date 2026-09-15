@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation"
+import type { NavKey } from "@/lib/nav"
 import { AppHeader } from "@/components/app-header"
 import { DashboardView } from "@/components/dashboard-view"
 import type { DashboardLog } from "@/lib/dashboard-stats"
 import { WellnessView } from "@/components/wellness-view"
+import { JourneyView } from "@/components/journey-view"
+import { AccountView } from "@/components/account-view"
 import { wellnessTips } from "@/lib/data/wellness-tips"
 import { motivationalQuotes } from "@/lib/data/motivational-quotes"
 
@@ -26,29 +29,57 @@ const QUIT_DAY = new Date("2025-01-14T08:00:00.000Z")
 function fixtureLogs(): DashboardLog[] {
   const logs: DashboardLog[] = []
   const day = 86_400_000
+  const cleanDays = Math.round((NOW.getTime() - QUIT_DAY.getTime()) / day)
+  const smokingDays = 30
 
-  // Newest first, matching what getLogs returns.
-  for (let i = 0; i < 46; i++) {
-    const ts = new Date(NOW.getTime() - i * day)
-    const smokeFree = ts.getTime() >= QUIT_DAY.getTime()
+  // Newest first, matching what getLogs returns: the clean streak, then the
+  // weeks of cutting down that came before it. The previous fixture generated
+  // nothing but zeroes, so every screen using it showed a flat chart, a peak of
+  // zero, and savings computed from the fallback rate rather than real history.
+  for (let i = 0; i <= cleanDays; i++) {
     logs.push({
-      id: `fixture-${i}`,
-      ts,
-      cigarettes: smokeFree ? 0 : Math.min(15, 1 + Math.floor((i - 46) * -0.4)),
+      id: `clean-${i}`,
+      ts: new Date(NOW.getTime() - i * day),
+      cigarettes: 0,
       note: i === 0 ? "Still going." : null,
     })
   }
+
+  for (let i = 1; i <= smokingDays; i++) {
+    logs.push({
+      id: `smoking-${i}`,
+      ts: new Date(QUIT_DAY.getTime() - i * day),
+      // Climbs back towards fifteen a day the further back you look.
+      cigarettes: Math.min(15, Math.round(i / 2) + 1),
+      note: i === smokingDays ? "First day trying to cut down." : null,
+    })
+  }
+
   return logs
 }
 
 const SCREENS = {
   dashboard: {
     title: "Dashboard",
-    render: () => <DashboardView logs={fixtureLogs()} now={NOW} />,
+    render: () => <DashboardView logs={fixtureLogs()} tip={wellnessTips[0]} now={NOW} />,
   },
   "dashboard-empty": {
     title: "Dashboard, no logs yet",
     render: () => <DashboardView logs={[]} now={NOW} />,
+  },
+  journey: {
+    title: "Journey",
+    render: () => (
+      <JourneyView
+        entries={fixtureLogs()}
+        intro="Every check-in you have logged, and the shape they make."
+        now={NOW}
+      />
+    ),
+  },
+  account: {
+    title: "Account",
+    render: () => <AccountView name="Sam Rivera" email="sam@example.com" />,
   },
   wellness: {
     title: "Wellness",
@@ -79,7 +110,7 @@ export default async function DevPreviewPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader currentPage={screen === "wellness" ? "wellness" : "dashboard"} />
+      <AppHeader currentPage={(["wellness", "journey", "account"].includes(screen) ? screen : "dashboard") as NavKey} />
       {entry.render()}
     </div>
   )
