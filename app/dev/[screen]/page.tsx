@@ -8,6 +8,9 @@ import { JourneyView } from "@/components/journey-view"
 import { AccountView } from "@/components/account-view"
 import { BuddiesView } from "@/components/buddies-view"
 import { OnboardingFlow } from "@/components/onboarding-flow"
+import { DailyLogDialog } from "@/components/daily-log-dialog"
+import { Button } from "@/components/ui/button"
+import { PlusCircle } from "lucide-react"
 import type { UserSettings } from "@/lib/user-settings"
 import { InvitePanel } from "@/components/invite-panel"
 import { wellnessTips } from "@/lib/data/wellness-tips"
@@ -74,7 +77,22 @@ const SCREENS = {
   dashboard: {
     title: "Dashboard",
     render: () => (
-      <DashboardView logs={fixtureLogs()} tip={wellnessTips[0]} now={NOW} settings={SETTINGS} />
+      <DashboardView
+        logs={fixtureLogs()}
+        tip={wellnessTips[0]}
+        now={NOW}
+        settings={SETTINGS}
+        action={
+          <DailyLogDialog
+            trigger={
+              <Button className="shrink-0 gap-1.5">
+                <PlusCircle className="h-4 w-4" />
+                Log today
+              </Button>
+            }
+          />
+        }
+      />
     ),
   },
   "dashboard-empty": {

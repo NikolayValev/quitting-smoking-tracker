@@ -4,6 +4,7 @@ import { getLogs } from './actions';
 import { AppHeader } from '@/components/app-header';
 import { Button } from '@/components/ui/button';
 import { JourneyView } from '@/components/journey-view';
+import { DailyLogDialog } from '@/components/daily-log-dialog';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,12 +34,14 @@ export default async function AppPage() {
           entries={logs}
           intro="Every check-in you have logged, and the shape they make."
           action={
-            <Button asChild className="shrink-0">
-              <Link href="/onboarding" className="flex items-center gap-1.5">
-                <PlusCircle className="h-4 w-4" />
-                Log today
-              </Link>
-            </Button>
+            <DailyLogDialog
+              trigger={
+                <Button className="shrink-0 gap-1.5">
+                  <PlusCircle className="h-4 w-4" />
+                  Log today
+                </Button>
+              }
+            />
           }
         />
       )}
