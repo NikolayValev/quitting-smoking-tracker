@@ -5,6 +5,12 @@ import { MilestonesDisplay } from "@/components/milestones-display"
 import { DailyTip } from "@/components/daily-tip"
 import { deriveDashboardStats, type DashboardLog } from "@/lib/dashboard-stats"
 import type { WellnessTip } from "@/lib/data/wellness-tips"
+import {
+  EMPTY_SETTINGS,
+  formatMoney,
+  toStatsSettings,
+  type UserSettings,
+} from "@/lib/user-settings"
 
 /**
  * The dashboard body, given a log list.
@@ -22,13 +28,15 @@ export function DashboardView({
   logs,
   tip,
   now,
+  settings = EMPTY_SETTINGS,
 }: {
   logs: DashboardLog[]
   /** The day's wellness tip. Optional so the empty state need not pick one. */
   tip?: WellnessTip
   now?: Date
+  settings?: UserSettings
 }) {
-  const stats = deriveDashboardStats(logs, now)
+  const stats = deriveDashboardStats(logs, now, toStatsSettings(settings))
 
   if (logs.length === 0) {
     return (
@@ -80,7 +88,7 @@ export function DashboardView({
         <div>
           <dt className="text-sm text-muted-foreground">Money saved</dt>
           <dd className="mt-1 text-2xl font-medium">
-            ${stats.moneySaved.toFixed(2)}
+            {formatMoney(stats.moneySaved, settings.currency)}
           </dd>
           <p className="mt-1 text-xs text-muted-foreground">
             At {stats.baselinePerDay} a day before you quit

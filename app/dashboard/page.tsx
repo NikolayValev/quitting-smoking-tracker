@@ -7,6 +7,8 @@ import { DailyLogDialog } from "@/components/daily-log-dialog"
 import { deriveDashboardStats } from "@/lib/dashboard-stats"
 import { pickForToday } from "@/lib/daily"
 import { wellnessTips } from "@/lib/data/wellness-tips"
+import { getOrCreateUser } from "@/lib/auth/getOrCreateUser"
+import { getUserSettings } from "@/lib/user-settings.server"
 import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +28,8 @@ export default async function DashboardPage() {
   const result = await getLogs()
   const logs = result.success ? result.data ?? [] : []
 
+  const settings = await getUserSettings(await getOrCreateUser())
+
   const { hasLoggedToday } = deriveDashboardStats(logs)
 
   // Chosen on the server so the client renders exactly what was sent, matching
@@ -36,7 +40,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="dashboard" />
-      <DashboardView logs={logs} tip={tipOfTheDay} />
+      <DashboardView logs={logs} tip={tipOfTheDay} settings={settings} />
       {logs.length > 0 && <DailyLogDialog defaultOpen={!hasLoggedToday} />}
     </div>
   )

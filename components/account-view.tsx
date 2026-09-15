@@ -1,5 +1,7 @@
 import { DeleteAccountButton } from "@/app/account/delete-account-button"
 import { ExportDataButton } from "@/app/account/export-data-button"
+import { SettingsForm } from "@/components/settings-form"
+import type { UserSettings } from "@/lib/user-settings"
 
 /**
  * Account settings.
@@ -12,9 +14,11 @@ import { ExportDataButton } from "@/app/account/export-data-button"
 export function AccountView({
   name,
   email,
+  settings,
 }: {
   name: string | null
   email: string | null
+  settings: UserSettings
 }) {
   return (
     <main className="container mx-auto max-w-2xl px-4 py-12 sm:py-16">
@@ -34,6 +38,16 @@ export function AccountView({
             <dd>{email ?? "—"}</dd>
           </div>
         </dl>
+      </section>
+
+      <section className="mt-10 border-t border-border/60 pt-8">
+        <h2 className="text-sm font-medium text-muted-foreground">Savings</h2>
+        <p className="mt-2 max-w-[58ch] text-sm text-muted-foreground">
+          What the figures on your dashboard are worked out from.
+        </p>
+        <div className="mt-5">
+          <SettingsForm settings={settings} submitLabel="Save changes" />
+        </div>
       </section>
 
       <section className="mt-10 border-t border-border/60 pt-8">
