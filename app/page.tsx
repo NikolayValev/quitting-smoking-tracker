@@ -50,14 +50,20 @@ export default function HomePage() {
             Log a check-in a day, get something to do when a craving hits, and keep a
             streak worth protecting.
           </p>
+          {/* The sample journey leads. Most people arriving here are looking
+              rather than quitting, and it is the screen worth showing them —
+              a real ninety-day history, no account required. */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button size="lg" asChild>
-              <Link href="/sign-up">Create an account</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
               <Link href="/demo">See a sample journey</Link>
             </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/sign-up">Create an account</Link>
+            </Button>
           </div>
+          <p className="mt-3 text-sm text-muted-foreground">
+            No account needed to look around.
+          </p>
         </section>
 
         {/* Rules rather than cards. Three identical boxes would say these are
