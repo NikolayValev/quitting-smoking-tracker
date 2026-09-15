@@ -37,6 +37,13 @@ CI (`.github/workflows/ci.yml`) runs, in order: install `--frozen-lockfile`,
 
 ## Current state (2026-09-15)
 
-A **buddies** feature is in progress and uncommitted: `app/buddies/`, `app/join/`,
-`components/buddies-view.tsx`, `lib/buddies.ts`, `lib/milestones.ts`, and
-migration `drizzle/0003_mighty_vapor.sql`. Ask before reworking or discarding it.
+**Buddies** shipped in `75688ce`: `app/buddies/`, `app/join/`, `lib/buddies.ts`,
+`lib/milestones.ts`, migration `0003`. A buddy sees only a streak and milestone
+count — `getSharedSummary` names its output fields rather than spreading a log
+row, and a test asserts the exact key set. Do not widen it casually.
+
+**Backfill and edit** shipped in `c799f9f`: migration `0004` adds `smoke_logs.log_date`
+and makes a day unique per person. `createLog` upserts by day, so logging a day
+twice replaces it.
+
+Both migrations still need applying to Neon — same manual step as NIK-54.
