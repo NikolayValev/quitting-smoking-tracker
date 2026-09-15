@@ -14,6 +14,7 @@ Vitest + Playwright. Package manager is **pnpm** (`pnpm@9.15.0`, `pnpm-lock.yaml
 | Build | `pnpm build` | |
 | Screens | `pnpm screens` | Playwright visual capture — see the `screen-review` skill |
 | Migrations | `pnpm db:generate` then `pnpm db:migrate` | `db:migrate` reads `--env-file=.env` |
+| Buddy round-trip | `pnpm verify:buddies` | Hits the real database; creates throwaway users and deletes them |
 
 **`pnpm test` is bare `vitest`, which starts watch mode and hangs any unattended
 run.** Use `pnpm exec vitest run`. CI works around this with `pnpm test -- --run`.
@@ -46,4 +47,13 @@ row, and a test asserts the exact key set. Do not widen it casually.
 and makes a day unique per person. `createLog` upserts by day, so logging a day
 twice replaces it.
 
-Both migrations still need applying to Neon — same manual step as NIK-54.
+**Onboarding and money** shipped in `addbbed` (NIK-121): migration `0005` adds the
+baseline, pack price and currency. Savings use them and format with `Intl`.
+`lib/user-settings.ts` must stay free of `@/db` — the settings form is a client
+component and imports from it; the query lives in `lib/user-settings.server.ts`
+behind `server-only`.
+
+**Migrations 0003–0005 are applied to Neon** (verified 2026-09-15: `buddy_links`,
+`log_date`, the settings columns and all three indexes present, 4 existing rows
+intact). The buddy cycle passes 18/18 against the live database via
+`pnpm verify:buddies`.

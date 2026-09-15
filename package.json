@@ -12,6 +12,7 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "screens": "playwright test",
+    "verify:buddies": "tsx --env-file=.env scripts/verify-buddies.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env db/migrate.ts",
     "db:seed": "tsx db/seed.ts"
