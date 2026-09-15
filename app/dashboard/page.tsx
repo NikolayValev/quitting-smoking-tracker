@@ -5,6 +5,8 @@ import { AppHeader } from "@/components/app-header"
 import { DashboardView } from "@/components/dashboard-view"
 import { DailyLogDialog } from "@/components/daily-log-dialog"
 import { deriveDashboardStats } from "@/lib/dashboard-stats"
+import { pickForToday } from "@/lib/daily"
+import { wellnessTips } from "@/lib/data/wellness-tips"
 import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic';
@@ -26,10 +28,15 @@ export default async function DashboardPage() {
 
   const { hasLoggedToday } = deriveDashboardStats(logs)
 
+  // Chosen on the server so the client renders exactly what was sent, matching
+  // how the wellness screen picks it — a client-side pick swaps the tip after
+  // mount and trips hydration.
+  const tipOfTheDay = pickForToday(wellnessTips)
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="dashboard" />
-      <DashboardView logs={logs} />
+      <DashboardView logs={logs} tip={tipOfTheDay} />
       {logs.length > 0 && <DailyLogDialog defaultOpen={!hasLoggedToday} />}
     </div>
   )

@@ -90,8 +90,11 @@ export function DeleteAccountButton() {
     )
   }
 
+  // items-start so the trigger sizes to its label. Stretched by the column it
+  // became a full-width scarlet bar — the loudest thing in the app, for a
+  // secondary action nobody should be nudged towards.
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-start gap-2">
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error}
