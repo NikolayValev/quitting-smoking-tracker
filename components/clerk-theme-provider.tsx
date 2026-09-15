@@ -25,8 +25,12 @@ export function ClerkThemeProvider({ children }: { children: React.ReactNode }) 
     <ClerkProvider
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      afterSignInUrl="/app"
-      afterSignUpUrl="/app"
+      // A new account has no check-ins, so /app was the empty journey — and
+      // onboarding, which is where the baseline and pack price get set, was
+      // only reachable by noticing a button on that empty screen.
+      afterSignUpUrl="/onboarding"
+      // Returning visitors want the summary, not the raw log.
+      afterSignInUrl="/dashboard"
       appearance={{
         ...(isDark ? { baseTheme: dark } : {}),
         layout: {

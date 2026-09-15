@@ -1,58 +1,73 @@
 # Production Readiness
 
-This app currently runs as a **portfolio demo**, and a few things are configured
-accordingly. Nothing here is broken for demo use — this is the honest gap between
-where it is and what taking real users would require.
+This app is a **portfolio piece**, deliberately. It exists so friends, recruiters
+and people online can look at the work, not to take paying customers. Several
+things below would be wrong for a commercial product and are right for this one;
+they are recorded here so nobody has to rediscover the reasoning.
 
-The live checklist is [NIK-120][nik120]; this file is the checked-in summary.
-Where the two disagree, Linear wins.
+The decision that shapes the rest: **staying on the Clerk development instance**
+(confirmed 2026-09-15).
 
-## Blockers
+## Deliberate, with their costs stated
 
-Do not take real users without these.
+- **Clerk development instance** — NIK-117. Caps at roughly 100 users, uses
+  Clerk's shared Google OAuth rather than this project's own, and prints a small
+  orange **"Development mode"** line on the sign-in card. That line is visible to
+  anyone who signs up and cannot be styled away; it is the honest price of not
+  standing up a production instance. Anyone only *looking* never sees it, which
+  is why the landing page leads with the sample journey rather than sign-up.
+- **No `CLERK_WEBHOOK_SIGNING_SECRET`** — NIK-116. Deleting an account *from
+  inside the app* still erases everything, in-request, including buddy links;
+  that path does not use the webhook. What does not propagate is a deletion
+  started elsewhere — removing a user from the Clerk dashboard leaves their rows
+  and shares behind. At this scale that means occasional orphaned rows after
+  clearing out test accounts, not a privacy failure.
+- **Clerk's shared Google credentials** — NIK-118. The consent screen is
+  Clerk-branded rather than SmokeFree-branded. The project's own OAuth client is
+  unused and Google will delete it for inactivity, which is the desired outcome.
+- **The rate limiter fails open.** If the database is unreachable, writes are
+  allowed rather than users being locked out of logging. See `lib/rate-limit.ts`.
+- **The deletion receipt is not stored.** Persisting a record about someone who
+  asked to be erased would work against the erasure. The user holds the only
+  copy. See `app/api/account/delete/route.ts`.
+- **No stored quit date.** The streak comes from the current unbroken run of
+  smoke-free check-ins; a second stored date would be a rival source of truth.
+- **Fonts are self-hosted** via the `geist` package so builds need no network
+  access to Google. Do not reintroduce `next/font/google`.
 
-- **Clerk production instance.** Production serves a `pk_test_` development key
-  (`sacred-airedale-38.clerk.accounts.dev`). Development instances are user-capped,
-  use Clerk's shared Google OAuth credentials rather than this project's own, and
-  handle sessions more loosely than production ones. Needs a `pk_live_` instance on
-  a custom Frontend API domain. — NIK-117
-- **Clerk webhook signing secret.** `CLERK_WEBHOOK_SIGNING_SECRET` is unset, so the
-  `user.deleted` backstop in `app/api/webhooks/clerk/route.ts` rejects every
-  delivery. Deleting through the app UI still erases everything — that route does
-  the work in-request — but deletions started anywhere else do not propagate. — NIK-116
-- **Exercise the GDPR paths against real data.** The export and deletion receipt
-  have unit coverage but have never run against a real database. Log some entries,
-  download the export, delete the account, and confirm the receipt's count matches
-  and the rows are gone.
+## If it ever does take real users
 
-## Should do
+Reopen in this order. Nothing here is started.
 
-- **Own Google OAuth credentials** — only if you want your own consent screen
-  instead of Clerk's. Requires the production instance first. — NIK-118
-- **Decommission the orphaned Supabase project** `ygcblgluayqupelmmrgs`. May still
-  hold pre-migration user data and may still be billing. Back up first. — NIK-107
+1. **NIK-117** — a `pk_live_` instance on a custom Frontend API domain. This is
+   the gate; everything else is smaller.
+2. **NIK-116** — the webhook secret, so deletions started outside the app
+   propagate. It matters more now that buddy links exist.
+3. **NIK-118** — own Google credentials, once there is a production instance to
+   attach them to.
+
+## Still worth doing regardless
+
+- **Decommission the orphaned Supabase project** `ygcblgluayqupelmmrgs` — NIK-107.
+  May still hold pre-migration user data and may still be billing. Back up first.
+  Needs the Supabase dashboard.
 - **Remove the dangling `auth.nikolayvalev.com` DNS record.** It points at Vercel
-  with no deployment behind it.
-- **Confirm Neon backup / PITR retention.** Know the restore window before there is
-  data worth restoring.
-- **React / Clerk peer skew.** `react@19.2.0` sits just under Clerk's `~19.2.3`. — NIK-114
+  with nothing behind it.
+- **Confirm Neon backup / PITR retention.** Know the restore window.
+- **React / Clerk peer skew** — NIK-114 bumped this; re-check after Clerk upgrades.
+- **Exercise the GDPR paths by hand.** The export and the deletion receipt are
+  covered by unit tests and by `verify:buddies` at the database level, but nobody
+  has yet signed in, downloaded the JSON, deleted the account and read the
+  receipt. That is the one thing tests cannot stand in for.
 
-## Resolved
+## Done
 
-- **Server-side error tracking** — NIK-119. The server logger had no key in
-  production, so every `logError` fell back to `console.error`. It now falls back
-  to the shared `NEXT_PUBLIC_POSTHOG_*` pair, which is valid server-side because a
-  PostHog project key is capture-only. `POSTHOG_API_KEY` still wins if set.
-
-## Deliberate choices, not oversights
-
-- **The rate limiter fails open.** If the database is unreachable, writes are allowed
-  rather than users being locked out of logging. Right for a demo; worth re-deciding
-  for production. See `lib/rate-limit.ts`.
-- **The deletion receipt is not stored.** Persisting a record about someone who asked
-  to be erased would work against the erasure. The user holds the only copy. See
-  `app/api/account/delete/route.ts`.
-- **Fonts are self-hosted** via the `geist` package so builds need no network access
-  to Google. Do not reintroduce `next/font/google`.
-
-[nik120]: https://linear.app/nikolayvalev/issue/NIK-120/production-readiness-checklist-quitting-smoking-tracker
+- **Migrations 0003–0005 applied to Neon** (2026-09-15). `buddy_links`,
+  `smoke_logs.log_date`, the settings columns and all three indexes are present;
+  the four pre-existing check-ins survived with `log_date` backfilled.
+- **The buddy cycle is verified against the live database** — `pnpm verify:buddies`
+  runs invite, accept, read, revoke and the uniqueness constraints against real
+  Postgres, 18 checks, cleaning up after itself.
+- **Server-side error tracking** — NIK-119. `logError` falls back to the shared
+  `NEXT_PUBLIC_POSTHOG_*` pair, which is valid because a project key is
+  capture-only.
