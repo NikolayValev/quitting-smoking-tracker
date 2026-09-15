@@ -73,6 +73,7 @@ const SCREENS = {
     title: "Journey",
     render: () => (
       <JourneyView
+        editable
         entries={fixtureLogs()}
         intro="Every check-in you have logged, and the shape they make."
         now={NOW}

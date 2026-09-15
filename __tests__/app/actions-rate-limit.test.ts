@@ -56,7 +56,9 @@ describe("server actions are rate limited", () => {
 
     const row = { id: LOG_ID, userId: USER_ID, cigarettes: 1, note: null, ts: new Date() }
     vi.mocked(db.insert).mockReturnValue({
-      values: () => ({ returning: () => Promise.resolve([row]) }),
+      values: () => ({
+        onConflictDoUpdate: () => ({ returning: () => Promise.resolve([row]) }),
+      }),
     } as never)
 
     const { createLog } = await import("@/app/app/actions")
@@ -72,7 +74,9 @@ describe("server actions are rate limited", () => {
     vi.mocked(getOrCreateUser).mockResolvedValue(USER_ID)
     vi.mocked(consumeRateLimit).mockResolvedValue(limited(true))
     vi.mocked(db.insert).mockReturnValue({
-      values: () => ({ returning: () => Promise.resolve([{}]) }),
+      values: () => ({
+        onConflictDoUpdate: () => ({ returning: () => Promise.resolve([{}]) }),
+      }),
     } as never)
 
     const { createLog } = await import("@/app/app/actions")

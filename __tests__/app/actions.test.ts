@@ -91,7 +91,7 @@ describe("server actions: smoke logs", () => {
       const created = { id: LOG_ID, userId: USER_ID, cigarettes: 2, note: "after lunch", ts: new Date() }
       const returning = vi.fn().mockResolvedValue([created])
       vi.mocked(db.insert).mockReturnValue({
-        values: () => ({ returning }),
+        values: () => ({ onConflictDoUpdate: () => ({ returning }) }),
       } as never)
 
       const { createLog } = await import("@/app/app/actions")
@@ -122,7 +122,11 @@ describe("server actions: smoke logs", () => {
       vi.mocked(getOrCreateUser).mockResolvedValue(USER_ID)
 
       vi.mocked(db.insert).mockReturnValue({
-        values: () => ({ returning: () => Promise.reject(new Error("insert failed")) }),
+        values: () => ({
+          onConflictDoUpdate: () => ({
+            returning: () => Promise.reject(new Error("insert failed")),
+          }),
+        }),
       } as never)
 
       const { createLog } = await import("@/app/app/actions")

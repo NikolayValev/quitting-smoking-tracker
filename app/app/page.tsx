@@ -29,6 +29,7 @@ export default async function AppPage() {
         </main>
       ) : (
         <JourneyView
+          editable
           entries={logs}
           intro="Every check-in you have logged, and the shape they make."
           action={

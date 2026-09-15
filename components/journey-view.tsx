@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { CheckCircle2 } from "lucide-react"
 import { JourneyChart, type JourneyPoint } from "@/components/journey-chart"
+import { CheckInActions } from "@/components/check-in-actions"
 import { deriveDashboardStats, type DashboardLog } from "@/lib/dashboard-stats"
 
 export type JourneyEntry = DashboardLog
@@ -67,12 +68,16 @@ export function JourneyView({
   intro,
   action,
   now,
+  editable = false,
   children,
 }: {
   entries: JourneyEntry[]
   intro?: ReactNode
   action?: ReactNode
   now?: Date
+  /** Whether these entries belong to the person reading them. The demo shows
+   *  the same list to a stranger and must stay read-only. */
+  editable?: boolean
   /** Rendered after the check-ins, for whatever the page wants to add. */
   children?: ReactNode
 }) {
@@ -211,6 +216,15 @@ export function JourneyView({
                     </p>
                   )}
                 </div>
+
+                {editable && (
+                  <CheckInActions
+                    id={entry.id}
+                    date={shortDate(date)}
+                    cigarettes={entry.cigarettes}
+                    note={entry.note ?? null}
+                  />
+                )}
               </li>
             )
           })}

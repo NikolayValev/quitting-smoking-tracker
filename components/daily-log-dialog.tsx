@@ -17,6 +17,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { createLog } from "@/app/app/actions"
 import { captureDailyLog } from "@/lib/analytics/posthog"
 
+/**
+ * Today in the browser's own time zone.
+ *
+ * `toISOString()` alone would give the UTC day, which is the wrong day for
+ * anyone far enough east or west — someone in Auckland logging on Tuesday
+ * morning would file it under Monday.
+ */
+function localToday(): string {
+  const now = new Date()
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 10)
+}
+
 export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
   const router = useRouter()
   const [open, setOpen] = useState(defaultOpen)
@@ -24,6 +38,7 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
   const [error, setError] = useState<string | null>(null)
   const [cigarettes, setCigarettes] = useState("")
   const [note, setNote] = useState("")
+  const [date, setDate] = useState(localToday())
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +53,7 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
     setError(null)
 
     try {
-      const result = await createLog({ cigarettes: count, note: note || undefined })
+      const result = await createLog({ cigarettes: count, note: note || undefined, date })
       if (!result.success) throw new Error(result.error || "Failed to save log")
       // Bucketed count and whether a note was written -- never the note itself.
       captureDailyLog(count, note.trim().length > 0)
@@ -55,9 +70,9 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>How did today go?</DialogTitle>
+          <DialogTitle>Log a check-in</DialogTitle>
           <DialogDescription>
-            Log your cigarettes for today to keep your streak accurate.
+            Today by default. Change the date to fill in a day you missed.
           </DialogDescription>
         </DialogHeader>
 
@@ -69,7 +84,22 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="dlg-cigarettes">Cigarettes smoked today</Label>
+            <Label htmlFor="dlg-date">Day</Label>
+            <Input
+              id="dlg-date"
+              type="date"
+              value={date}
+              max={localToday()}
+              onChange={(e) => { setDate(e.target.value); setError(null) }}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Logging a day again replaces what was there.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="dlg-cigarettes">Cigarettes smoked</Label>
             <Input
               id="dlg-cigarettes"
               type="number"
@@ -80,7 +110,7 @@ export function DailyLogDialog({ defaultOpen }: { defaultOpen: boolean }) {
               required
               autoFocus
             />
-            <p className="text-xs text-muted-foreground">Enter 0 if you stayed smoke-free today.</p>
+            <p className="text-xs text-muted-foreground">Enter 0 for a smoke-free day.</p>
           </div>
 
           <div className="space-y-1.5">
