@@ -69,6 +69,11 @@ export const rateLimits = pgTable('rate_limits', {
  * itself is shown once at generation: a table of live invite codes is a table
  * of keys to other people's health data, and there is no reason to keep one.
  *
+ * `role` is chosen by the owner when inviting. A `buddy` is a peer and sees the
+ * streak; a `sponsor` is someone the owner leans on, sees when they slipped,
+ * and is the one an "I'm struggling" signal goes to. See SharedSummary and
+ * SponsorSummary in lib/buddies.ts for exactly what each may read.
+ *
  * Revoking sets `revokedAt` rather than deleting the row, so a share that
  * existed stays auditable from the owner's side. Both columns cascade on user
  * deletion; `deleteUserByClerkId` also clears them explicitly rather than
@@ -83,6 +88,7 @@ export const buddyLinks = pgTable(
       .notNull(),
     buddyUserId: uuid('buddy_user_id').references(() => users.id, { onDelete: 'cascade' }),
     codeHash: text('code_hash').unique().notNull(),
+    role: text('role', { enum: ['buddy', 'sponsor'] }).default('buddy').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     acceptedAt: timestamp('accepted_at', { withTimezone: true }),
@@ -94,9 +100,36 @@ export const buddyLinks = pgTable(
   ],
 );
 
+/**
+ * A one-tap message along a share: an "I'm struggling" from the owner to a
+ * sponsor, or a preset word of encouragement from a supporter to the owner.
+ *
+ * `kind` is one of a fixed set rather than free text. Nobody can be sent
+ * anything here that was not written by us, so there is nothing to moderate
+ * and nothing in this table that describes a person beyond the fact of a tap.
+ *
+ * Cascades with its link; `deleteUserByClerkId` also clears it explicitly.
+ */
+export const buddySignals = pgTable(
+  'buddy_signals',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    linkId: uuid('link_id')
+      .references(() => buddyLinks.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromUserId: uuid('from_user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    kind: text('kind', { enum: ['sos', 'proud', 'keep_going', 'here_for_you'] }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('buddy_signals_link_created_idx').on(table.linkId, table.createdAt)],
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SmokeLog = typeof smokeLogs.$inferSelect;
 export type NewSmokeLog = typeof smokeLogs.$inferInsert;
 export type BuddyLink = typeof buddyLinks.$inferSelect;
 export type NewBuddyLink = typeof buddyLinks.$inferInsert;
+export type BuddySignal = typeof buddySignals.$inferSelect;

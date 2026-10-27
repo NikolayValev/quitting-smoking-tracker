@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { users, smokeLogs, buddyLinks } from '@/db/schema';
-import { eq, count, or } from 'drizzle-orm';
+import { users, smokeLogs, buddyLinks, buddySignals } from '@/db/schema';
+import { eq, count, inArray, or } from 'drizzle-orm';
 
 /**
  * Removes a user and all of their smoke logs, keyed by Clerk user ID.
@@ -52,6 +52,14 @@ export async function deleteUserByClerkId(
     // deliberately does not depend on that (see above) — and a share outliving
     // the person who granted it is exactly the failure worth being explicit
     // about: it would leave a buddy pointed at a deleted account.
+    // Signals first: they hang off links, and every signal on a share this
+    // person was part of goes with it — including ones the other side sent.
+    const links = tx
+      .select({ id: buddyLinks.id })
+      .from(buddyLinks)
+      .where(or(eq(buddyLinks.ownerUserId, userId), eq(buddyLinks.buddyUserId, userId)));
+    await tx.delete(buddySignals).where(inArray(buddySignals.linkId, links));
+
     await tx
       .delete(buddyLinks)
       .where(or(eq(buddyLinks.ownerUserId, userId), eq(buddyLinks.buddyUserId, userId)));

@@ -1,5 +1,12 @@
 # Production Readiness
 
+> **2026-10-27: heading for real users.** The portfolio framing below is being
+> retired. Sponsors put a call for help and slip days in front of another
+> person, which is not something to run on a development instance capped at
+> ~100 users. "If it ever does take real users" is now the plan, and NIK-117 is
+> the gate for inviting anyone outside friends and testers. The "deliberate"
+> list stays as a record of why each choice was made, until each is reversed.
+
 This app is a **portfolio piece**, deliberately. It exists so friends, recruiters
 and people online can look at the work, not to take paying customers. Several
 things below would be wrong for a commercial product and are right for this one;
@@ -35,14 +42,15 @@ The decision that shapes the rest: **staying on the Clerk development instance**
 - **Fonts are self-hosted** via the `geist` package so builds need no network
   access to Google. Do not reintroduce `next/font/google`.
 
-## If it ever does take real users
+## Taking real users
 
-Reopen in this order. Nothing here is started.
+In this order. Each needs the Clerk dashboard, Google Cloud or DNS, so none can
+be done from the codebase alone.
 
 1. **NIK-117** — a `pk_live_` instance on a custom Frontend API domain. This is
    the gate; everything else is smaller.
 2. **NIK-116** — the webhook secret, so deletions started outside the app
-   propagate. It matters more now that buddy links exist.
+   propagate. It matters more now that buddy links and signals exist.
 3. **NIK-118** — own Google credentials, once there is a production instance to
    attach them to.
 

@@ -13,4 +13,5 @@ export const SCREENS = [
   { name: "onboarding", path: "/dev/onboarding" },
   { name: "buddies-empty", path: "/dev/buddies-empty" },
   { name: "buddies-invite", path: "/dev/buddies-invite" },
+  { name: "buddies-invite-sponsor", path: "/dev/buddies-invite-sponsor" },
 ]

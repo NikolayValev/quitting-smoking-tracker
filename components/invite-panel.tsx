@@ -15,7 +15,15 @@ import { Button } from "@/components/ui/button"
  * is the moment someone hands another person a window into a health record, and
  * it is the moment it has to be unambiguous.
  */
-export function InvitePanel({ code, origin }: { code: string; origin?: string }) {
+export function InvitePanel({
+  code,
+  origin,
+  role = "buddy",
+}: {
+  code: string
+  origin?: string
+  role?: "buddy" | "sponsor"
+}) {
   const [copied, setCopied] = useState(false)
   const [failed, setFailed] = useState(false)
 
@@ -36,7 +44,7 @@ export function InvitePanel({ code, origin }: { code: string; origin?: string })
 
   return (
     <div className="mt-4 rounded-xl border border-primary/25 bg-primary/5 p-5">
-      <p className="text-sm font-medium">Send this link to your buddy</p>
+      <p className="text-sm font-medium">Send this link to your {role}</p>
 
       <p className="mt-3 break-all rounded-lg bg-background px-3 py-2 font-mono text-sm">
         {url}
@@ -60,14 +68,16 @@ export function InvitePanel({ code, origin }: { code: string; origin?: string })
         <div>
           <dt className="font-medium">They will see</dt>
           <dd className="text-muted-foreground">
-            How many days you have been smoke-free, and how many milestones you have
-            reached.
+            {role === "sponsor"
+              ? "How many days you have been smoke-free, how many milestones you have reached, the last day you slipped and how many days you slipped in the past month — and any time you tap “I'm struggling”."
+              : "How many days you have been smoke-free, and how many milestones you have reached."}
           </dd>
         </div>
         <div>
           <dt className="font-medium">They will not see</dt>
           <dd className="text-muted-foreground">
-            Your check-ins, your daily counts, or anything you have written.
+            How many cigarettes you smoked on any day, your check-ins, or anything you
+            have written.
           </dd>
         </div>
       </dl>

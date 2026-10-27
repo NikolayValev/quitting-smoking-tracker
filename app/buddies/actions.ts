@@ -6,6 +6,7 @@ import { getOrCreateUser } from '@/lib/auth/getOrCreateUser';
 import { consumeRateLimit } from '@/lib/rate-limit';
 import { logError } from '@/lib/observability/logger';
 import { acceptInvite, createInvite, revokeLink } from '@/lib/buddies';
+import { sendCheer, sendSos } from '@/lib/buddy-signals';
 
 const RATE_LIMITED = 'Too many requests. Please wait a moment and try again.';
 
@@ -17,6 +18,23 @@ const RATE_LIMITED = 'Too many requests. Please wait a moment and try again.';
 const INVITE_LIMIT = 5;
 const INVITE_WINDOW_SECONDS = 60 * 60;
 
+/**
+ * Signals share one budget, apart from writes. Generous enough that nobody
+ * asking for help is ever turned away in an ordinary hour, tight enough that
+ * a supporter cannot be flooded.
+ */
+const SIGNAL_LIMIT = 20;
+const SIGNAL_WINDOW_SECONDS = 60 * 60;
+
+const inviteSchema = z
+  .object({ role: z.enum(['buddy', 'sponsor']).default('buddy') })
+  .default({ role: 'buddy' });
+
+const cheerSchema = z.object({
+  linkId: z.string().uuid(),
+  kind: z.enum(['proud', 'keep_going', 'here_for_you']),
+});
+
 const acceptSchema = z.object({
   code: z.string().min(8).max(64),
 });
@@ -25,10 +43,11 @@ const revokeSchema = z.object({
   linkId: z.string().uuid(),
 });
 
-export async function createBuddyInvite() {
+export async function createBuddyInvite(data?: unknown) {
   let userId: string | undefined;
   try {
     userId = await getOrCreateUser();
+    const { role } = inviteSchema.parse(data);
 
     const rate = await consumeRateLimit(`invite:${userId}`, {
       limit: INVITE_LIMIT,
@@ -38,7 +57,7 @@ export async function createBuddyInvite() {
       return { success: false as const, error: RATE_LIMITED };
     }
 
-    const { code, expiresAt } = await createInvite(userId);
+    const { code, expiresAt } = await createInvite(userId, role);
 
     revalidatePath('/buddies');
     // The only time this code is ever returned. It is not stored, so it cannot
@@ -111,5 +130,64 @@ export async function revokeBuddyLink(data: unknown) {
   } catch (error) {
     logError('buddy_revoke_failed', error, { userId });
     return { success: false as const, error: 'Could not stop that share' };
+  }
+}
+
+async function signalBudget(userId: string) {
+  return consumeRateLimit(`signal:${userId}`, {
+    limit: SIGNAL_LIMIT,
+    windowSeconds: SIGNAL_WINDOW_SECONDS,
+  });
+}
+
+export async function sendSosSignal() {
+  let userId: string | undefined;
+  try {
+    userId = await getOrCreateUser();
+
+    const rate = await signalBudget(userId);
+    if (!rate.allowed) {
+      return { success: false as const, error: RATE_LIMITED };
+    }
+
+    const { sent } = await sendSos(userId);
+    if (sent === 0) {
+      return { success: false as const, error: 'Invite a sponsor first, so there is someone to tell.' };
+    }
+
+    revalidatePath('/buddies');
+    return { success: true as const, data: { sent } };
+  } catch (error) {
+    logError('buddy_sos_failed', error, { userId });
+    return { success: false as const, error: 'Could not send that. Try again, or call them.' };
+  }
+}
+
+export async function sendCheerSignal(data: unknown) {
+  let userId: string | undefined;
+  try {
+    userId = await getOrCreateUser();
+
+    const rate = await signalBudget(userId);
+    if (!rate.allowed) {
+      return { success: false as const, error: RATE_LIMITED };
+    }
+
+    const { linkId, kind } = cheerSchema.parse(data);
+    const { sent } = await sendCheer(linkId, userId, kind);
+
+    if (!sent) {
+      // Same answer whether the link is missing or not theirs, as for revoking.
+      return { success: false as const, error: 'Could not send that' };
+    }
+
+    revalidatePath('/buddies');
+    return { success: true as const };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false as const, error: 'Could not send that' };
+    }
+    logError('buddy_cheer_failed', error, { userId });
+    return { success: false as const, error: 'Could not send that' };
   }
 }

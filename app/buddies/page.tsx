@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation"
 import { auth, clerkClient } from "@clerk/nextjs/server"
 import { AppHeader } from "@/components/app-header"
-import { BuddiesView, type BuddyPerson } from "@/components/buddies-view"
+import { BuddiesView, type BuddyPerson, type ReceivedCheer } from "@/components/buddies-view"
 import { getOrCreateUser } from "@/lib/auth/getOrCreateUser"
 import { getSharedSummary, listBuddies, listSupporting } from "@/lib/buddies"
+import { receivedSignals } from "@/lib/buddy-signals"
 import { logError } from "@/lib/observability/logger"
+import { relativeTime } from "@/lib/relative-time"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -51,34 +53,69 @@ export default async function BuddiesPage() {
   if (!clerkUserId) redirect("/sign-in")
 
   const userId = await getOrCreateUser()
-  const [mine, theirs] = await Promise.all([listBuddies(userId), listSupporting(userId)])
+  const now = new Date()
+  const [mine, theirs, signals] = await Promise.all([
+    listBuddies(userId, now),
+    listSupporting(userId, now),
+    receivedSignals(userId, now),
+  ])
 
   const names = await resolveNames([
     ...mine.map((row) => row.clerkUserId),
     ...theirs.map((row) => row.clerkUserId),
   ].filter((id): id is string => Boolean(id)))
 
+  const nameOf = (clerkUserId: string | null) =>
+    clerkUserId ? names.get(clerkUserId) ?? null : null
+
   const buddies: BuddyPerson[] = mine.map((row) => ({
     linkId: row.linkId,
-    name: row.clerkUserId ? names.get(row.clerkUserId) ?? null : null,
+    name: nameOf(row.clerkUserId),
     state: row.state,
+    role: row.role,
   }))
+
+  // receivedSignals has already scoped these to this user: encouragement on
+  // links they own, calls for help on links where they support. Each is matched
+  // back to a row above only to put a name to it.
+  const ownedBy = new Map(mine.map((row) => [row.linkId, row]))
+  const cheers: ReceivedCheer[] = signals.flatMap((signal) =>
+    signal.kind !== "sos" && ownedBy.has(signal.linkId)
+      ? [
+          {
+            id: signal.id,
+            name: nameOf(ownedBy.get(signal.linkId)!.clerkUserId),
+            kind: signal.kind,
+            when: relativeTime(signal.createdAt, now),
+          },
+        ]
+      : [],
+  )
+  const lastCall = new Map<string, Date>()
+  for (const signal of signals) {
+    // Newest first, so the first one seen per link is the latest.
+    if (signal.kind === "sos" && !lastCall.has(signal.linkId)) {
+      lastCall.set(signal.linkId, signal.createdAt)
+    }
+  }
 
   // One summary per person followed. Each goes through getSharedSummary, which
   // re-checks the link rather than trusting that listSupporting returned it.
   const supporting: BuddyPerson[] = await Promise.all(
     theirs.map(async (row) => ({
       linkId: row.linkId,
-      name: row.clerkUserId ? names.get(row.clerkUserId) ?? null : null,
+      name: nameOf(row.clerkUserId),
       state: row.state,
-      summary: await getSharedSummary(row.ownerUserId, userId),
+      role: row.role,
+      summary: await getSharedSummary(row.ownerUserId, userId, now),
+      askedForHelp: lastCall.has(row.linkId) ? relativeTime(lastCall.get(row.linkId)!, now) : null,
     })),
   )
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="buddies" />
-      <BuddiesView buddies={buddies} supporting={supporting} />
+      <BuddiesView buddies={buddies} supporting={supporting} cheers={cheers} />
     </div>
   )
 }

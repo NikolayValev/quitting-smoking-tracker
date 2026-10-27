@@ -1,11 +1,11 @@
 import { db } from '@/db';
-import { users, smokeLogs, buddyLinks } from '@/db/schema';
-import { eq, desc, or } from 'drizzle-orm';
+import { users, smokeLogs, buddyLinks, buddySignals } from '@/db/schema';
+import { eq, desc, inArray, or } from 'drizzle-orm';
 
 /**
  * Bumped whenever the shape below changes, so an old file stays interpretable.
  */
-export const EXPORT_FORMAT_VERSION = 1;
+export const EXPORT_FORMAT_VERSION = 2;
 
 /** The profile fields Clerk holds for us, passed in rather than fetched here. */
 export type ExportProfile = {
@@ -34,11 +34,19 @@ export type UserDataExport = {
   /** Who this person shares their streak with, and whose they can see. */
   shares: Array<{
     role: 'owner' | 'buddy';
+    /** Format 2: whether the supporter on this share is a peer or a sponsor. */
+    relationship: 'buddy' | 'sponsor';
     state: 'active' | 'pending';
     createdAt: string;
     acceptedAt: string | null;
   }>;
-  counts: { smokeLogs: number; shares: number };
+  /** Format 2: one-tap messages this person sent or was sent along a share. */
+  signals: Array<{
+    direction: 'sent' | 'received';
+    kind: string;
+    createdAt: string;
+  }>;
+  counts: { smokeLogs: number; shares: number; signals: number };
 };
 
 /**
@@ -100,6 +108,27 @@ export async function exportUserData(
         )
     : [];
 
+  // Every signal on any share this person was ever part of, revoked ones
+  // included: the taps happened, and a record of them is theirs to have. Only
+  // the direction is exported, never who was at the other end, as for shares.
+  const signals =
+    shares.length > 0
+      ? await db
+          .select({
+            fromUserId: buddySignals.fromUserId,
+            kind: buddySignals.kind,
+            createdAt: buddySignals.createdAt,
+          })
+          .from(buddySignals)
+          .where(
+            inArray(
+              buddySignals.linkId,
+              shares.map((share) => share.id),
+            ),
+          )
+          .orderBy(desc(buddySignals.createdAt))
+      : [];
+
   const activeShares = shares.filter((s) => !s.revokedAt);
 
   return {
@@ -121,10 +150,16 @@ export async function exportUserData(
     })),
     shares: activeShares.map((share) => ({
       role: share.ownerUserId === account?.id ? ('owner' as const) : ('buddy' as const),
+      relationship: share.role,
       state: share.acceptedAt ? ('active' as const) : ('pending' as const),
       createdAt: share.createdAt.toISOString(),
       acceptedAt: share.acceptedAt ? share.acceptedAt.toISOString() : null,
     })),
-    counts: { smokeLogs: logs.length, shares: activeShares.length },
+    signals: signals.map((signal) => ({
+      direction: signal.fromUserId === account?.id ? ('sent' as const) : ('received' as const),
+      kind: signal.kind,
+      createdAt: signal.createdAt.toISOString(),
+    })),
+    counts: { smokeLogs: logs.length, shares: activeShares.length, signals: signals.length },
   };
 }
