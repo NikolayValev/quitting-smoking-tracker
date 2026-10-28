@@ -23,6 +23,7 @@ function link(overrides: Record<string, unknown> = {}) {
     expiresAt: new Date(NOW.getTime() + 6 * DAY),
     acceptedAt: new Date(NOW.getTime() - DAY),
     revokedAt: null,
+    role: "buddy" as "buddy" | "sponsor",
     ...overrides,
   }
 }
@@ -104,6 +105,55 @@ describe("toSharedSummary", () => {
   })
 })
 
+describe("toSponsorSummary", () => {
+  const day = (i: number) => new Date(NOW.getTime() - i * DAY).toISOString().slice(0, 10)
+
+  it("adds when they slipped, and nothing more", async () => {
+    // A sponsor sees more than a buddy, but the extra is named and bounded the
+    // same way: the day of the last slip and how many days, never how much.
+    const { toSponsorSummary } = await import("@/lib/buddies")
+    const logs = [
+      { id: "l-1", ts: NOW, logDate: day(0), cigarettes: 0, note: "rough evening" },
+      { id: "l-2", ts: new Date(NOW.getTime() - DAY), logDate: day(1), cigarettes: 17 },
+    ]
+
+    const summary = toSponsorSummary(logs, NOW)
+
+    expect(Object.keys(summary).sort()).toEqual([
+      "lastSlipOn",
+      "milestoneCount",
+      "milestonesReached",
+      "quitDate",
+      "slipDaysRecent",
+      "smokeFreeDays",
+    ])
+    expect(JSON.stringify(summary)).not.toContain("rough evening")
+    expect(JSON.stringify(summary)).not.toContain("17")
+  })
+
+  it("counts slips in days inside the window, not in cigarettes", async () => {
+    const { toSponsorSummary, SLIP_WINDOW_DAYS } = await import("@/lib/buddies")
+    const logs = [
+      { id: "a", ts: new Date(NOW.getTime() - 2 * DAY), logDate: day(2), cigarettes: 9 },
+      { id: "b", ts: new Date(NOW.getTime() - 5 * DAY), logDate: day(5), cigarettes: 1 },
+      { id: "c", ts: new Date(NOW.getTime() - (SLIP_WINDOW_DAYS + 3) * DAY), logDate: day(SLIP_WINDOW_DAYS + 3), cigarettes: 20 },
+    ]
+
+    const summary = toSponsorSummary(logs, NOW)
+
+    expect(summary.slipDaysRecent).toBe(2)
+    expect(summary.lastSlipOn).toBe(day(2))
+  })
+
+  it("reports no slip for someone who has never logged one", async () => {
+    const { toSponsorSummary } = await import("@/lib/buddies")
+    const summary = toSponsorSummary([{ id: "l", ts: NOW, logDate: day(0), cigarettes: 0 }], NOW)
+
+    expect(summary.lastSlipOn).toBeNull()
+    expect(summary.slipDaysRecent).toBe(0)
+  })
+})
+
 describe("createInvite", () => {
   beforeEach(() => vi.clearAllMocks())
 
@@ -113,7 +163,7 @@ describe("createInvite", () => {
     vi.mocked(db.insert).mockReturnValue({ values } as never)
 
     const { createInvite } = await import("@/lib/buddies")
-    const { code } = await createInvite(OWNER, NOW)
+    const { code } = await createInvite(OWNER, "buddy", NOW)
 
     const stored = values.mock.calls[0][0]
     expect(code).toBeTruthy()
@@ -127,8 +177,8 @@ describe("createInvite", () => {
     vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) } as never)
 
     const { createInvite } = await import("@/lib/buddies")
-    const a = await createInvite(OWNER, NOW)
-    const b = await createInvite(OWNER, NOW)
+    const a = await createInvite(OWNER, "buddy", NOW)
+    const b = await createInvite(OWNER, "buddy", NOW)
 
     expect(a.code).not.toBe(b.code)
   })
@@ -139,10 +189,21 @@ describe("createInvite", () => {
     vi.mocked(db.insert).mockReturnValue({ values } as never)
 
     const { createInvite, INVITE_TTL_DAYS } = await import("@/lib/buddies")
-    await createInvite(OWNER, NOW)
+    await createInvite(OWNER, "buddy", NOW)
 
     const stored = values.mock.calls[0][0]
     expect(stored.expiresAt.getTime()).toBe(NOW.getTime() + INVITE_TTL_DAYS * DAY)
+  })
+
+  it("records whether the invite is for a buddy or a sponsor", async () => {
+    const { db } = await import("@/db")
+    const values = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(db.insert).mockReturnValue({ values } as never)
+
+    const { createInvite } = await import("@/lib/buddies")
+    await createInvite(OWNER, "sponsor", NOW)
+
+    expect(values.mock.calls[0][0].role).toBe("sponsor")
   })
 })
 
@@ -171,5 +232,33 @@ describe("getSharedSummary", () => {
     await getSharedSummary(OWNER, BUDDY, NOW)
 
     expect(db.select).toHaveBeenCalledTimes(1)
+  })
+
+  it("gives a sponsor the sponsor fields and a buddy only the buddy ones", async () => {
+    const { db } = await import("@/db")
+    const logs = [
+      { id: "l", ts: NOW, logDate: "2025-03-01", cigarettes: 0 },
+      { id: "m", ts: new Date(NOW.getTime() - DAY), logDate: "2025-02-28", cigarettes: 3 },
+    ]
+    const serve = (role: string) =>
+      vi
+        .mocked(db.select)
+        .mockReturnValueOnce({
+          from: () => ({ where: () => ({ limit: () => Promise.resolve([link({ role })]) }) }),
+        } as never)
+        .mockReturnValueOnce({
+          from: () => ({ where: () => ({ orderBy: () => Promise.resolve(logs) }) }),
+        } as never)
+
+    const { getSharedSummary } = await import("@/lib/buddies")
+
+    serve("sponsor")
+    const sponsor = await getSharedSummary(OWNER, BUDDY, NOW)
+    expect(sponsor).toMatchObject({ lastSlipOn: "2025-02-28", slipDaysRecent: 1 })
+
+    serve("buddy")
+    const buddy = await getSharedSummary(OWNER, BUDDY, NOW)
+    expect(buddy).not.toHaveProperty("lastSlipOn")
+    expect(buddy).not.toHaveProperty("slipDaysRecent")
   })
 })

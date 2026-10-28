@@ -121,16 +121,36 @@ const SCREENS = {
     render: () => (
       <BuddiesView
         buddies={[
-          { linkId: "a", name: "Priya Raman", state: "active" },
-          { linkId: "b", name: null, state: "pending" },
+          { linkId: "a", name: "Priya Raman", state: "active", role: "sponsor" },
+          { linkId: "d", name: "Jonas Weber", state: "active", role: "buddy" },
+          { linkId: "b", name: null, state: "pending", role: "buddy" },
         ]}
         supporting={[
           {
             linkId: "c",
             name: "Tom Okafor",
             state: "active",
+            role: "sponsor",
+            summary: {
+              smokeFreeDays: 3,
+              milestonesReached: 6,
+              milestoneCount: 13,
+              lastSlipOn: "2025-02-25",
+              slipDaysRecent: 2,
+            },
+            askedForHelp: "2 hours ago",
+          },
+          {
+            linkId: "e",
+            name: "Mei Lin",
+            state: "active",
+            role: "buddy",
             summary: { smokeFreeDays: 212, milestonesReached: 10, milestoneCount: 13 },
           },
+        ]}
+        cheers={[
+          { id: "s1", name: "Priya Raman", kind: "proud", when: "yesterday" },
+          { id: "s2", name: "Jonas Weber", kind: "keep_going", when: "3 days ago" },
         ]}
       />
     ),
@@ -157,6 +177,19 @@ const SCREENS = {
       <main className="container mx-auto max-w-2xl px-4 py-12">
         <h1 className="text-3xl font-semibold tracking-tight">Buddies</h1>
         <InvitePanel code="7KQ2MBXN4TVCJ3HRGPWD" origin="https://smoking.nikolayvalev.com" />
+      </main>
+    ),
+  },
+  "buddies-invite-sponsor": {
+    title: "Buddies, sponsor invite created",
+    render: () => (
+      <main className="container mx-auto max-w-2xl px-4 py-12">
+        <h1 className="text-3xl font-semibold tracking-tight">Buddies</h1>
+        <InvitePanel
+          code="7KQ2MBXN4TVCJ3HRGPWD"
+          origin="https://smoking.nikolayvalev.com"
+          role="sponsor"
+        />
       </main>
     ),
   },

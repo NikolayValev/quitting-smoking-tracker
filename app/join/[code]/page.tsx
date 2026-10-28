@@ -73,10 +73,14 @@ export default async function JoinPage({
       <main className="container mx-auto max-w-2xl px-4 py-16">
         {result.ok ? (
           <>
-            <h1 className="text-3xl font-semibold tracking-tight">You are following them</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {result.role === "sponsor" ? "You are their sponsor" : "You are following them"}
+            </h1>
             <p className="mt-3 max-w-[58ch] text-muted-foreground">
-              You can see how many days they have been smoke-free and how many milestones
-              they have reached. You will not see their check-ins or anything they have
+              {result.role === "sponsor"
+                ? "You can see how many days they have been smoke-free, their milestones, and when they last slipped. If they tap “I'm struggling”, you will see it on your buddies page."
+                : "You can see how many days they have been smoke-free and how many milestones they have reached."}{" "}
+              You will not see how much they smoked, their check-ins or anything they have
               written. Either of you can stop the share at any time.
             </p>
           </>

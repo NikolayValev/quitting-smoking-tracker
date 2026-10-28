@@ -13,7 +13,7 @@
  */
 import { and, eq, inArray, or } from 'drizzle-orm';
 import { db } from '../db';
-import { users, smokeLogs, buddyLinks } from '../db/schema';
+import { users, smokeLogs, buddyLinks, buddySignals } from '../db/schema';
 import {
   acceptInvite,
   createInvite,
@@ -22,6 +22,7 @@ import {
   listSupporting,
   revokeLink,
 } from '../lib/buddies';
+import { receivedSignals, sendCheer, sendSos } from '../lib/buddy-signals';
 
 const PREFIX = `verify-buddies-${Date.now()}`;
 const results: string[] = [];
@@ -145,6 +146,60 @@ async function main() {
     'access stops the moment it is revoked',
     (await getSharedSummary(owner.id, buddy.id)) === null,
   );
+
+  // Sponsors (migration 0006): the role column, the extra fields, and signals.
+  check('with no sponsor, an SOS goes nowhere', (await sendSos(owner.id)).sent === 0);
+
+  const sponsorInvite = await createInvite(owner.id, 'sponsor');
+  const accepted = await acceptInvite(sponsorInvite.code, stranger.id);
+  check('a sponsor invite is accepted as a sponsor', accepted.ok && accepted.role === 'sponsor');
+
+  const sponsorView = await getSharedSummary(owner.id, stranger.id);
+  check(
+    'the sponsor sees the buddy fields plus slips, and nothing else',
+    sponsorView !== null &&
+      JSON.stringify(Object.keys(sponsorView).sort()) ===
+        JSON.stringify([
+          'lastSlipOn',
+          'milestoneCount',
+          'milestonesReached',
+          'quitDate',
+          'slipDaysRecent',
+          'smokeFreeDays',
+        ]),
+    sponsorView ? Object.keys(sponsorView).join(',') : '',
+  );
+
+  check('an SOS reaches the one sponsor', (await sendSos(owner.id)).sent === 1);
+  check(
+    'and shows up for the sponsor',
+    (await receivedSignals(stranger.id)).some((s) => s.kind === 'sos'),
+  );
+  check(
+    'but not as something the owner received',
+    !(await receivedSignals(owner.id)).some((s) => s.kind === 'sos'),
+  );
+
+  const sponsorLink = (await listSupporting(stranger.id))[0];
+  check(
+    'the sponsor can send encouragement',
+    (await sendCheer(sponsorLink.linkId, stranger.id, 'proud')).sent === true,
+  );
+  check(
+    'which the owner receives',
+    (await receivedSignals(owner.id)).some((s) => s.kind === 'proud'),
+  );
+  check(
+    'the old buddy cannot send on a link that is not theirs',
+    (await sendCheer(sponsorLink.linkId, buddy.id, 'proud')).sent === false,
+  );
+
+  await revokeLink(sponsorLink.linkId, owner.id);
+  check(
+    'revoking takes the signals off screen',
+    (await receivedSignals(owner.id)).length === 0 &&
+      (await receivedSignals(stranger.id)).length === 0,
+  );
 }
 
 async function cleanup() {
@@ -155,6 +210,7 @@ async function cleanup() {
   const ids = rows.map((r) => r.id);
   if (ids.length === 0) return;
 
+  await db.delete(buddySignals).where(inArray(buddySignals.fromUserId, ids));
   await db
     .delete(buddyLinks)
     .where(or(inArray(buddyLinks.ownerUserId, ids), inArray(buddyLinks.buddyUserId, ids)));

@@ -24,6 +24,26 @@ export type SharedSummary = {
   milestoneCount: number;
 };
 
+/**
+ * Everything a sponsor is allowed to know: the buddy fields, plus whether and
+ * when the person slipped.
+ *
+ * Slips are counted in days, never in cigarettes. A sponsor's job is to notice
+ * that someone is struggling, not to audit how much — the per-day count stays
+ * as private as it is for a buddy.
+ */
+export type SponsorSummary = SharedSummary & {
+  /** The most recent day with any cigarettes, as YYYY-MM-DD, or null if none logged. */
+  lastSlipOn: string | null;
+  /** How many of the last SLIP_WINDOW_DAYS days had any cigarettes. */
+  slipDaysRecent: number;
+};
+
+/** How far back a sponsor's slip count looks. */
+export const SLIP_WINDOW_DAYS = 30;
+
+export type LinkRole = BuddyLink['role'];
+
 export type LinkState = 'active' | 'pending' | 'expired' | 'revoked';
 
 /**
@@ -50,6 +70,25 @@ export function toSharedSummary(logs: DashboardLog[], now: Date = new Date()): S
     quitDate: stats.quitDate ? stats.quitDate.toISOString() : null,
     milestonesReached: milestonesReached(minutes),
     milestoneCount: MILESTONE_COUNT,
+  };
+}
+
+/** A log row as a sponsor summary needs it: the buddy fields plus the day it is about. */
+export type SponsorLog = DashboardLog & { logDate: string };
+
+/** Reduces a log list to the fields a sponsor sees. Each one is named, as above. */
+export function toSponsorSummary(logs: SponsorLog[], now: Date = new Date()): SponsorSummary {
+  const shared = toSharedSummary(logs, now);
+  const since = now.getTime() - SLIP_WINDOW_DAYS * DAY_MS;
+  const slips = logs.filter((log) => log.cigarettes > 0);
+
+  return {
+    smokeFreeDays: shared.smokeFreeDays,
+    quitDate: shared.quitDate,
+    milestonesReached: shared.milestonesReached,
+    milestoneCount: shared.milestoneCount,
+    lastSlipOn: slips[0]?.logDate ?? null,
+    slipDaysRecent: slips.filter((log) => new Date(log.ts).getTime() > since).length,
   };
 }
 
@@ -80,6 +119,7 @@ async function hashCode(code: string): Promise<string> {
  */
 export async function createInvite(
   ownerUserId: string,
+  role: LinkRole = 'buddy',
   now: Date = new Date(),
 ): Promise<{ code: string; expiresAt: Date }> {
   const code = newCode();
@@ -88,6 +128,7 @@ export async function createInvite(
   await db.insert(buddyLinks).values({
     ownerUserId,
     codeHash: await hashCode(code),
+    role,
     expiresAt,
   });
 
@@ -95,7 +136,7 @@ export async function createInvite(
 }
 
 export type AcceptResult =
-  | { ok: true }
+  | { ok: true; role: LinkRole }
   | { ok: false; reason: 'not_found' | 'expired' | 'revoked' | 'already_accepted' | 'self' };
 
 /**
@@ -133,12 +174,15 @@ export async function acceptInvite(
     .where(and(eq(buddyLinks.id, link.id), isNull(buddyLinks.acceptedAt)))
     .returning({ id: buddyLinks.id });
 
-  return updated.length > 0 ? { ok: true } : { ok: false, reason: 'already_accepted' };
+  return updated.length > 0
+    ? { ok: true, role: link.role }
+    : { ok: false, reason: 'already_accepted' };
 }
 
 export type BuddyRow = {
   linkId: string;
   clerkUserId: string | null;
+  role: LinkRole;
   acceptedAt: Date | null;
   expiresAt: Date;
   state: LinkState;
@@ -159,6 +203,7 @@ export async function listBuddies(
   return rows.map(({ link, clerkUserId }) => ({
     linkId: link.id,
     clerkUserId,
+    role: link.role,
     acceptedAt: link.acceptedAt,
     expiresAt: link.expiresAt,
     state: linkState(link, now),
@@ -181,6 +226,7 @@ export async function listSupporting(
     linkId: link.id,
     ownerUserId: link.ownerUserId,
     clerkUserId,
+    role: link.role,
     acceptedAt: link.acceptedAt,
     expiresAt: link.expiresAt,
     state: linkState(link, now),
@@ -209,7 +255,8 @@ export async function revokeLink(
 }
 
 /**
- * What `buddyUserId` may see of `ownerUserId`.
+ * What `buddyUserId` may see of `ownerUserId`: a SponsorSummary when the link
+ * is a sponsor link, a SharedSummary otherwise.
  *
  * Permission is checked before the logs are read, not after. Reading first and
  * filtering afterwards is how data reaches places it should not — and it means
@@ -219,7 +266,7 @@ export async function getSharedSummary(
   ownerUserId: string,
   buddyUserId: string,
   now: Date = new Date(),
-): Promise<SharedSummary | null> {
+): Promise<SharedSummary | SponsorSummary | null> {
   const found = await db
     .select()
     .from(buddyLinks)
@@ -236,12 +283,17 @@ export async function getSharedSummary(
   if (!link || linkState(link, now) !== 'active') return null;
 
   const logs = await db
-    .select({ id: smokeLogs.id, ts: smokeLogs.ts, cigarettes: smokeLogs.cigarettes })
+    .select({
+      id: smokeLogs.id,
+      ts: smokeLogs.ts,
+      logDate: smokeLogs.logDate,
+      cigarettes: smokeLogs.cigarettes,
+    })
     .from(smokeLogs)
     .where(eq(smokeLogs.userId, ownerUserId))
     .orderBy(desc(smokeLogs.ts));
 
-  return toSharedSummary(logs, now);
+  return link.role === 'sponsor' ? toSponsorSummary(logs, now) : toSharedSummary(logs, now);
 }
 
 /** Every link this user is on, either side. Used by account deletion and export. */

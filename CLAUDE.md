@@ -36,7 +36,21 @@ CI (`.github/workflows/ci.yml`) runs, in order: install `--frozen-lockfile`,
 - React Compiler rules are enforced (`react-hooks/purity`) — NIK-108 fixed a
   batch of set-state-in-effect violations; don't reintroduce them.
 
-## Current state (2026-09-15)
+## Current state (2026-10-27)
+
+**Direction: real users, not a portfolio demo** (decided 2026-10-27). See the note at
+the top of `PRODUCTION_READINESS.md`; NIK-117 (production Clerk) is the gate.
+
+**Sponsors and signals** — migration `0006` adds `buddy_links.role`
+(`buddy` | `sponsor`) and `buddy_signals`. A sponsor additionally sees
+`lastSlipOn` and `slipDaysRecent` (`SponsorSummary`, key set asserted like the
+buddy one), never cigarette counts or notes. Signals are fixed presets only, no free
+text: an owner's "I'm struggling" goes to all active sponsors, and supporters send
+encouragement. Delivery is in-app on `/buddies` only; email and push are not built yet.
+**`0006` is not yet applied to Neon**: run `pnpm db:migrate`, then `pnpm verify:buddies`,
+which now covers the sponsor cycle.
+
+### Earlier (2026-09-15)
 
 **Buddies** shipped in `75688ce`: `app/buddies/`, `app/join/`, `lib/buddies.ts`,
 `lib/milestones.ts`, migration `0003`. A buddy sees only a streak and milestone
