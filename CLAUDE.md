@@ -50,6 +50,31 @@ encouragement. Delivery is in-app on `/buddies` only; email and push are not bui
 **`0006` is not yet applied to Neon**: run `pnpm db:migrate`, then `pnpm verify:buddies`,
 which now covers the sponsor cycle.
 
+## Todo (as of 2026-10-28)
+
+Constraint: **no paid infrastructure.** Stay on free tiers (Vercel Hobby, Neon,
+PostHog, Clerk free) and prefer approaches that need no vendor at all.
+
+1. **Apply `0006` to Neon**, then run `pnpm verify:buddies`. The sponsors code is
+   already in production (merge `f648f82`); until this runs, `/buddies`, account
+   deletion and export fail there. Rolling back to `ed8c9c2` in Vercel is the stopgap.
+2. **Land the CI fix.** `f8cbe1b` on `ccr-63bb7094-p866y7` drops the pnpm version
+   pin from `ci.yml`, because `pnpm/action-setup` refuses to run when it conflicts
+   with `packageManager`. CI has failed at setup on every run before this fix, so
+   PR #6 was never checked by CI. It needs a PR to main.
+3. **Look at the buddies screens** (`pnpm screens -g buddies`). The sponsor UI was
+   only checked as rendered HTML; Chromium could not reach the dev server in the
+   cloud container.
+4. **NIK-117 → NIK-116 → NIK-118**: production Clerk instance, webhook secret, own
+   Google credentials. All free; all dashboard/DNS work. NIK-117 must be done
+   before inviting real users.
+5. **Installable app (PWA) plus web push**: VAPID keys we generate ourselves, so
+   there is no provider. This lets an SOS reach a sponsor outside the app. iOS
+   only gets push once the app is added to the home screen.
+6. **Daily check-in reminder** over the same push, triggered by Vercel Cron. Hobby
+   allows daily frequency.
+7. **Craving log**: urge, trigger and outcome, with trigger patterns over time.
+
 ### Earlier (2026-09-15)
 
 **Buddies** shipped in `75688ce`: `app/buddies/`, `app/join/`, `lib/buddies.ts`,
