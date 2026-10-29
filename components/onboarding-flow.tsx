@@ -134,7 +134,7 @@ export function OnboardingFlow({ settings }: { settings: UserSettings }) {
               <Textarea
                 id="onboarding-note"
                 rows={3}
-                placeholder="How are you feeling?"
+                placeholder="What set it off, or what helped?"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />

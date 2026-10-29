@@ -201,38 +201,43 @@ export const copingStrategies = [
   },
 ]
 
+/**
+ * Timed sessions, each aimed at something withdrawal actually does: the
+ * restlessness of the first days, the urge itself, physical tension, and the
+ * broken sleep of the first week or two.
+ */
 export const relaxationTechniques = [
   {
-    id: "1",
-    title: "Box Breathing",
+    id: "box-breathing",
+    title: "Box breathing",
     duration: "5 minutes",
     minutes: 5,
-    description: "A calming technique used by Navy SEALs to reduce stress and improve focus",
-    image: "/placeholder.svg?height=300&width=600",
+    description:
+      "In for 4, hold for 4, out for 4, hold for 4. For the restless, on-edge stretch of the first few days.",
   },
   {
-    id: "2",
-    title: "Progressive Muscle Relaxation",
-    duration: "10 minutes",
-    minutes: 10,
-    description: "Systematically tense and relax muscle groups to release physical tension",
-    image: "/placeholder.svg?height=300&width=600",
-  },
-  {
-    id: "3",
-    title: "Guided Visualization",
+    id: "urge-surfing",
+    title: "Urge surfing",
     duration: "8 minutes",
     minutes: 8,
-    description: "Imagine a peaceful sanctuary to calm your mind and reduce cravings",
-    image: "/placeholder.svg?height=300&width=600",
+    description:
+      "Notice where the craving sits in your body and watch it rise, peak and fall without acting on it. Most are gone before the timer is.",
   },
   {
-    id: "4",
-    title: "Body Scan Meditation",
+    id: "muscle-relaxation",
+    title: "Progressive muscle relaxation",
+    duration: "10 minutes",
+    minutes: 10,
+    description:
+      "Tense each muscle group for five seconds, then let go, from your feet up. For the tension that withdrawal leaves in your jaw and shoulders.",
+  },
+  {
+    id: "sleep",
+    title: "Wind down for sleep",
     duration: "12 minutes",
     minutes: 12,
-    description: "Bring mindful awareness to each part of your body for deep relaxation",
-    image: "/placeholder.svg?height=300&width=600",
+    description:
+      "A slow body scan in bed, lights off. Sleep is often broken for the first week or two after quitting, and this helps you drift back off.",
   },
 ]
 

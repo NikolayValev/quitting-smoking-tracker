@@ -63,7 +63,8 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
    with `packageManager`. CI has failed at setup on every run before this fix, so
    PR #6 was never checked by CI. It needs a PR to main.
 3. **Look at the screens** (`pnpm screens`): buddies, plus the landing page,
-   dashboard, wellness and onboarding after the cigarette-specific rewrite. All
+   dashboard (incl. `dashboard-slip`, `dashboard-empty`), wellness and onboarding
+   after the cigarette-specific rewrite. All
    were only checked as rendered HTML; Chromium could not reach the dev server
    in the cloud container.
 4. **NIK-117 → NIK-116 → NIK-118**: production Clerk instance, webhook secret, own

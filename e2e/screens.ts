@@ -5,6 +5,7 @@ export const SCREENS = [
   { name: "privacy", path: "/privacy" },
   { name: "terms", path: "/terms" },
   { name: "dashboard", path: "/dev/dashboard" },
+  { name: "dashboard-slip", path: "/dev/dashboard-slip" },
   { name: "dashboard-empty", path: "/dev/dashboard-empty" },
   { name: "wellness", path: "/dev/wellness" },
   { name: "journey", path: "/dev/journey" },

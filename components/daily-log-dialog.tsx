@@ -139,7 +139,7 @@ export function DailyLogDialog({
             </Label>
             <Textarea
               id="dlg-note"
-              placeholder="How are you feeling?"
+              placeholder="What set it off, or what helped?"
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
