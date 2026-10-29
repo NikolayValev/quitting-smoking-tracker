@@ -2,7 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Quit Smoking Tracker",
+  title: "Privacy Policy — SmokeFree",
 }
 
 export default function PrivacyPage() {

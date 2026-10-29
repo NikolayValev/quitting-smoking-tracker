@@ -4,6 +4,7 @@ import { TipLibrary } from "@/components/tip-library"
 import { RelaxationPreview } from "@/components/relaxation-preview"
 import { DailyTip } from "@/components/daily-tip"
 import { MotivationalHero } from "@/components/motivational-hero"
+import { QuitSupport } from "@/components/quit-support"
 import type { WellnessTip } from "@/lib/data/wellness-tips"
 import type { MotivationalQuote } from "@/lib/data/motivational-quotes"
 
@@ -47,11 +48,15 @@ export function WellnessView({
       </div>
 
       <section className="mt-14">
-        <h2 className="text-sm font-medium text-muted-foreground">Other ways through</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">When does it usually hit?</h2>
         <div className="mt-4">
           <UrgeResistance />
         </div>
       </section>
+
+      <div className="mt-14">
+        <QuitSupport />
+      </div>
 
       <section className="mt-14">
         <h2 className="text-sm font-medium text-muted-foreground">Longer sessions</h2>

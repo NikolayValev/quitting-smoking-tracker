@@ -16,7 +16,7 @@ import type { Metadata } from "next"
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: "Dashboard - Quit Smoking Tracker",
+  title: "Dashboard — SmokeFree",
   description: "Track your smoke-free progress, view milestones, and access wellness tools",
 }
 

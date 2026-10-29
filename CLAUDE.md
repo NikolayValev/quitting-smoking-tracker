@@ -62,9 +62,10 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
    pin from `ci.yml`, because `pnpm/action-setup` refuses to run when it conflicts
    with `packageManager`. CI has failed at setup on every run before this fix, so
    PR #6 was never checked by CI. It needs a PR to main.
-3. **Look at the buddies screens** (`pnpm screens -g buddies`). The sponsor UI was
-   only checked as rendered HTML; Chromium could not reach the dev server in the
-   cloud container.
+3. **Look at the screens** (`pnpm screens`): buddies, plus the landing page,
+   dashboard, wellness and onboarding after the cigarette-specific rewrite. All
+   were only checked as rendered HTML; Chromium could not reach the dev server
+   in the cloud container.
 4. **NIK-117 → NIK-116 → NIK-118**: production Clerk instance, webhook secret, own
    Google credentials. All free; all dashboard/DNS work. NIK-117 must be done
    before inviting real users.
@@ -74,6 +75,19 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
 6. **Daily check-in reminder** over the same push, triggered by Vercel Cron. Hobby
    allows daily frequency.
 7. **Craving log**: urge, trigger and outcome, with trigger patterns over time.
+8. **Marijuana support** (advertised as "coming soon" on the landing page and in
+   onboarding). Cannabis needs its own content rather than relabelled copy: a
+   different withdrawal course (irritability, poor sleep and vivid dreams that
+   peak in the first week and can last a few weeks), its own triggers, and grams
+   or sessions in place of cigarettes and packs. That means a substance on the
+   user or the log.
+
+**Cigarette-specific content** (2026-10-29): the app now targets cigarettes
+explicitly. The withdrawal timeline is in `lib/withdrawal.ts` (shown on the
+dashboard), trigger plans and tips are in `lib/data/wellness-tips.ts`, and the
+support section with NRT, medication and quitlines is `components/quit-support.tsx`.
+Claims are kept to NHS, smokefree.gov and Cochrane strength. Do not reintroduce
+generic wellness filler or invented quote attributions.
 
 ### Earlier (2026-09-15)
 

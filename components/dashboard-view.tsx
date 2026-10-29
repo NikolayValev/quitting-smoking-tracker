@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { MilestonesDisplay } from "@/components/milestones-display"
 import { DailyTip } from "@/components/daily-tip"
+import { WithdrawalNote } from "@/components/withdrawal-note"
 import { deriveDashboardStats, type DashboardLog } from "@/lib/dashboard-stats"
 import type { WellnessTip } from "@/lib/data/wellness-tips"
 import {
@@ -82,6 +83,8 @@ export function DashboardView({
         </div>
         {action}
       </div>
+
+      {quitDate && <WithdrawalNote smokeFreeDays={smokeFreeDays} />}
 
       <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-6 border-t border-border/60 pt-6 sm:grid-cols-3">
         <div>

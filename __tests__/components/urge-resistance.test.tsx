@@ -13,17 +13,18 @@ describe("UrgeResistance", () => {
     expect(choices.length).toBeGreaterThanOrEqual(4)
   })
 
-  it("displays coping strategies", () => {
+  it("offers plans for the moments cigarettes are tied to", () => {
     render(<UrgeResistance />)
 
-    expect(screen.getByText("The 5-4-3-2-1 Grounding Technique")).toBeInTheDocument()
-    expect(screen.getByText("Deep Breathing Exercise")).toBeInTheDocument()
+    expect(screen.getByText("The first one of the morning")).toBeInTheDocument()
+    expect(screen.getByText("With coffee")).toBeInTheDocument()
+    expect(screen.getByText("With a drink")).toBeInTheDocument()
   })
 
   it("navigates to strategy details when clicked", () => {
     render(<UrgeResistance />)
 
-    const strategyButton = screen.getByText("The 5-4-3-2-1 Grounding Technique")
+    const strategyButton = screen.getByText("With coffee")
     fireEvent.click(strategyButton)
 
     expect(screen.getByText("Back")).toBeInTheDocument()
@@ -32,11 +33,11 @@ describe("UrgeResistance", () => {
   it("tracks completed steps", () => {
     render(<UrgeResistance />)
 
-    const strategyButton = screen.getByText("The 5-4-3-2-1 Grounding Technique")
+    const strategyButton = screen.getByText("With coffee")
     fireEvent.click(strategyButton)
 
     const steps = screen.getAllByRole("button")
-    const firstStep = steps.find((btn) => btn.textContent?.includes("5 things you can see"))
+    const firstStep = steps.find((btn) => btn.textContent?.includes("half-strength"))
 
     if (firstStep) {
       fireEvent.click(firstStep)
@@ -47,13 +48,13 @@ describe("UrgeResistance", () => {
   it("shows completion message when all steps are done", () => {
     render(<UrgeResistance />)
 
-    const strategyButton = screen.getByText("The 5-4-3-2-1 Grounding Technique")
+    const strategyButton = screen.getByText("With coffee")
     fireEvent.click(strategyButton)
 
     const stepButtons = screen.getAllByRole("button").filter((btn) => !btn.textContent?.includes("Back"))
 
     stepButtons.forEach((btn) => fireEvent.click(btn))
 
-    expect(screen.getByText(/Great job!/i)).toBeInTheDocument()
+    expect(screen.getByText(/passed without a cigarette/i)).toBeInTheDocument()
   })
 })

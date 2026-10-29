@@ -1,23 +1,33 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
-import { BarChart2, Wind, Lightbulb } from "lucide-react"
+import { CalendarClock, Coffee, HeartHandshake, PiggyBank } from "lucide-react"
 
+/**
+ * Each feature names something specific to cigarettes. The earlier copy ("A
+ * reason to come back", "advice on health and motivation") could have been on
+ * any wellness app, which is what made the page read as generic.
+ */
 const features = [
   {
-    icon: BarChart2,
-    title: "See the line come down",
-    body: "Log what you smoke and watch the count fall. Milestones from twenty minutes to ten years mark themselves off as you pass them.",
+    icon: CalendarClock,
+    title: "Know what day three feels like",
+    body: "Withdrawal peaks in the first three days and fades over about a month. The dashboard tells you what is normal for the day you are on, so a bad afternoon reads as expected rather than as failure.",
   },
   {
-    icon: Wind,
-    title: "Something to do at 3pm",
-    body: "A 4-4-6-2 breathing exercise and step-by-step urge guides, for the moments a craving arrives and willpower alone is thin.",
+    icon: Coffee,
+    title: "A plan for the cigarettes you never think about",
+    body: "The first one of the morning, the one with coffee, after meals, in the car, with a drink. Each gets a short, specific plan, and a breathing timer for when it hits anyway.",
   },
   {
-    icon: Lightbulb,
-    title: "A reason to come back",
-    body: "A rotating library of advice on health, motivation and the ordinary practicalities of not smoking.",
+    icon: PiggyBank,
+    title: "What the packs were costing you",
+    body: "Set your pack price in your own currency and watch what you keep add up. Health milestones, from twenty minutes to ten years, mark themselves off.",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Someone in your corner",
+    body: "Invite a buddy to follow your streak, or a sponsor who sees when you slip and is the one you reach with a single tap when it gets hard.",
   },
 ]
 
@@ -42,13 +52,21 @@ export default function HomePage() {
         {/* Left-aligned rather than a centred stack: the page reads as a
             document with a spine, and it is the same shape on a phone. */}
         <section className="mx-auto max-w-3xl py-20 sm:py-28">
+          <p className="mb-6 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 font-medium text-foreground">
+              For quitting cigarettes
+            </span>
+            <span className="rounded-full border border-dashed border-border px-3 py-1">
+              Marijuana — coming soon
+            </span>
+          </p>
           <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-            Quitting is a lot of small days.
+            Quitting cigarettes is a lot of small days.
             <span className="block text-muted-foreground">This counts them.</span>
           </h1>
           <p className="mt-6 max-w-[58ch] text-lg text-muted-foreground">
-            Log a check-in a day, get something to do when a craving hits, and keep a
-            streak worth protecting.
+            Log a check-in a day, know what withdrawal will feel like before it arrives,
+            and have a plan for the coffee, the car and the drink after work.
           </p>
           {/* The sample journey leads. Most people arriving here are looking
               rather than quitting, and it is the screen worth showing them —

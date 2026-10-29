@@ -12,22 +12,22 @@ export const metadata: Metadata = {
   // Social crawlers need absolute image URLs; without this the og:image
   // resolves relative and link previews come back blank.
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://smoking.nikolayvalev.com"),
-  title: "Quit Smoking Tracker - Your Smoke-Free Journey",
+  title: "SmokeFree — Quit cigarettes, one day at a time",
   description:
-    "Track your progress, celebrate milestones, and reclaim your health on your smoke-free journey. Featuring breathing exercises, wellness tips, and personalized support.",
-  keywords: ["quit smoking", "smoking cessation", "health tracker", "wellness app", "stop smoking"],
-  authors: [{ name: "Quit Smoking App" }],
+    "A quit-smoking tracker built for cigarettes: what withdrawal feels like day by day, plans for your triggers, money saved per pack, and a sponsor in your corner. Marijuana support coming soon.",
+  keywords: ["quit smoking", "quit cigarettes", "nicotine withdrawal", "smoking cessation", "stop smoking"],
+  authors: [{ name: "SmokeFree" }],
   openGraph: {
-    title: "Quit Smoking Tracker - Your Smoke-Free Journey",
-    description: "Track your progress, celebrate milestones, and reclaim your health on your smoke-free journey",
+    title: "SmokeFree — Quit cigarettes, one day at a time",
+    description: "A quit-smoking tracker built for cigarettes: what withdrawal feels like day by day, plans for your triggers, money saved per pack, and a sponsor in your corner. Marijuana support coming soon.",
     type: "website",
     locale: "en_US",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SmokeFree" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Quit Smoking Tracker - Your Smoke-Free Journey",
-    description: "Track your progress, celebrate milestones, and reclaim your health on your smoke-free journey",
+    title: "SmokeFree — Quit cigarettes, one day at a time",
+    description: "A quit-smoking tracker built for cigarettes: what withdrawal feels like day by day, plans for your triggers, money saved per pack, and a sponsor in your corner. Marijuana support coming soon.",
     images: ["/og-image.png"],
   },
   robots: {

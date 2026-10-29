@@ -7,7 +7,7 @@ import { getUserSettings } from "@/lib/user-settings.server"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Account Settings - Quit Smoking Tracker",
+  title: "Account Settings — SmokeFree",
 }
 
 export default async function AccountPage() {
