@@ -6,25 +6,23 @@ import { HeartHandshake, LifeBuoy, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { InvitePanel } from "@/components/invite-panel"
+import { NotificationSettings } from "@/components/notification-settings"
 import {
   createBuddyInvite,
   revokeBuddyLink,
   sendCheerSignal,
   sendSosSignal,
 } from "@/app/buddies/actions"
+import { CHEER_TEXT, type CheerText } from "@/lib/push-messages"
 
 type Role = "buddy" | "sponsor"
-type CheerKind = "proud" | "keep_going" | "here_for_you"
+type CheerKind = CheerText
 
 /**
- * The words behind each preset. Only the key is stored, so sender and receiver
- * both read them from here.
+ * The words behind each preset. Only the key is stored, so the sender, the
+ * receiver and the push notification all read them from one place.
  */
-const CHEER_LABELS: Record<CheerKind, string> = {
-  proud: "Proud of you",
-  keep_going: "Keep going",
-  here_for_you: "I'm here if you need me",
-}
+const CHEER_LABELS = CHEER_TEXT
 
 export type BuddyPerson = {
   linkId: string
@@ -134,6 +132,8 @@ export function BuddiesView({
         Quitting is easier when someone is in your corner. A buddy follows your streak.
         A sponsor also sees when you slip, and is who you reach for when it gets hard.
       </p>
+
+      <NotificationSettings />
 
       {error && (
         <p className="mt-6 text-sm text-destructive" role="alert">

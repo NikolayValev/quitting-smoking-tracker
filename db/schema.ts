@@ -126,6 +126,33 @@ export const buddySignals = pgTable(
   (table) => [index('buddy_signals_link_created_idx').on(table.linkId, table.createdAt)],
 );
 
+/**
+ * One browser or installed app that has agreed to receive push notifications.
+ *
+ * `endpoint` is the push service URL for that device and is unique: a device
+ * that signs in as someone else moves its row rather than gaining a second
+ * one. `p256dh` and `auth` are the device's public keys for encrypting
+ * messages to it. They are not secrets of ours, but they are not exported
+ * either, since they mean nothing outside a push service.
+ *
+ * Rows are removed when the push service reports the subscription gone (404
+ * or 410), when the person turns alerts off, or with the account.
+ */
+export const pushSubscriptions = pgTable(
+  'push_subscriptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    endpoint: text('endpoint').unique().notNull(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('push_subscriptions_user_idx').on(table.userId)],
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SmokeLog = typeof smokeLogs.$inferSelect;
@@ -133,3 +160,4 @@ export type NewSmokeLog = typeof smokeLogs.$inferInsert;
 export type BuddyLink = typeof buddyLinks.$inferSelect;
 export type NewBuddyLink = typeof buddyLinks.$inferInsert;
 export type BuddySignal = typeof buddySignals.$inferSelect;
+export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;

@@ -1,11 +1,11 @@
 import { db } from '@/db';
-import { users, smokeLogs, buddyLinks, buddySignals } from '@/db/schema';
+import { users, smokeLogs, buddyLinks, buddySignals, pushSubscriptions } from '@/db/schema';
 import { eq, desc, inArray, or } from 'drizzle-orm';
 
 /**
  * Bumped whenever the shape below changes, so an old file stays interpretable.
  */
-export const EXPORT_FORMAT_VERSION = 2;
+export const EXPORT_FORMAT_VERSION = 3;
 
 /** The profile fields Clerk holds for us, passed in rather than fetched here. */
 export type ExportProfile = {
@@ -46,7 +46,13 @@ export type UserDataExport = {
     kind: string;
     createdAt: string;
   }>;
-  counts: { smokeLogs: number; shares: number; signals: number };
+  /**
+   * Format 3: devices with push notifications turned on, by when. The endpoint
+   * and keys are left out: they identify a browser to a push service and mean
+   * nothing to the person reading the file.
+   */
+  devices: Array<{ addedAt: string }>;
+  counts: { smokeLogs: number; shares: number; signals: number; devices: number };
 };
 
 /**
@@ -129,6 +135,13 @@ export async function exportUserData(
           .orderBy(desc(buddySignals.createdAt))
       : [];
 
+  const devices = account
+    ? await db
+        .select({ createdAt: pushSubscriptions.createdAt })
+        .from(pushSubscriptions)
+        .where(eq(pushSubscriptions.userId, account.id))
+    : [];
+
   const activeShares = shares.filter((s) => !s.revokedAt);
 
   return {
@@ -160,6 +173,12 @@ export async function exportUserData(
       kind: signal.kind,
       createdAt: signal.createdAt.toISOString(),
     })),
-    counts: { smokeLogs: logs.length, shares: activeShares.length, signals: signals.length },
+    devices: devices.map((device) => ({ addedAt: device.createdAt.toISOString() })),
+    counts: {
+      smokeLogs: logs.length,
+      shares: activeShares.length,
+      signals: signals.length,
+      devices: devices.length,
+    },
   };
 }

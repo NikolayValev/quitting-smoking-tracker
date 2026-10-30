@@ -47,7 +47,7 @@ describe("deleteUserByClerkId", () => {
 
   it("deletes the user's smoke logs before deleting the user row", async () => {
     const { db } = await import("@/db")
-    const { users, smokeLogs, buddyLinks, buddySignals } = await import("@/db/schema")
+    const { users, smokeLogs, buddyLinks, buddySignals, pushSubscriptions } = await import("@/db/schema")
     const { tx, deletedFrom } = fakeTransaction([[{ id: INTERNAL_USER_ID }], [{ value: 0 }]])
     vi.mocked(db.transaction).mockImplementation((cb) => (cb as (t: unknown) => never)(tx))
 
@@ -57,7 +57,7 @@ describe("deleteUserByClerkId", () => {
     expect(result.deleted).toBe(true)
     // Signals before the shares they hang off, shares before the user row, so
     // nothing is left pointing at anything gone.
-    expect(deletedFrom).toEqual([smokeLogs, buddySignals, buddyLinks, users])
+    expect(deletedFrom).toEqual([smokeLogs, buddySignals, buddyLinks, pushSubscriptions, users])
   })
 
   it("reports how many logs it erased, so the receipt can be specific", async () => {

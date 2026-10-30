@@ -50,6 +50,13 @@
       "when": 1793120399260,
       "tag": "0006_sponsors_and_signals",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793321915289,
+      "tag": "0007_push_subscriptions",
+      "breakpoints": true
     }
   ]
 }
