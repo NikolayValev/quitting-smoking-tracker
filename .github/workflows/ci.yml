@@ -39,3 +39,8 @@ jobs:
         run: pnpm build
         env:
           NEXT_PUBLIC_SITE_URL: https://example.com
+          # ClerkProvider throws at prerender without a publishable key. These
+          # are well-formed placeholders, not credentials: the key decodes to
+          # "placeholder.clerk.accounts.dev$", and nothing in CI talks to Clerk.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_cGxhY2Vob2xkZXIuY2xlcmsuYWNjb3VudHMuZGV2JA==
+          CLERK_SECRET_KEY: sk_test_placeholder
