@@ -3,9 +3,11 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { MilestonesDisplay } from "@/components/milestones-display"
 import { DailyTip } from "@/components/daily-tip"
+import { WithdrawalNote } from "@/components/withdrawal-note"
 import { deriveDashboardStats, type DashboardLog } from "@/lib/dashboard-stats"
 import type { WellnessTip } from "@/lib/data/wellness-tips"
 import {
+  DEFAULT_CIGARETTES_PER_PACK,
   EMPTY_SETTINGS,
   formatMoney,
   toStatsSettings,
@@ -43,13 +45,27 @@ export function DashboardView({
   const stats = deriveDashboardStats(logs, now, toStatsSettings(settings))
 
   if (logs.length === 0) {
+    // Before the first check-in is when preparation pays off most. These are
+    // the steps stop-smoking services suggest, not a generic "ready to start".
     return (
       <main className="container mx-auto max-w-2xl px-4 py-24">
-        <h1 className="text-3xl font-semibold tracking-tight">Ready to start?</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Before your quit day</h1>
         <p className="mt-3 max-w-[52ch] text-muted-foreground">
-          Log your first day to begin tracking. One check-in is enough to start a streak.
+          A few things done beforehand make the first week much easier.
         </p>
-        <Button asChild size="lg" className="mt-6">
+        <ol className="mt-6 max-w-[58ch] list-decimal space-y-2 pl-5 text-sm">
+          <li>Pick a day in the next two weeks, ideally not one you expect to be stressful.</li>
+          <li>Tell the people around you, and ask smokers not to offer you one.</li>
+          <li>Get nicotine replacement in before the day: a patch, plus gum or lozenges.</li>
+          <li>The night before, get rid of every cigarette, lighter and ashtray.</li>
+          <li>
+            <Link href="/wellness" className="font-medium text-primary underline-offset-4 hover:underline">
+              Read the plans for your usual triggers
+            </Link>
+            , so the first coffee is not a surprise.
+          </li>
+        </ol>
+        <Button asChild size="lg" className="mt-8">
           <Link href="/onboarding">Log your first day</Link>
         </Button>
       </main>
@@ -57,6 +73,9 @@ export function DashboardView({
   }
 
   const { quitDate, smokeFreeDays, smokeFreeHours } = stats
+  const packsNotBought = Math.floor(
+    stats.cigarettesNotSmoked / (settings.cigarettesPerPack || DEFAULT_CIGARETTES_PER_PACK),
+  )
 
   return (
     <main className="container mx-auto max-w-3xl px-4 py-12 sm:py-16">
@@ -70,18 +89,32 @@ export function DashboardView({
               </span>
             </h1>
           ) : (
-            <h1 className="text-4xl font-semibold tracking-tight">Your journey</h1>
+            <h1 className="text-4xl font-semibold tracking-tight">A slip, not the end</h1>
           )}
-          <p className="mt-3 text-muted-foreground">
-            {quitDate
-              ? smokeFreeHours > 0
+          {quitDate ? (
+            <p className="mt-3 text-muted-foreground">
+              {smokeFreeHours > 0
                 ? `and ${smokeFreeHours} ${smokeFreeHours === 1 ? "hour" : "hours"}`
-                : "Going strong."
-              : "Log a smoke-free day to start your counter."}
-          </p>
+                : "Going strong."}
+            </p>
+          ) : (
+            // The last check-in had cigarettes in it. Most people who stop for
+            // good have slipped along the way; what matters is the next day,
+            // and knowing what set this one off.
+            <p className="mt-3 max-w-[58ch] text-muted-foreground">
+              Your last check-in had cigarettes in it. Make the next one a zero, and think
+              about what set this one off: a drink, a bad day, someone offering. The{" "}
+              <Link href="/wellness" className="font-medium text-primary underline-offset-4 hover:underline">
+                trigger plans
+              </Link>{" "}
+              cover the usual ones.
+            </p>
+          )}
         </div>
         {action}
       </div>
+
+      {quitDate && <WithdrawalNote smokeFreeDays={smokeFreeDays} />}
 
       <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-6 border-t border-border/60 pt-6 sm:grid-cols-3">
         <div>
@@ -101,10 +134,10 @@ export function DashboardView({
           <p className="mt-1 text-xs text-muted-foreground">Since your quit day</p>
         </div>
         <div>
-          <dt className="text-sm text-muted-foreground">Days tracked</dt>
-          <dd className="mt-1 text-2xl font-medium">{stats.daysTracked}</dd>
+          <dt className="text-sm text-muted-foreground">Packs not bought</dt>
+          <dd className="mt-1 text-2xl font-medium">{packsNotBought.toLocaleString("en-GB")}</dd>
           <p className="mt-1 text-xs text-muted-foreground">
-            {quitDate ? "Every check-in counts" : "Keep tracking"}
+            Of {settings.cigarettesPerPack || DEFAULT_CIGARETTES_PER_PACK}
           </p>
         </div>
       </dl>

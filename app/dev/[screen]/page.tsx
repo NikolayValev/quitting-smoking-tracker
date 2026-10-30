@@ -95,6 +95,19 @@ const SCREENS = {
       />
     ),
   },
+  "dashboard-slip": {
+    title: "Dashboard, last check-in had cigarettes",
+    render: () => (
+      <DashboardView
+        logs={[
+          { id: "slip", ts: new Date(NOW.getTime() - 86_400_000), cigarettes: 3 },
+          ...fixtureLogs().slice(1),
+        ]}
+        now={NOW}
+        settings={SETTINGS}
+      />
+    ),
+  },
   "dashboard-empty": {
     title: "Dashboard, no logs yet",
     render: () => <DashboardView logs={[]} now={NOW} />,

@@ -12,7 +12,7 @@ import type { Metadata } from "next"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Buddies - Quit Smoking Tracker",
+  title: "Buddies — SmokeFree",
 }
 
 /**

@@ -59,8 +59,8 @@ export function UrgeResistance() {
 
           {completedSteps.length === selectedStrategyData.steps.length && (
             <div className="mt-6 p-4 bg-primary/10 rounded-lg text-center">
-              <p className="font-medium text-primary">Great job! You have completed this strategy.</p>
-              <p className="text-sm text-muted-foreground mt-1">The craving should be subsiding now.</p>
+              <p className="font-medium text-primary">That one passed without a cigarette.</p>
+              <p className="text-sm text-muted-foreground mt-1">Next time this moment comes round, it will be a little easier.</p>
             </div>
           )}
         </CardContent>

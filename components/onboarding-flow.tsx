@@ -71,8 +71,11 @@ export function OnboardingFlow({ settings }: { settings: UserSettings }) {
 
       {step === "settings" ? (
         <section className="mt-10">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            What was your habit costing you?
+          <p className="text-sm text-muted-foreground">
+            Quitting cigarettes. Marijuana support is coming soon.
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            What were cigarettes costing you?
           </h1>
           <p className="mt-3 max-w-[52ch] text-muted-foreground">
             This is what the savings on your dashboard are worked out from. You can
@@ -131,7 +134,7 @@ export function OnboardingFlow({ settings }: { settings: UserSettings }) {
               <Textarea
                 id="onboarding-note"
                 rows={3}
-                placeholder="How are you feeling?"
+                placeholder="What set it off, or what helped?"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />

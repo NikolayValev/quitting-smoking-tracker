@@ -20,7 +20,9 @@ export function MotivationalHero({ quote }: { quote: MotivationalQuote }) {
       <blockquote className="text-lg font-medium tracking-tight text-balance sm:text-xl">
         {quote.quote}
       </blockquote>
-      <figcaption className="mt-2 text-sm text-muted-foreground">{quote.author}</figcaption>
+      {quote.author && (
+        <figcaption className="mt-2 text-sm text-muted-foreground">{quote.author}</figcaption>
+      )}
     </figure>
   )
 }
