@@ -13,6 +13,7 @@ vi.mock("@/lib/buddy-signals", () => ({
   sendCheer: vi.fn(),
   sendSos: vi.fn(),
 }))
+vi.mock("@/lib/push", () => ({ pushToUsers: vi.fn() }))
 
 const USER = "11111111-1111-4111-8111-111111111111"
 
@@ -178,7 +179,7 @@ describe("sendSosSignal", () => {
   it("says plainly when there is nobody to tell", async () => {
     await signedIn()
     const { sendSos } = await import("@/lib/buddy-signals")
-    vi.mocked(sendSos).mockResolvedValue({ sent: 0 })
+    vi.mocked(sendSos).mockResolvedValue({ sent: 0, recipients: [] })
 
     const { sendSosSignal } = await import("@/app/buddies/actions")
     const result = await sendSosSignal()
@@ -190,13 +191,41 @@ describe("sendSosSignal", () => {
     await signedIn()
     const { consumeRateLimit } = await import("@/lib/rate-limit")
     const { sendSos } = await import("@/lib/buddy-signals")
-    vi.mocked(sendSos).mockResolvedValue({ sent: 1 })
+    vi.mocked(sendSos).mockResolvedValue({ sent: 1, recipients: ["sponsor"] })
 
     const { sendSosSignal } = await import("@/app/buddies/actions")
     const result = await sendSosSignal()
 
     expect(result.success).toBe(true)
     expect(vi.mocked(consumeRateLimit).mock.calls[0][0]).toBe(`signal:${USER}`)
+  })
+
+  it("pushes to the sponsors it was sent to", async () => {
+    await signedIn()
+    const { sendSos } = await import("@/lib/buddy-signals")
+    const { pushToUsers } = await import("@/lib/push")
+    vi.mocked(sendSos).mockResolvedValue({ sent: 2, recipients: ["s1", "s2"] })
+
+    const { sendSosSignal } = await import("@/app/buddies/actions")
+    await sendSosSignal()
+
+    expect(vi.mocked(pushToUsers).mock.calls[0][0]).toEqual(["s1", "s2"])
+    expect(vi.mocked(pushToUsers).mock.calls[0][1].tag).toBe("sos")
+  })
+
+  it("still reports the SOS as sent when the push fails", async () => {
+    // The in-app signal is already written. Telling someone in a craving that
+    // it did not go through, when it did, is the worse failure.
+    await signedIn()
+    const { sendSos } = await import("@/lib/buddy-signals")
+    const { pushToUsers } = await import("@/lib/push")
+    vi.mocked(sendSos).mockResolvedValue({ sent: 1, recipients: ["s1"] })
+    vi.mocked(pushToUsers).mockRejectedValue(new Error("push service down"))
+
+    const { sendSosSignal } = await import("@/app/buddies/actions")
+    const result = await sendSosSignal()
+
+    expect(result.success).toBe(true)
   })
 })
 
@@ -230,5 +259,21 @@ describe("sendCheerSignal", () => {
     })
 
     expect(result).toEqual({ success: false, error: "Could not send that" })
+  })
+})
+
+describe("sendCheerSignal push", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("pushes the cheer to the person it was for", async () => {
+    await signedIn()
+    const { sendCheer } = await import("@/lib/buddy-signals")
+    const { pushToUsers } = await import("@/lib/push")
+    vi.mocked(sendCheer).mockResolvedValue({ sent: true, recipient: "owner" })
+
+    const { sendCheerSignal } = await import("@/app/buddies/actions")
+    await sendCheerSignal({ linkId: "33333333-3333-4333-8333-333333333333", kind: "proud" })
+
+    expect(vi.mocked(pushToUsers).mock.calls[0][0]).toEqual(["owner"])
   })
 })

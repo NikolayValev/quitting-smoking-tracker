@@ -7,6 +7,8 @@ import { consumeRateLimit } from '@/lib/rate-limit';
 import { logError } from '@/lib/observability/logger';
 import { acceptInvite, createInvite, revokeLink } from '@/lib/buddies';
 import { sendCheer, sendSos } from '@/lib/buddy-signals';
+import { pushToUsers } from '@/lib/push';
+import { cheerMessage, sosMessage } from '@/lib/push-messages';
 
 const RATE_LIMITED = 'Too many requests. Please wait a moment and try again.';
 
@@ -133,6 +135,19 @@ export async function revokeBuddyLink(data: unknown) {
   }
 }
 
+/** Pushes to devices, swallowing failures. The in-app signal is the record. */
+async function notify(
+  recipients: string[],
+  message: Parameters<typeof pushToUsers>[1],
+  userId: string,
+) {
+  try {
+    await pushToUsers(recipients, message);
+  } catch (error) {
+    logError('buddy_push_failed', error, { userId });
+  }
+}
+
 async function signalBudget(userId: string) {
   return consumeRateLimit(`signal:${userId}`, {
     limit: SIGNAL_LIMIT,
@@ -150,10 +165,14 @@ export async function sendSosSignal() {
       return { success: false as const, error: RATE_LIMITED };
     }
 
-    const { sent } = await sendSos(userId);
+    const { sent, recipients } = await sendSos(userId);
     if (sent === 0) {
       return { success: false as const, error: 'Invite a sponsor first, so there is someone to tell.' };
     }
+
+    // The signal is already written, so a push failure must not undo it or
+    // tell the person it did not send. It is logged and the SOS stands.
+    await notify(recipients, sosMessage(), userId);
 
     revalidatePath('/buddies');
     return { success: true as const, data: { sent } };
@@ -174,12 +193,14 @@ export async function sendCheerSignal(data: unknown) {
     }
 
     const { linkId, kind } = cheerSchema.parse(data);
-    const { sent } = await sendCheer(linkId, userId, kind);
+    const result = await sendCheer(linkId, userId, kind);
 
-    if (!sent) {
+    if (!result.sent) {
       // Same answer whether the link is missing or not theirs, as for revoking.
       return { success: false as const, error: 'Could not send that' };
     }
+
+    await notify([result.recipient], cheerMessage(kind), userId);
 
     revalidatePath('/buddies');
     return { success: true as const };

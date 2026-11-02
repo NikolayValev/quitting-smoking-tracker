@@ -7,6 +7,19 @@ const nextConfig = {
   // PostHog ingestion is sensitive to the trailing-slash redirect Next would
   // otherwise issue, which drops the request body.
   skipTrailingSlashRedirect: true,
+  // The service worker must never be served from a cache, or a fix to it would
+  // take days to reach phones that already have it.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+    ]
+  },
   // Same-origin proxy so ad blockers do not drop events.
   async rewrites() {
     return [

@@ -22,6 +22,7 @@ async function mockQueries(
   logRows: unknown[],
   shareRows: unknown[] = [],
   signalRows: unknown[] = [],
+  deviceRows: unknown[] = [],
 ) {
   const { db } = await import("@/db")
 
@@ -42,6 +43,13 @@ async function mockQueries(
   if (shareRows.length > 0) {
     select.mockReturnValueOnce({
       from: () => ({ where: () => ({ orderBy: () => Promise.resolve(signalRows) }) }),
+    } as never)
+  }
+
+  // Devices are only looked up for someone with an account row.
+  if (accountRows.length > 0) {
+    select.mockReturnValueOnce({
+      from: () => ({ where: () => Promise.resolve(deviceRows) }),
     } as never)
   }
 }
@@ -73,7 +81,7 @@ describe("exportUserData", () => {
     expect(result.smokeLogs).toEqual([
       { id: LOG_ID, ts: ts.toISOString(), cigarettes: 3, note: "after lunch" },
     ])
-    expect(result.counts).toEqual({ smokeLogs: 1, shares: 0, signals: 0 })
+    expect(result.counts).toEqual({ smokeLogs: 1, shares: 0, signals: 0, devices: 0 })
   })
 
   it("is self-describing so the file makes sense away from the app", async () => {
@@ -102,7 +110,7 @@ describe("exportUserData", () => {
     expect(result.account.email).toBe(PROFILE.email)
     expect(result.smokeLogs).toEqual([])
     expect(result.shares).toEqual([])
-    expect(result.counts).toEqual({ smokeLogs: 0, shares: 0, signals: 0 })
+    expect(result.counts).toEqual({ smokeLogs: 0, shares: 0, signals: 0, devices: 0 })
   })
 
   it("does not query for logs when there is no local account", async () => {
@@ -150,5 +158,22 @@ describe("exportUserData", () => {
     ])
     expect(result.counts.signals).toBe(2)
     expect(JSON.stringify(result)).not.toContain(OTHER)
+  })
+
+  it("lists push devices by date and never their keys", async () => {
+    const at = new Date("2026-03-01T10:00:00.000Z")
+    await mockQueries(
+      [{ id: INTERNAL_USER_ID, createdAt: at }],
+      [],
+      [],
+      [],
+      [{ createdAt: at }],
+    )
+
+    const { exportUserData } = await import("@/lib/account/exportUserData")
+    const result = await exportUserData(CLERK_USER_ID, PROFILE)
+
+    expect(result.devices).toEqual([{ addedAt: at.toISOString() }])
+    expect(result.counts.devices).toBe(1)
   })
 })

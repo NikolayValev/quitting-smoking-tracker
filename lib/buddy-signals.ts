@@ -20,9 +20,9 @@ const DAY_MS = 86_400_000;
 export async function sendSos(
   ownerUserId: string,
   now: Date = new Date(),
-): Promise<{ sent: number }> {
+): Promise<{ sent: number; recipients: string[] }> {
   const sponsors = await db
-    .select({ id: buddyLinks.id })
+    .select({ id: buddyLinks.id, buddyUserId: buddyLinks.buddyUserId })
     .from(buddyLinks)
     .where(
       and(
@@ -33,7 +33,7 @@ export async function sendSos(
       ),
     );
 
-  if (sponsors.length === 0) return { sent: 0 };
+  if (sponsors.length === 0) return { sent: 0, recipients: [] };
 
   await db.insert(buddySignals).values(
     sponsors.map((link) => ({
@@ -44,7 +44,11 @@ export async function sendSos(
     })),
   );
 
-  return { sent: sponsors.length };
+  return {
+    sent: sponsors.length,
+    // Who to notify. Accepted links always have a buddy; the filter is for the type.
+    recipients: sponsors.map((link) => link.buddyUserId).filter((id): id is string => id !== null),
+  };
 }
 
 /**
@@ -59,7 +63,7 @@ export async function sendCheer(
   fromUserId: string,
   kind: CheerKind,
   now: Date = new Date(),
-): Promise<{ sent: boolean }> {
+): Promise<{ sent: false } | { sent: true; recipient: string }> {
   const found = await db.select().from(buddyLinks).where(eq(buddyLinks.id, linkId)).limit(1);
   const link = found[0];
 
@@ -68,7 +72,7 @@ export async function sendCheer(
   }
 
   await db.insert(buddySignals).values({ linkId, fromUserId, kind, createdAt: now });
-  return { sent: true };
+  return { sent: true, recipient: link.ownerUserId };
 }
 
 export type ReceivedSignal = {

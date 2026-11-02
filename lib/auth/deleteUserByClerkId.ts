@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { users, smokeLogs, buddyLinks, buddySignals } from '@/db/schema';
+import { users, smokeLogs, buddyLinks, buddySignals, pushSubscriptions } from '@/db/schema';
 import { eq, count, inArray, or } from 'drizzle-orm';
 
 /**
@@ -63,6 +63,10 @@ export async function deleteUserByClerkId(
     await tx
       .delete(buddyLinks)
       .where(or(eq(buddyLinks.ownerUserId, userId), eq(buddyLinks.buddyUserId, userId)));
+
+    // Their devices, so nothing can be pushed to a phone after the account is
+    // gone.
+    await tx.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
 
     await tx.delete(users).where(eq(users.id, userId));
 

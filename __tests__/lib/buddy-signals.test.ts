@@ -50,7 +50,7 @@ describe("sendCheer", () => {
     const values = await captureInsert()
 
     const { sendCheer } = await import("@/lib/buddy-signals")
-    expect(await sendCheer("link-1", BUDDY, "proud", NOW)).toEqual({ sent: true })
+    expect(await sendCheer("link-1", BUDDY, "proud", NOW)).toEqual({ sent: true, recipient: OWNER })
     expect(values.mock.calls[0][0]).toMatchObject({ linkId: "link-1", fromUserId: BUDDY, kind: "proud" })
   })
 
@@ -90,11 +90,14 @@ describe("sendSos", () => {
   }
 
   it("goes to every active sponsor at once", async () => {
-    await serveSponsors([{ id: "a" }, { id: "b" }])
+    await serveSponsors([
+      { id: "a", buddyUserId: "sponsor-a" },
+      { id: "b", buddyUserId: "sponsor-b" },
+    ])
     const values = await captureInsert()
 
     const { sendSos } = await import("@/lib/buddy-signals")
-    expect(await sendSos(OWNER, NOW)).toEqual({ sent: 2 })
+    expect(await sendSos(OWNER, NOW)).toEqual({ sent: 2, recipients: ["sponsor-a", "sponsor-b"] })
 
     const rows = values.mock.calls[0][0]
     expect(rows.map((r: { linkId: string }) => r.linkId)).toEqual(["a", "b"])
@@ -106,7 +109,7 @@ describe("sendSos", () => {
     const values = await captureInsert()
 
     const { sendSos } = await import("@/lib/buddy-signals")
-    expect(await sendSos(OWNER, NOW)).toEqual({ sent: 0 })
+    expect(await sendSos(OWNER, NOW)).toEqual({ sent: 0, recipients: [] })
     expect(values).not.toHaveBeenCalled()
   })
 })
