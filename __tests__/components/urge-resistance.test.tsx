@@ -1,6 +1,9 @@
-import { describe, it, expect } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { UrgeResistance } from "@/components/urge-resistance"
+
+// A server action: under Next it becomes a network call; here it is a spy.
+vi.mock("@/app/wellness/actions", () => ({ recordCraving: vi.fn() }))
 
 describe("UrgeResistance", () => {
   it("offers every strategy as a choice", () => {
@@ -56,5 +59,49 @@ describe("UrgeResistance", () => {
     stepButtons.forEach((btn) => fireEvent.click(btn))
 
     expect(screen.getByText(/passed without a cigarette/i)).toBeInTheDocument()
+  })
+
+  describe("recording a craving", () => {
+    beforeEach(() => vi.clearAllMocks())
+
+    it("needs a strength before either outcome can be chosen", () => {
+      render(<UrgeResistance />)
+      fireEvent.click(screen.getByText("With a drink"))
+
+      expect(screen.getByRole("button", { name: "It passed" })).toBeDisabled()
+      expect(screen.getByRole("button", { name: "I smoked" })).toBeDisabled()
+    })
+
+    it("records the plan's moment as the trigger, with the hour on this clock", async () => {
+      const { recordCraving } = await import("@/app/wellness/actions")
+      vi.mocked(recordCraving).mockResolvedValue({ success: true })
+
+      render(<UrgeResistance />)
+      fireEvent.click(screen.getByText("With a drink"))
+      fireEvent.click(screen.getByRole("radio", { name: "4" }))
+      fireEvent.click(screen.getByRole("button", { name: "It passed" }))
+
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Recorded"))
+      expect(recordCraving).toHaveBeenCalledWith({
+        trigger: "drink",
+        strength: 4,
+        outcome: "passed",
+        localHour: new Date().getHours(),
+      })
+    })
+
+    it("records a moment that is not on the list as 'other'", async () => {
+      const { recordCraving } = await import("@/app/wellness/actions")
+      vi.mocked(recordCraving).mockResolvedValue({ success: true })
+
+      render(<UrgeResistance />)
+      fireEvent.click(screen.getByText(/Something else\? Record it anyway/))
+      fireEvent.click(screen.getByRole("radio", { name: "2" }))
+      fireEvent.click(screen.getByRole("button", { name: "I smoked" }))
+
+      // A slip is met with the next step, not a verdict.
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("slip, not the end"))
+      expect(vi.mocked(recordCraving).mock.calls[0][0]).toMatchObject({ trigger: "other", outcome: "smoked" })
+    })
   })
 })

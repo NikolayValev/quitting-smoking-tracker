@@ -55,9 +55,9 @@ which now covers the sponsor cycle.
 Constraint: **no paid infrastructure.** Stay on free tiers (Vercel Hobby, Neon,
 PostHog, Clerk free) and prefer approaches that need no vendor at all.
 
-1. **Apply `0006`, `0007` and `0008` to Neon** (`pnpm db:migrate`), then run
-   `pnpm verify:buddies`. Until then, `/buddies`, `/account`, account deletion and
-   export fail in production. Nobody uses it yet, but do this before inviting anyone.
+1. **Apply `0006`–`0009` to Neon** (`pnpm db:migrate`), then run
+   `pnpm verify:buddies`. Until then, `/buddies`, `/account`, account deletion,
+   export and recording a craving fail in production. Nobody uses it yet, but do this before inviting anyone.
 2. **Set the VAPID keys** in Vercel: run `pnpm exec web-push generate-vapid-keys`
    once, then set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Push stays
    off until both are set. Do not rotate them, since that drops every subscribed device.
@@ -79,7 +79,13 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
    Europe, afternoon in the Americas. Timing rules are pure in `lib/checkin-reminder.ts`
    (their local day, never 22:00–08:00 local, once per day via `users.reminded_on`).
    `api/cron` is outside the Clerk matcher; the route checks the bearer secret itself.
-7. **Craving log**: urge, trigger and outcome, with trigger patterns over time.
+7. ~~**Craving log**~~ — built 2026-11-07, needs `0009`. Recorded at the end of each
+   plan on `/wellness` (`components/craving-record.tsx`), plus "Something else" for
+   `other`: trigger, strength 1–5, passed/smoked, and the browser's local hour. No
+   free text. Triggers must match `copingStrategies` ids; a test checks the schema
+   enum too. Patterns (`lib/cravings.ts`, `components/craving-patterns.tsx`) show on
+   the journey page for the last 30 days. Never shared with buddies or sponsors;
+   in the export (format 5) and in `deleteUserByClerkId`.
 8. **Marijuana support** (advertised as "coming soon" on the landing page and in
    onboarding). Cannabis needs its own content rather than relabelled copy: a
    different withdrawal course (irritability, poor sleep and vivid dreams that

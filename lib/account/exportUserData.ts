@@ -1,11 +1,11 @@
 import { db } from '@/db';
-import { users, smokeLogs, buddyLinks, buddySignals, pushSubscriptions } from '@/db/schema';
+import { users, smokeLogs, buddyLinks, buddySignals, pushSubscriptions, cravings } from '@/db/schema';
 import { eq, desc, inArray, or } from 'drizzle-orm';
 
 /**
  * Bumped whenever the shape below changes, so an old file stays interpretable.
  */
-export const EXPORT_FORMAT_VERSION = 4;
+export const EXPORT_FORMAT_VERSION = 5;
 
 /** The profile fields Clerk holds for us, passed in rather than fetched here. */
 export type ExportProfile = {
@@ -57,7 +57,21 @@ export type UserDataExport = {
    * reported when it was turned on. Null when it is off.
    */
   checkinReminder: { timeZone: string } | null;
-  counts: { smokeLogs: number; shares: number; signals: number; devices: number };
+  /** Format 5: every craving recorded from the wellness screen. */
+  cravings: Array<{
+    createdAt: string;
+    trigger: string;
+    strength: number;
+    outcome: string;
+    localHour: number;
+  }>;
+  counts: {
+    smokeLogs: number;
+    shares: number;
+    signals: number;
+    devices: number;
+    cravings: number;
+  };
 };
 
 /**
@@ -147,6 +161,20 @@ export async function exportUserData(
         .where(eq(pushSubscriptions.userId, account.id))
     : [];
 
+  const cravingRows = account
+    ? await db
+        .select({
+          createdAt: cravings.createdAt,
+          trigger: cravings.trigger,
+          strength: cravings.strength,
+          outcome: cravings.outcome,
+          localHour: cravings.localHour,
+        })
+        .from(cravings)
+        .where(eq(cravings.userId, account.id))
+        .orderBy(desc(cravings.createdAt))
+    : [];
+
   const activeShares = shares.filter((s) => !s.revokedAt);
 
   return {
@@ -180,11 +208,13 @@ export async function exportUserData(
     })),
     devices: devices.map((device) => ({ addedAt: device.createdAt.toISOString() })),
     checkinReminder: account?.reminderTimeZone ? { timeZone: account.reminderTimeZone } : null,
+    cravings: cravingRows.map((c) => ({ ...c, createdAt: c.createdAt.toISOString() })),
     counts: {
       smokeLogs: logs.length,
       shares: activeShares.length,
       signals: signals.length,
       devices: devices.length,
+      cravings: cravingRows.length,
     },
   };
 }
