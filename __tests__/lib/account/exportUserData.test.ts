@@ -176,4 +176,13 @@ describe("exportUserData", () => {
     expect(result.devices).toEqual([{ addedAt: at.toISOString() }])
     expect(result.counts.devices).toBe(1)
   })
+
+  it("includes the reminder's time zone when it is on, and null when off", async () => {
+    await mockQueries([{ id: INTERNAL_USER_ID, createdAt: new Date(), reminderTimeZone: "Europe/Sofia" }], [])
+    const { exportUserData } = await import("@/lib/account/exportUserData")
+    expect((await exportUserData(CLERK_USER_ID, PROFILE)).checkinReminder).toEqual({ timeZone: "Europe/Sofia" })
+
+    await mockQueries([{ id: INTERNAL_USER_ID, createdAt: new Date(), reminderTimeZone: null }], [])
+    expect((await exportUserData(CLERK_USER_ID, PROFILE)).checkinReminder).toBeNull()
+  })
 })

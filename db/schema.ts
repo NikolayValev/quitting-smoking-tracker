@@ -20,6 +20,18 @@ export const users = pgTable('users', {
   cigarettesPerPack: integer('cigarettes_per_pack').default(20),
   /** ISO 4217, e.g. GBP. Drives Intl.NumberFormat, not a hardcoded symbol. */
   currency: text('currency'),
+  /**
+   * IANA zone (e.g. Europe/London) the browser reported when the person turned
+   * on the daily check-in reminder. Null means the reminder is off. It is kept
+   * for that alone: it is what makes "today" their day rather than UTC's, and
+   * what keeps a reminder from arriving in their night.
+   */
+  reminderTimeZone: text('reminder_time_zone'),
+  /**
+   * Their local date when a reminder was last sent. Cron delivery is
+   * at-least-once, so this is what stops a repeated run reminding twice.
+   */
+  remindedOn: date('reminded_on'),
 });
 
 /**

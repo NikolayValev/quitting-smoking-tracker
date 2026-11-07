@@ -5,7 +5,7 @@ import { eq, desc, inArray, or } from 'drizzle-orm';
 /**
  * Bumped whenever the shape below changes, so an old file stays interpretable.
  */
-export const EXPORT_FORMAT_VERSION = 3;
+export const EXPORT_FORMAT_VERSION = 4;
 
 /** The profile fields Clerk holds for us, passed in rather than fetched here. */
 export type ExportProfile = {
@@ -52,6 +52,11 @@ export type UserDataExport = {
    * nothing to the person reading the file.
    */
   devices: Array<{ addedAt: string }>;
+  /**
+   * Format 4: the daily check-in reminder, with the time zone the browser
+   * reported when it was turned on. Null when it is off.
+   */
+  checkinReminder: { timeZone: string } | null;
   counts: { smokeLogs: number; shares: number; signals: number; devices: number };
 };
 
@@ -82,7 +87,7 @@ export async function exportUserData(
   profile: ExportProfile,
 ): Promise<UserDataExport> {
   const accountRows = await db
-    .select({ id: users.id, createdAt: users.createdAt })
+    .select({ id: users.id, createdAt: users.createdAt, reminderTimeZone: users.reminderTimeZone })
     .from(users)
     .where(eq(users.clerkUserId, clerkUserId))
     .limit(1);
@@ -174,6 +179,7 @@ export async function exportUserData(
       createdAt: signal.createdAt.toISOString(),
     })),
     devices: devices.map((device) => ({ addedAt: device.createdAt.toISOString() })),
+    checkinReminder: account?.reminderTimeZone ? { timeZone: account.reminderTimeZone } : null,
     counts: {
       smokeLogs: logs.length,
       shares: activeShares.length,

@@ -136,7 +136,7 @@ const SCREENS = {
   account: {
     title: "Account",
     render: () => (
-      <AccountView name="Sam Rivera" email="sam@example.com" settings={SETTINGS} />
+      <AccountView name="Sam Rivera" email="sam@example.com" settings={SETTINGS} checkinReminder />
     ),
   },
   buddies: {

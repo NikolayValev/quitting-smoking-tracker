@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app-header"
 import { AccountView } from "@/components/account-view"
 import { getOrCreateUser } from "@/lib/auth/getOrCreateUser"
 import { getUserSettings } from "@/lib/user-settings.server"
+import { getCheckinReminder } from "@/lib/checkin-reminder.server"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -18,7 +19,8 @@ export default async function AccountPage() {
   }
 
   const user = await currentUser()
-  const settings = await getUserSettings(await getOrCreateUser())
+  const id = await getOrCreateUser()
+  const [settings, checkinReminder] = await Promise.all([getUserSettings(id), getCheckinReminder(id)])
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null
 
   return (
@@ -28,6 +30,7 @@ export default async function AccountPage() {
         name={name}
         email={user?.emailAddresses[0]?.emailAddress ?? null}
         settings={settings}
+        checkinReminder={checkinReminder}
       />
     </div>
   )

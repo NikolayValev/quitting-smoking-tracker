@@ -1,5 +1,6 @@
 import { DeleteAccountButton } from "@/app/account/delete-account-button"
 import { ExportDataButton } from "@/app/account/export-data-button"
+import { CheckinReminder } from "@/components/checkin-reminder"
 import { SettingsForm } from "@/components/settings-form"
 import type { UserSettings } from "@/lib/user-settings"
 
@@ -15,10 +16,12 @@ export function AccountView({
   name,
   email,
   settings,
+  checkinReminder,
 }: {
   name: string | null
   email: string | null
   settings: UserSettings
+  checkinReminder: boolean
 }) {
   return (
     <main className="container mx-auto max-w-2xl px-4 py-12 sm:py-16">
@@ -49,6 +52,8 @@ export function AccountView({
           <SettingsForm settings={settings} submitLabel="Save changes" />
         </div>
       </section>
+
+      <CheckinReminder enabled={checkinReminder} />
 
       <section className="mt-10 border-t border-border/60 pt-8">
         <h2 className="text-sm font-medium text-muted-foreground">Your data</h2>

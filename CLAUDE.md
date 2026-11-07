@@ -55,12 +55,14 @@ which now covers the sponsor cycle.
 Constraint: **no paid infrastructure.** Stay on free tiers (Vercel Hobby, Neon,
 PostHog, Clerk free) and prefer approaches that need no vendor at all.
 
-1. **Apply `0006` and `0007` to Neon** (`pnpm db:migrate`), then run
-   `pnpm verify:buddies`. Until then, `/buddies`, account deletion and export fail
-   in production. Nobody uses it yet, but do this before inviting anyone.
+1. **Apply `0006`, `0007` and `0008` to Neon** (`pnpm db:migrate`), then run
+   `pnpm verify:buddies`. Until then, `/buddies`, `/account`, account deletion and
+   export fail in production. Nobody uses it yet, but do this before inviting anyone.
 2. **Set the VAPID keys** in Vercel: run `pnpm exec web-push generate-vapid-keys`
    once, then set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Push stays
    off until both are set. Do not rotate them, since that drops every subscribed device.
+   Also set `CRON_SECRET` (any long random string): until it is set the reminder
+   cron endpoint refuses every caller, Vercel included.
 3. ~~**Look at the screens**~~ — done 2026-11-05, all 49 captures reviewed locally.
    Fixed what they showed: a slip zeroed money saved and cigarettes not smoked
    (now only the streak restarts), the `dashboard-slip` fixture had no "Log today",
@@ -70,8 +72,13 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
    before inviting real users.
 5. **Try push on real phones**: Android Chrome, and iPhone after Add to Home
    Screen. None of it could be exercised in the cloud container.
-6. **Daily check-in reminder** over the same push (`pushToUsers` in `lib/push.ts`),
-   triggered by Vercel Cron. Hobby allows daily frequency.
+6. ~~**Daily check-in reminder**~~ — built 2026-11-07, needs `0008` and `CRON_SECRET`.
+   Toggle on `/account` (`components/checkin-reminder.tsx`), which also subscribes the
+   device and stores the browser's time zone in `users.reminder_time_zone` (null = off).
+   `vercel.json` runs `/api/cron/checkin-reminder` daily at 19:00 UTC: evening in
+   Europe, afternoon in the Americas. Timing rules are pure in `lib/checkin-reminder.ts`
+   (their local day, never 22:00–08:00 local, once per day via `users.reminded_on`).
+   `api/cron` is outside the Clerk matcher; the route checks the bearer secret itself.
 7. **Craving log**: urge, trigger and outcome, with trigger patterns over time.
 8. **Marijuana support** (advertised as "coming soon" on the landing page and in
    onboarding). Cannabis needs its own content rather than relabelled copy: a

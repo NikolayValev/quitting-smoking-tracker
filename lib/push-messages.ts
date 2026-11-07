@@ -40,3 +40,16 @@ export function cheerMessage(kind: CheerText): PushMessage {
     tag: 'cheer',
   };
 }
+
+/**
+ * The daily nudge. Says only that a check-in is due, and opens the dashboard,
+ * which offers the day's log straight away when there is none yet.
+ */
+export function checkinReminderMessage(): PushMessage {
+  return {
+    title: 'Time for today’s check-in',
+    body: 'How did today go? It takes a few seconds.',
+    url: '/dashboard',
+    tag: 'checkin',
+  };
+}

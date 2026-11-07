@@ -20,7 +20,7 @@ vi.mock("@/lib/rate-limit", () => ({
 const CLERK_USER_ID = "user_123"
 
 const EXPORT_PAYLOAD = {
-  format: 3,
+  format: 4,
   exportedAt: "2026-09-13T00:00:00.000Z",
   account: {
     id: "11111111-1111-4111-8111-111111111111",
@@ -34,6 +34,7 @@ const EXPORT_PAYLOAD = {
   shares: [],
   signals: [],
   devices: [],
+  checkinReminder: null,
   counts: { smokeLogs: 0, shares: 0, signals: 0, devices: 0 },
 }
 
