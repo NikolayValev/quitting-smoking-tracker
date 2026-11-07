@@ -61,11 +61,10 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
 2. **Set the VAPID keys** in Vercel: run `pnpm exec web-push generate-vapid-keys`
    once, then set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Push stays
    off until both are set. Do not rotate them, since that drops every subscribed device.
-3. **Look at the screens** (`pnpm screens`): buddies, plus the landing page,
-   dashboard (incl. `dashboard-slip`, `dashboard-empty`), wellness and onboarding
-   after the cigarette-specific rewrite. All
-   were only checked as rendered HTML; Chromium could not reach the dev server
-   in the cloud container.
+3. ~~**Look at the screens**~~ — done 2026-11-05, all 49 captures reviewed locally.
+   Fixed what they showed: a slip zeroed money saved and cigarettes not smoked
+   (now only the streak restarts), the `dashboard-slip` fixture had no "Log today",
+   "Packs not bought" read "Of 20", and the sponsor line ended "in the last 30".
 4. **NIK-117 → NIK-116 → NIK-118**: production Clerk instance, webhook secret, own
    Google credentials. All free; all dashboard/DNS work. NIK-117 must be done
    before inviting real users.

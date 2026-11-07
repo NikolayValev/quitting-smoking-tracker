@@ -105,6 +105,16 @@ const SCREENS = {
         ]}
         now={NOW}
         settings={SETTINGS}
+        action={
+          <DailyLogDialog
+            trigger={
+              <Button className="shrink-0 gap-1.5">
+                <PlusCircle className="h-4 w-4" />
+                Log today
+              </Button>
+            }
+          />
+        }
       />
     ),
   },

@@ -137,7 +137,7 @@ export function DashboardView({
           <dt className="text-sm text-muted-foreground">Packs not bought</dt>
           <dd className="mt-1 text-2xl font-medium">{packsNotBought.toLocaleString("en-GB")}</dd>
           <p className="mt-1 text-xs text-muted-foreground">
-            Of {settings.cigarettesPerPack || DEFAULT_CIGARETTES_PER_PACK}
+            At {settings.cigarettesPerPack || DEFAULT_CIGARETTES_PER_PACK} to a pack
           </p>
         </div>
       </dl>
