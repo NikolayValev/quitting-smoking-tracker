@@ -18,6 +18,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createLog } from "@/app/app/actions"
 import { captureDailyLog } from "@/lib/analytics/posthog"
+import { CountFields, parseCounts, type CountDraft } from "@/components/count-fields"
+import { tracked, type Quitting } from "@/lib/substances"
 
 /**
  * Today in the browser's own time zone.
@@ -44,24 +46,27 @@ function localToday(): string {
 export function DailyLogDialog({
   defaultOpen = false,
   trigger,
+  quitting = "cigarettes",
 }: {
   defaultOpen?: boolean
   trigger?: ReactNode
+  /** Which counts to ask for: one field per substance being quit. */
+  quitting?: Quitting
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(defaultOpen)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [cigarettes, setCigarettes] = useState("")
+  const [draft, setDraft] = useState<CountDraft>({})
   const [note, setNote] = useState("")
   const [date, setDate] = useState(localToday())
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const count = parseInt(cigarettes, 10)
-    if (isNaN(count) || count < 0) {
-      setError("Please enter a valid number (0 or more)")
+    const parsed = parseCounts(tracked(quitting), draft)
+    if (!parsed.ok) {
+      setError(parsed.error)
       return
     }
 
@@ -69,12 +74,13 @@ export function DailyLogDialog({
     setError(null)
 
     try {
-      const result = await createLog({ cigarettes: count, note: note || undefined, date })
+      const result = await createLog({ ...parsed.counts, note: note || undefined, date })
       if (!result.success) throw new Error(result.error || "Failed to save log")
-      // Bucketed count and whether a note was written -- never the note itself.
-      captureDailyLog(count, note.trim().length > 0)
+      // Bucketed total and whether a note was written -- never the note
+      // itself, and never which substance.
+      captureDailyLog(parsed.total, note.trim().length > 0)
       setOpen(false)
-      setCigarettes("")
+      setDraft({})
       setNote("")
       setDate(localToday())
       router.refresh()
@@ -118,20 +124,13 @@ export function DailyLogDialog({
             </p>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="dlg-cigarettes">Cigarettes smoked</Label>
-            <Input
-              id="dlg-cigarettes"
-              type="number"
-              min="0"
-              placeholder="0"
-              value={cigarettes}
-              onChange={(e) => { setCigarettes(e.target.value); setError(null) }}
-              required
-              autoFocus
-            />
-            <p className="text-xs text-muted-foreground">Enter 0 for a smoke-free day.</p>
-          </div>
+          <CountFields
+            substances={tracked(quitting)}
+            draft={draft}
+            onChange={(next) => { setDraft(next); setError(null) }}
+            idPrefix="dlg"
+            autoFocus
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor="dlg-note">

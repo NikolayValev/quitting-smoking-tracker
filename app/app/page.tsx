@@ -10,6 +10,8 @@ import { getOrCreateUser } from '@/lib/auth/getOrCreateUser';
 import { summariseCravings } from '@/lib/cravings';
 import { recentCravings } from '@/lib/cravings.server';
 import { logError } from '@/lib/observability/logger';
+import { getUserSettings } from '@/lib/user-settings.server';
+import { tracked } from '@/lib/substances';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,13 +19,16 @@ export default async function AppPage() {
   const result = await getLogs();
   const logs = result.success ? result.data ?? [] : [];
 
-  // Patterns are an extra. If they cannot be read, the journey still shows.
-  const cravings = await getOrCreateUser()
-    .then((userId) => recentCravings(userId))
-    .catch((error) => {
-      logError('get_cravings_failed', error);
+  const userId = await getOrCreateUser();
+  const [settings, cravings] = await Promise.all([
+    getUserSettings(userId),
+    // Patterns are an extra. If they cannot be read, the journey still shows.
+    recentCravings(userId).catch((error) => {
+      logError('get_cravings_failed', error, { userId });
       return [];
-    });
+    }),
+  ]);
+  const substances = tracked(settings.quitting);
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,10 +50,19 @@ export default async function AppPage() {
         <JourneyView
           editable
           entries={logs}
-          cravings={<CravingPatterns summary={summariseCravings(cravings)} />}
+          quitting={settings.quitting}
+          cravings={substances.map((substance) => (
+            <CravingPatterns
+              key={substance}
+              substance={substance}
+              named={substances.length > 1}
+              summary={summariseCravings(cravings.filter((c) => c.substance === substance))}
+            />
+          ))}
           intro="Every check-in you have logged, and the shape they make."
           action={
             <DailyLogDialog
+              quitting={settings.quitting}
               trigger={
                 <Button className="shrink-0 gap-1.5">
                   <PlusCircle className="h-4 w-4" />

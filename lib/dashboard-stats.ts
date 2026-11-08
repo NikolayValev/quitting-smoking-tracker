@@ -1,7 +1,11 @@
+/**
+ * One day of one substance: how many cigarettes, or how many times cannabis
+ * was used. lib/substances turns a stored check-in into these.
+ */
 export type DashboardLog = {
   id: string
   ts: Date | string
-  cigarettes: number
+  count: number
   note?: string | null
 }
 
@@ -10,11 +14,13 @@ export type DashboardStats = {
   quitDate: Date | null
   smokeFreeDays: number
   smokeFreeHours: number
-  cigarettesNotSmoked: number
-  moneySaved: number
+  /** Cigarettes not smoked, or times cannabis was not used. */
+  notUsed: number
+  /** Null when there is no price to reckon it at. */
+  moneySaved: number | null
   daysTracked: number
   hasLoggedToday: boolean
-  /** Cigarettes a day while smoking — what the savings are reckoned against. */
+  /** A day's count while still using — what the savings are reckoned against. */
   baselinePerDay: number
 }
 
@@ -28,12 +34,21 @@ export const COST_PER_CIGARETTE_USD = 0.5
  * finished onboarding degrades to the old behaviour rather than to zero.
  */
 export type StatsSettings = {
-  /** Cigarettes a day before quitting, as stated rather than inferred. */
+  /** A day's count before quitting, as stated rather than inferred. */
   baselinePerDay?: number | null
-  pricePerCigarette?: number | null
+  /** The price of one cigarette, or one session. */
+  pricePerUnit?: number | null
+  /** The daily rate to assume before there is any history to average. */
+  assumedPerDay?: number
+  /**
+   * The price to assume when none is stated, or null to report no saving.
+   * Cigarettes have a rough pack price to fall back on; cannabis prices vary
+   * too much for a guess to mean anything.
+   */
+  fallbackPrice?: number | null
 }
 
-/** Fallback daily rate before there is enough history to average. */
+/** Fallback daily rate for cigarettes before there is enough history to average. */
 const ASSUMED_DAILY_COUNT = 15
 
 /**
@@ -59,7 +74,7 @@ export function deriveDashboardStats(
   let streakStart: DashboardLog | null = null
   let streakLength = 0
   for (const log of logs) {
-    if (log.cigarettes !== 0) break
+    if (log.count !== 0) break
     streakStart = log
     streakLength++
   }
@@ -76,11 +91,11 @@ export function deriveDashboardStats(
   // A stated baseline wins over the inferred one. Someone who smoked twenty a
   // day for years but only logged the week they spent tapering off would
   // otherwise have their savings measured against the taper.
-  const smokingDays = logs.filter((log) => log.cigarettes > 0)
+  const smokingDays = logs.filter((log) => log.count > 0)
   const inferred =
     smokingDays.length > 0
-      ? smokingDays.reduce((sum, log) => sum + log.cigarettes, 0) / smokingDays.length
-      : ASSUMED_DAILY_COUNT
+      ? smokingDays.reduce((sum, log) => sum + log.count, 0) / smokingDays.length
+      : (settings.assumedPerDay ?? ASSUMED_DAILY_COUNT)
   const avgPerDay =
     settings.baselinePerDay && settings.baselinePerDay > 0
       ? settings.baselinePerDay
@@ -88,21 +103,21 @@ export function deriveDashboardStats(
 
   // A negative or zero price is not a discount; fall back rather than render a
   // saving of nothing, or worse, a negative one.
-  const pricePerCigarette =
-    settings.pricePerCigarette && settings.pricePerCigarette > 0
-      ? settings.pricePerCigarette
-      : COST_PER_CIGARETTE_USD
+  const fallbackPrice =
+    settings.fallbackPrice === undefined ? COST_PER_CIGARETTE_USD : settings.fallbackPrice
+  const pricePerUnit =
+    settings.pricePerUnit && settings.pricePerUnit > 0 ? settings.pricePerUnit : fallbackPrice
 
   // A slip restarts the streak, not the savings: what was not smoked before it
   // still was not smoked. Days logged before the current streak count what each
   // fell short of the baseline, from the first smoke-free day on, so the taper
   // before quitting is not counted as savings.
-  const firstSmokeFree = logs.findLastIndex((log) => log.cigarettes === 0)
+  const firstSmokeFree = logs.findLastIndex((log) => log.count === 0)
   const avoidedEarlier = logs
     .slice(streakLength, firstSmokeFree + 1)
-    .reduce((sum, log) => sum + Math.max(0, avgPerDay - log.cigarettes), 0)
+    .reduce((sum, log) => sum + Math.max(0, avgPerDay - log.count), 0)
 
-  const cigarettesNotSmoked = Math.floor(
+  const notUsed = Math.floor(
     (smokeFreeMinutes / 1440) * avgPerDay + avoidedEarlier,
   )
 
@@ -110,8 +125,8 @@ export function deriveDashboardStats(
     quitDate,
     smokeFreeDays: Math.floor(smokeFreeMinutes / 1440),
     smokeFreeHours: Math.floor((smokeFreeMinutes % 1440) / 60),
-    cigarettesNotSmoked,
-    moneySaved: cigarettesNotSmoked * pricePerCigarette,
+    notUsed,
+    moneySaved: pricePerUnit === null ? null : notUsed * pricePerUnit,
     baselinePerDay: Math.round(avgPerDay),
     daysTracked: logs.length,
     hasLoggedToday:

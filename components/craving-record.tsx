@@ -9,6 +9,7 @@ import {
   type CravingOutcome,
   type CravingTrigger,
 } from "@/lib/cravings"
+import { SUBSTANCE_COPY, type Substance } from "@/lib/substances"
 
 /**
  * Records one craving: how strong it was and whether it passed. The trigger is
@@ -17,7 +18,13 @@ import {
  * Two taps and no typing, because the person using it is mid-craving or just
  * out of one. Recording is optional; the plan above it works without.
  */
-export function CravingRecord({ trigger }: { trigger: CravingTrigger }) {
+export function CravingRecord({
+  trigger,
+  substance = "cigarettes",
+}: {
+  trigger: CravingTrigger
+  substance?: Substance
+}) {
   const [strength, setStrength] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [recorded, setRecorded] = useState<CravingOutcome | null>(null)
@@ -29,6 +36,7 @@ export function CravingRecord({ trigger }: { trigger: CravingTrigger }) {
     setError(null)
     try {
       const result = await recordCraving({
+        substance,
         trigger,
         strength,
         outcome,
@@ -57,8 +65,8 @@ export function CravingRecord({ trigger }: { trigger: CravingTrigger }) {
           </p>
         ) : (
           <p className="max-w-[58ch] text-sm">
-            Recorded. One cigarette is a slip, not the end of the quit. Put it in
-            today&rsquo;s check-in, and carry on from here.
+            Recorded. {substance === "cannabis" ? "Using once" : "One cigarette"} is a slip,
+            not the end of the quit. Put it in today&rsquo;s check-in, and carry on from here.
           </p>
         )}
       </div>
@@ -110,7 +118,7 @@ export function CravingRecord({ trigger }: { trigger: CravingTrigger }) {
           onClick={() => save("smoked")}
           disabled={strength === null || saving}
         >
-          I smoked
+          {SUBSTANCE_COPY[substance].gaveIn}
         </Button>
       </div>
 

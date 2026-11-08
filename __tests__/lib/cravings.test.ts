@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { getTableConfig } from "drizzle-orm/pg-core"
 import { cravings } from "@/db/schema"
 import { copingStrategies } from "@/lib/data/wellness-tips"
+import { cannabisStrategies } from "@/lib/data/cannabis"
 import {
   CRAVING_TRIGGERS,
   summariseCravings,
@@ -16,6 +17,7 @@ const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000)
 function craving(overrides: Partial<CravingRecord> = {}): CravingRecord {
   return {
     createdAt: daysAgo(1),
+    substance: "cigarettes",
     trigger: "coffee",
     strength: 3,
     outcome: "passed",
@@ -25,10 +27,14 @@ function craving(overrides: Partial<CravingRecord> = {}): CravingRecord {
 }
 
 describe("craving triggers", () => {
-  it("are the coping-strategy moments plus 'other', in the schema too", () => {
+  it("are the coping-strategy moments of both substances plus 'other', in the schema too", () => {
     // The wellness screen records a strategy id as the trigger. If a strategy
-    // is added without a trigger, recording it fails at the database.
-    expect([...CRAVING_TRIGGERS]).toEqual([...copingStrategies.map((s) => s.id), "other"])
+    // is added without a trigger, recording it fails validation.
+    expect([...CRAVING_TRIGGERS]).toEqual([
+      ...copingStrategies.map((s) => s.id),
+      ...cannabisStrategies.map((s) => s.id),
+      "other",
+    ])
 
     const column = getTableConfig(cravings).columns.find((c) => c.name === "trigger")
     expect(column?.enumValues).toEqual([...CRAVING_TRIGGERS])
@@ -36,7 +42,14 @@ describe("craving triggers", () => {
 
   it("are labelled the way the wellness screen names them", () => {
     expect(triggerLabel("coffee")).toBe("With coffee")
+    expect(triggerLabel("sleep")).toBe("To get to sleep")
     expect(triggerLabel("other")).toBe("Something else")
+  })
+
+  it("never share an id between the two substances", () => {
+    // A shared id would label one substance's craving with the other's plan.
+    const cigarette = new Set(copingStrategies.map((s) => s.id))
+    expect(cannabisStrategies.filter((s) => cigarette.has(s.id))).toEqual([])
   })
 })
 

@@ -4,6 +4,7 @@ import { UrgeResistance } from "@/components/urge-resistance"
 
 // A server action: under Next it becomes a network call; here it is a spy.
 vi.mock("@/app/wellness/actions", () => ({ recordCraving: vi.fn() }))
+vi.mock("@/lib/analytics/posthog", () => ({ captureCraving: vi.fn() }))
 
 describe("UrgeResistance", () => {
   it("offers every strategy as a choice", () => {
@@ -83,6 +84,7 @@ describe("UrgeResistance", () => {
 
       await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Recorded"))
       expect(recordCraving).toHaveBeenCalledWith({
+        substance: "cigarettes",
         trigger: "drink",
         strength: 4,
         outcome: "passed",
@@ -102,6 +104,37 @@ describe("UrgeResistance", () => {
       // A slip is met with the next step, not a verdict.
       await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("slip, not the end"))
       expect(vi.mocked(recordCraving).mock.calls[0][0]).toMatchObject({ trigger: "other", outcome: "smoked" })
+    })
+
+    it("offers cannabis plans and records against cannabis, in its own words", async () => {
+      const { recordCraving } = await import("@/app/wellness/actions")
+      vi.mocked(recordCraving).mockResolvedValue({ success: true })
+
+      render(<UrgeResistance substance="cannabis" />)
+      expect(screen.queryByText("With coffee")).toBeNull()
+      fireEvent.click(screen.getByText("To get to sleep"))
+      fireEvent.click(screen.getByRole("radio", { name: "3" }))
+      fireEvent.click(screen.getByRole("button", { name: "I used" }))
+
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Using once is a slip"))
+      expect(vi.mocked(recordCraving).mock.calls[0][0]).toMatchObject({
+        substance: "cannabis",
+        trigger: "sleep",
+        outcome: "smoked",
+      })
+    })
+
+    it("does not tell analytics which cannabis plan was opened", async () => {
+      // The id alone would say what the person is quitting.
+      const { captureCraving } = await import("@/lib/analytics/posthog")
+
+      render(<UrgeResistance substance="cannabis" />)
+      fireEvent.click(screen.getByText("With people who use"))
+      expect(captureCraving).toHaveBeenLastCalledWith(undefined)
+
+      render(<UrgeResistance />)
+      fireEvent.click(screen.getByText("With coffee"))
+      expect(captureCraving).toHaveBeenLastCalledWith("coffee")
     })
   })
 })

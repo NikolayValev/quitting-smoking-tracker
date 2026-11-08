@@ -7,7 +7,7 @@ vi.mock("@/lib/observability/logger", () => ({ logError: vi.fn() }))
 vi.mock("@/lib/cravings.server", () => ({ recordCraving: vi.fn() }))
 
 const USER = "11111111-1111-4111-8111-111111111111"
-const CRAVING = { trigger: "coffee", strength: 4, outcome: "passed", localHour: 8 }
+const CRAVING = { substance: "cigarettes", trigger: "coffee", strength: 4, outcome: "passed", localHour: 8 }
 
 async function signedIn(allowed = true) {
   const { getOrCreateUser } = await import("@/lib/auth/getOrCreateUser")
@@ -45,6 +45,16 @@ describe("recordCraving", () => {
 
     expect((await recordCraving({ ...CRAVING, strength: 6 })).success).toBe(false)
     expect((await recordCraving({ ...CRAVING, localHour: 24 })).success).toBe(false)
+  })
+
+  it("refuses a craving with no substance, or one it does not know", async () => {
+    await signedIn()
+    const { recordCraving } = await import("@/app/wellness/actions")
+    const withoutSubstance: Partial<typeof CRAVING> = { ...CRAVING }
+    delete withoutSubstance.substance
+
+    expect((await recordCraving(withoutSubstance)).success).toBe(false)
+    expect((await recordCraving({ ...CRAVING, substance: "alcohol" })).success).toBe(false)
   })
 
   it("is rate limited like every other write", async () => {

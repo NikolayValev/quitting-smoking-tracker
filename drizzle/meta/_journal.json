@@ -71,6 +71,13 @@
       "when": 1794094940213,
       "tag": "0009_craving_log",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794107069853,
+      "tag": "0010_cannabis",
+      "breakpoints": true
     }
   ]
 }

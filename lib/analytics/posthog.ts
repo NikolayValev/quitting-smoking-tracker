@@ -84,20 +84,31 @@ export function resetUser(): void {
   posthog.reset()
 }
 
-/** A daily log. Splits into streak vs relapse; never carries the note text. */
-export function captureDailyLog(cigarettes: number, hasNote: boolean): void {
+/**
+ * A daily log. Splits into streak vs relapse; never carries the note text.
+ *
+ * `count` is the day's total across whatever the person is quitting, and the
+ * event does not say which substance that was. Cannabis is illegal in a lot of
+ * places, and analytics has no need to know who uses it. The property keeps
+ * its old name so existing insights keep working.
+ */
+export function captureDailyLog(count: number, hasNote: boolean): void {
   if (!enabled) return
-  posthog.capture(cigarettes === 0 ? "streak_day_logged" : "relapse_logged", {
-    cigarettes_bucket: bucketCigarettes(cigarettes),
+  posthog.capture(count === 0 ? "streak_day_logged" : "relapse_logged", {
+    cigarettes_bucket: bucketCigarettes(count),
     // Whether a note was written, never what it said.
     note_included: hasNote,
   })
 }
 
-/** Reaching for a coping strategy. `strategy` is an app-defined id, not user text. */
-export function captureCraving(strategy: string): void {
+/**
+ * Reaching for a coping strategy. `strategy` is an app-defined id, not user
+ * text. It is left out for cannabis plans, whose ids alone would say what the
+ * person is quitting; see captureDailyLog.
+ */
+export function captureCraving(strategy?: string): void {
   if (!enabled) return
-  posthog.capture("craving_logged", { strategy })
+  posthog.capture("craving_logged", strategy ? { strategy } : {})
 }
 
 /**

@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
-import { CalendarClock, Coffee, HeartHandshake, PiggyBank } from "lucide-react"
+import { CalendarClock, Coffee, HeartHandshake, Moon, PiggyBank } from "lucide-react"
 
 /**
- * Each feature names something specific to cigarettes. The earlier copy ("A
- * reason to come back", "advice on health and motivation") could have been on
- * any wellness app, which is what made the page read as generic.
+ * Each feature names something specific to what is being quit. The earlier
+ * copy ("A reason to come back", "advice on health and motivation") could have
+ * been on any wellness app, which is what made the page read as generic.
+ * Cigarettes lead because most people arriving are quitting them; cannabis has
+ * a feature of its own rather than a word added to each of the others.
  */
 const features = [
   {
@@ -23,6 +25,11 @@ const features = [
     icon: PiggyBank,
     title: "What the packs were costing you",
     body: "Set your pack price in your own currency and watch what you keep add up. Health milestones, from twenty minutes to ten years, mark themselves off.",
+  },
+  {
+    icon: Moon,
+    title: "Cannabis too, on its own terms",
+    body: "Quitting cannabis, or both? Its withdrawal runs on a different clock: the worst of it in the first week, and sleep the last thing to recover. It gets its own notes, its own plans for evenings and bedtime, and a streak of its own.",
   },
   {
     icon: HeartHandshake,
@@ -56,12 +63,15 @@ export default function HomePage() {
             <span className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 font-medium text-foreground">
               For quitting cigarettes
             </span>
-            <span className="rounded-full border border-dashed border-border px-3 py-1">
-              Marijuana — coming soon
+            <span className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 font-medium text-foreground">
+              Cannabis
+            </span>
+            <span className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 font-medium text-foreground">
+              Or both
             </span>
           </p>
           <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-            Quitting cigarettes is a lot of small days.
+            Quitting is a lot of small days.
             <span className="block text-muted-foreground">This counts them.</span>
           </h1>
           <p className="mt-6 max-w-[58ch] text-lg text-muted-foreground">

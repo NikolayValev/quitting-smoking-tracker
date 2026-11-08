@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { triggerLabel, type CravingSummary, type TimeOfDay } from "@/lib/cravings"
+import type { Substance } from "@/lib/substances"
 
 const PERIOD: Record<TimeOfDay, string> = {
   morning: "Mornings",
@@ -17,10 +18,24 @@ const PERIOD: Record<TimeOfDay, string> = {
  * Plain rows and numbers rather than a chart: there are at most eight
  * triggers, and a sorted list already reads as a ranking.
  */
-export function CravingPatterns({ summary }: { summary: CravingSummary | null }) {
+export function CravingPatterns({
+  summary,
+  substance = "cigarettes",
+  named = false,
+}: {
+  summary: CravingSummary | null
+  substance?: Substance
+  /** Say which substance, for someone quitting both, who sees two of these. */
+  named?: boolean
+}) {
+  const gaveIn = substance === "cannabis" ? "used" : "smoked"
   return (
     <section className="mt-12">
-      <h2 className="text-sm font-medium text-muted-foreground">Cravings, last 30 days</h2>
+      <h2 className="text-sm font-medium text-muted-foreground">
+        {named
+          ? `${substance === "cannabis" ? "Cannabis" : "Cigarette"} cravings, last 30 days`
+          : "Cravings, last 30 days"}
+      </h2>
 
       {!summary ? (
         <p className="mt-3 max-w-[58ch] text-sm text-muted-foreground">
@@ -59,7 +74,7 @@ export function CravingPatterns({ summary }: { summary: CravingSummary | null })
                 <span className="text-sm font-medium">{triggerLabel(trigger)}</span>
                 <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
                   {count} {count === 1 ? "time" : "times"}
-                  {passed < count && ` · ${count - passed} smoked`}
+                  {passed < count && ` · ${count - passed} ${gaveIn}`}
                 </span>
               </li>
             ))}

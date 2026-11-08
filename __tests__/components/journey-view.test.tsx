@@ -20,6 +20,7 @@ function entries(
     id: `e-${i}`,
     ts: new Date(NOW.getTime() - i * DAY),
     cigarettes: s.cigarettes,
+    sessions: null,
     note: s.note ?? null,
   }))
 }
@@ -78,5 +79,20 @@ describe("JourneyView", () => {
     )
 
     expect(screen.getByText("11")).toBeInTheDocument()
+  })
+
+  it("counts a streak across both, and names each count on a day", () => {
+    const log = [
+      { id: "a", ts: new Date(NOW.getTime()), cigarettes: 0, sessions: 0, note: "a" },
+      { id: "b", ts: new Date(NOW.getTime() - DAY), cigarettes: 0, sessions: 2, note: null },
+      { id: "c", ts: new Date(NOW.getTime() - 2 * DAY), cigarettes: 6, sessions: 0, note: null },
+    ]
+
+    render(<JourneyView entries={log} quitting="both" now={NOW} />)
+
+    // Clean only since the day nothing was used, so the cannabis day ends it.
+    expect(screen.getByText("free of both", { exact: false })).toBeInTheDocument()
+    expect(screen.getByText("Smoke-free · Cannabis 2 times")).toBeInTheDocument()
+    expect(screen.getByText("6 cigarettes · Cannabis-free")).toBeInTheDocument()
   })
 })

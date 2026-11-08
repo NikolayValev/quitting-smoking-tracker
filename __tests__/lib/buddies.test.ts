@@ -64,7 +64,7 @@ describe("toSharedSummary", () => {
     const logs = Array.from({ length: 10 }, (_, i) => ({
       id: `l-${i}`,
       ts: new Date(NOW.getTime() - i * DAY),
-      cigarettes: 0,
+      count: 0,
     }))
 
     const summary = toSharedSummary(logs, NOW)
@@ -80,8 +80,8 @@ describe("toSharedSummary", () => {
     // careless spread of the log row fails here instead of shipping.
     const { toSharedSummary } = await import("@/lib/buddies")
     const logs = [
-      { id: "l-1", ts: NOW, cigarettes: 0, note: "the worst day of my life" },
-      { id: "l-2", ts: new Date(NOW.getTime() - DAY), cigarettes: 12, note: "relapsed" },
+      { id: "l-1", ts: NOW, count: 0, note: "the worst day of my life" },
+      { id: "l-2", ts: new Date(NOW.getTime() - DAY), count: 12, note: "relapsed" },
     ]
 
     const summary = toSharedSummary(logs, NOW)
@@ -98,7 +98,7 @@ describe("toSharedSummary", () => {
 
   it("reports no streak for someone who has not stopped", async () => {
     const { toSharedSummary } = await import("@/lib/buddies")
-    const summary = toSharedSummary([{ id: "l", ts: NOW, cigarettes: 4 }], NOW)
+    const summary = toSharedSummary([{ id: "l", ts: NOW, count: 4 }], NOW)
 
     expect(summary.smokeFreeDays).toBe(0)
     expect(summary.quitDate).toBeNull()
@@ -113,8 +113,8 @@ describe("toSponsorSummary", () => {
     // same way: the day of the last slip and how many days, never how much.
     const { toSponsorSummary } = await import("@/lib/buddies")
     const logs = [
-      { id: "l-1", ts: NOW, logDate: day(0), cigarettes: 0, note: "rough evening" },
-      { id: "l-2", ts: new Date(NOW.getTime() - DAY), logDate: day(1), cigarettes: 17 },
+      { id: "l-1", ts: NOW, logDate: day(0), count: 0, note: "rough evening" },
+      { id: "l-2", ts: new Date(NOW.getTime() - DAY), logDate: day(1), count: 17 },
     ]
 
     const summary = toSponsorSummary(logs, NOW)
@@ -134,9 +134,9 @@ describe("toSponsorSummary", () => {
   it("counts slips in days inside the window, not in cigarettes", async () => {
     const { toSponsorSummary, SLIP_WINDOW_DAYS } = await import("@/lib/buddies")
     const logs = [
-      { id: "a", ts: new Date(NOW.getTime() - 2 * DAY), logDate: day(2), cigarettes: 9 },
-      { id: "b", ts: new Date(NOW.getTime() - 5 * DAY), logDate: day(5), cigarettes: 1 },
-      { id: "c", ts: new Date(NOW.getTime() - (SLIP_WINDOW_DAYS + 3) * DAY), logDate: day(SLIP_WINDOW_DAYS + 3), cigarettes: 20 },
+      { id: "a", ts: new Date(NOW.getTime() - 2 * DAY), logDate: day(2), count: 9 },
+      { id: "b", ts: new Date(NOW.getTime() - 5 * DAY), logDate: day(5), count: 1 },
+      { id: "c", ts: new Date(NOW.getTime() - (SLIP_WINDOW_DAYS + 3) * DAY), logDate: day(SLIP_WINDOW_DAYS + 3), count: 20 },
     ]
 
     const summary = toSponsorSummary(logs, NOW)
@@ -147,7 +147,7 @@ describe("toSponsorSummary", () => {
 
   it("reports no slip for someone who has never logged one", async () => {
     const { toSponsorSummary } = await import("@/lib/buddies")
-    const summary = toSponsorSummary([{ id: "l", ts: NOW, logDate: day(0), cigarettes: 0 }], NOW)
+    const summary = toSponsorSummary([{ id: "l", ts: NOW, logDate: day(0), count: 0 }], NOW)
 
     expect(summary.lastSlipOn).toBeNull()
     expect(summary.slipDaysRecent).toBe(0)
@@ -237,8 +237,8 @@ describe("getSharedSummary", () => {
   it("gives a sponsor the sponsor fields and a buddy only the buddy ones", async () => {
     const { db } = await import("@/db")
     const logs = [
-      { id: "l", ts: NOW, logDate: "2025-03-01", cigarettes: 0 },
-      { id: "m", ts: new Date(NOW.getTime() - DAY), logDate: "2025-02-28", cigarettes: 3 },
+      { id: "l", ts: NOW, logDate: "2025-03-01", cigarettes: 0, sessions: null },
+      { id: "m", ts: new Date(NOW.getTime() - DAY), logDate: "2025-02-28", cigarettes: null, sessions: 3 },
     ]
     const serve = (role: string) =>
       vi
@@ -254,6 +254,8 @@ describe("getSharedSummary", () => {
 
     serve("sponsor")
     const sponsor = await getSharedSummary(OWNER, BUDDY, NOW)
+    // The slip was cannabis, and the sponsor learns there was a slip without
+    // learning what it was: the summary has no field that could say.
     expect(sponsor).toMatchObject({ lastSlipOn: "2025-02-28", slipDaysRecent: 1 })
 
     serve("buddy")

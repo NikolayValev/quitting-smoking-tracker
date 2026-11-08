@@ -16,16 +16,18 @@ export default function PrivacyPage() {
         </div>
 
         <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
-        <p className="text-muted-foreground mb-8">Last updated: September 2026</p>
+        <p className="text-muted-foreground mb-8">Last updated: November 2026</p>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-6">
           <section>
             <h2 className="text-xl font-semibold mb-3">What we collect</h2>
             <p className="text-muted-foreground">
               When you sign in with Google, we receive your name and email address from Google. We also store
-              what you enter in the app: how many cigarettes you smoked a day before quitting, the price of a
-              pack and how many are in it, your daily check-ins and any note on them, and the cravings you
-              record (the moment it hit, how strong it was, whether it passed, and the hour on your clock).
+              what you enter in the app: whether you are quitting cigarettes, cannabis or both; how much you
+              smoked or used a day before quitting and what it cost; your daily check-ins, with how many
+              cigarettes you smoked and how many times you used cannabis, and any note on them; and the
+              cravings you record (which substance, the moment it hit, how strong it was, whether it passed,
+              and the hour on your clock).
             </p>
             <p className="text-muted-foreground mt-3">
               If you turn on notifications, we store the address your browser gives us for delivering them. If
@@ -71,11 +73,13 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">Sharing with a buddy</h2>
             <p className="text-muted-foreground">
-              You can invite one or more people to follow your progress. If you do, they
-              can see only two things: how many days you have been smoke-free, and how many
-              health milestones you have reached. They cannot see your individual check-ins,
-              your daily cigarette counts, or any note you have written — those never leave
-              your account.
+              You can invite one or more people to follow your progress. A buddy sees two
+              things: how many days you have gone without, and how many health milestones
+              you have reached. A sponsor also sees the last day you slipped and how many days
+              you slipped in the past month. Neither can see what you are quitting, your
+              individual check-ins, how much you smoked or used on any day, or any note you
+              have written — those never leave your account. If you are quitting both, the
+              streak they see counts only days with neither.
             </p>
             <p className="text-muted-foreground mt-3">
               Sharing is off unless you create an invite. Invite links expire after seven
@@ -91,7 +95,7 @@ export default function PrivacyPage() {
               We use Vercel Analytics to understand aggregate usage patterns (page views, performance); it does not
               use cookies or collect personally identifiable information. We also use PostHog to understand product
               usage — sign-ins, daily logs, craving strategies, and milestones reached. PostHog events are tied to
-              your Clerk user ID, never your name or email, and never include your notes or exact cigarette counts
+              your Clerk user ID, never your name or email, and never include your notes, what you are quitting, or exact counts
               (only coarse ranges). Session recording and click-content capture are disabled.
             </p>
           </section>

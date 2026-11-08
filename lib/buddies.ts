@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { buddyLinks, smokeLogs, users, type BuddyLink } from '@/db/schema';
 import { deriveDashboardStats, type DashboardLog } from '@/lib/dashboard-stats';
 import { milestonesReached, MILESTONE_COUNT } from '@/lib/milestones';
+import { combinedSeries } from '@/lib/substances';
 
 /** How long an unaccepted invite stays usable. */
 export const INVITE_TTL_DAYS = 7;
@@ -16,6 +17,10 @@ const DAY_MS = 86_400_000;
  * so adding a column to smoke_logs cannot widen what a buddy sees. Notes and
  * per-day counts are not here and must not be added — the share was offered on
  * the promise that they are not.
+ *
+ * Nor is what the person is quitting. The streak is of days with nothing used,
+ * across cigarettes and cannabis alike, so a supporter cannot tell from it
+ * whether someone uses cannabis (see combinedSeries in lib/substances).
  */
 export type SharedSummary = {
   smokeFreeDays: number;
@@ -33,9 +38,9 @@ export type SharedSummary = {
  * as private as it is for a buddy.
  */
 export type SponsorSummary = SharedSummary & {
-  /** The most recent day with any cigarettes, as YYYY-MM-DD, or null if none logged. */
+  /** The most recent day with any use, as YYYY-MM-DD, or null if none logged. */
   lastSlipOn: string | null;
-  /** How many of the last SLIP_WINDOW_DAYS days had any cigarettes. */
+  /** How many of the last SLIP_WINDOW_DAYS days had any use. */
   slipDaysRecent: number;
 };
 
@@ -80,7 +85,7 @@ export type SponsorLog = DashboardLog & { logDate: string };
 export function toSponsorSummary(logs: SponsorLog[], now: Date = new Date()): SponsorSummary {
   const shared = toSharedSummary(logs, now);
   const since = now.getTime() - SLIP_WINDOW_DAYS * DAY_MS;
-  const slips = logs.filter((log) => log.cigarettes > 0);
+  const slips = logs.filter((log) => log.count > 0);
 
   return {
     smokeFreeDays: shared.smokeFreeDays,
@@ -282,16 +287,20 @@ export async function getSharedSummary(
   const link = found[0];
   if (!link || linkState(link, now) !== 'active') return null;
 
-  const logs = await db
+  const rows = await db
     .select({
       id: smokeLogs.id,
       ts: smokeLogs.ts,
       logDate: smokeLogs.logDate,
       cigarettes: smokeLogs.cigarettes,
+      sessions: smokeLogs.sessions,
     })
     .from(smokeLogs)
     .where(eq(smokeLogs.userId, ownerUserId))
     .orderBy(desc(smokeLogs.ts));
+
+  // One count per day, so neither summary can say which substance it was.
+  const logs = combinedSeries(rows).map((log, i) => ({ ...log, logDate: rows[i].logDate }));
 
   return link.role === 'sponsor' ? toSponsorSummary(logs, now) : toSharedSummary(logs, now);
 }

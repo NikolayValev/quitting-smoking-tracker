@@ -6,7 +6,7 @@ import { TipCategory } from "@/components/tip-category"
 import { wellnessTips, type WellnessTip } from "@/lib/data/wellness-tips"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export function TipLibrary() {
+export function TipLibrary({ tips = wellnessTips }: { tips?: WellnessTip[] }) {
   const [selectedTip, setSelectedTip] = useState<WellnessTip | null>(null)
 
   const categories = ["all", "health", "motivation", "coping", "financial", "lifestyle"] as const
@@ -40,7 +40,7 @@ export function TipLibrary() {
     <Card>
       <CardHeader>
         <CardTitle>Wellness Tip Library</CardTitle>
-        <CardDescription>Explore helpful tips to support your smoke-free journey</CardDescription>
+        <CardDescription>Explore helpful tips to support your quit</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all" className="w-full">
@@ -54,7 +54,7 @@ export function TipLibrary() {
 
           {categories.map((category) => (
             <TabsContent key={category} value={category} className="mt-4 space-y-3">
-              {wellnessTips
+              {tips
                 .filter((tip) => category === "all" || tip.category === category)
                 .map((tip) => (
                   <button

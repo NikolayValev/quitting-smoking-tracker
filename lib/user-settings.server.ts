@@ -20,9 +20,12 @@ import {
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const rows = await db
     .select({
+      quitting: users.quitting,
       baselinePerDay: users.baselinePerDay,
       pricePerPack: users.pricePerPack,
       cigarettesPerPack: users.cigarettesPerPack,
+      sessionsPerDay: users.sessionsPerDay,
+      pricePerSession: users.pricePerSession,
       currency: users.currency,
     })
     .from(users)
@@ -33,11 +36,14 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
   if (!row) return EMPTY_SETTINGS;
 
   return {
+    quitting: row.quitting,
     baselinePerDay: row.baselinePerDay ?? null,
     // numeric comes back as a string from the driver, so that money does not
     // pass through a float on its way out of Postgres.
     pricePerPack: row.pricePerPack === null ? null : Number(row.pricePerPack),
     cigarettesPerPack: row.cigarettesPerPack ?? DEFAULT_CIGARETTES_PER_PACK,
+    sessionsPerDay: row.sessionsPerDay ?? null,
+    pricePerSession: row.pricePerSession === null ? null : Number(row.pricePerSession),
     currency: row.currency ?? DEFAULT_CURRENCY,
   };
 }

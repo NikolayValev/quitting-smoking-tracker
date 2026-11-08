@@ -7,6 +7,8 @@ import { MotivationalHero } from "@/components/motivational-hero"
 import { QuitSupport } from "@/components/quit-support"
 import type { WellnessTip } from "@/lib/data/wellness-tips"
 import type { MotivationalQuote } from "@/lib/data/motivational-quotes"
+import { tipsFor } from "@/lib/substance-content"
+import { SUBSTANCE_COPY, tracked, type Quitting } from "@/lib/substances"
 
 /**
  * The wellness screen.
@@ -27,19 +29,27 @@ export function WellnessView({
   quote,
   tip,
   openPlan,
+  quitting = "cigarettes",
 }: {
   quote: MotivationalQuote
   tip: WellnessTip
   /** Dev screens only: a craving plan to show already open. */
   openPlan?: string
+  quitting?: Quitting
 }) {
+  const substances = tracked(quitting)
+  const both = substances.length > 1
   return (
     <main className="container mx-auto max-w-3xl px-4 py-12 sm:py-16">
       {/* The most useful sentence on the screen, and previously buried in the
           tip library: a craving is survivable and short. */}
       <section>
         <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          A craving passes in about five minutes.
+          {/* Five minutes is the nicotine figure. Cannabis cravings are not
+              timed that precisely, so that headline says only what is known. */}
+          {quitting === "cigarettes"
+            ? "A craving passes in about five minutes."
+            : "A craving rises, peaks and passes."}
         </h1>
         <p className="mt-4 max-w-[58ch] text-lg text-muted-foreground">
           Here is something to do with them.
@@ -52,14 +62,23 @@ export function WellnessView({
 
       <section className="mt-14">
         <h2 className="text-sm font-medium text-muted-foreground">When does it usually hit?</h2>
-        <div className="mt-4">
-          <UrgeResistance initialStrategy={openPlan} />
-        </div>
+        {substances.map((substance) => (
+          <div key={substance} className="mt-4">
+            {both && (
+              <h3 className="mb-3 mt-8 text-base font-medium tracking-tight first:mt-0">
+                {SUBSTANCE_COPY[substance].name}
+              </h3>
+            )}
+            <UrgeResistance substance={substance} initialStrategy={openPlan} />
+          </div>
+        ))}
       </section>
 
-      <div className="mt-14">
-        <QuitSupport />
-      </div>
+      {substances.map((substance) => (
+        <div key={substance} className="mt-14">
+          <QuitSupport substance={substance} named={both} />
+        </div>
+      ))}
 
       <section className="mt-14">
         <h2 className="text-sm font-medium text-muted-foreground">Longer sessions</h2>
@@ -85,7 +104,7 @@ export function WellnessView({
             <span className="hidden group-open:inline">Hide the tips</span>
           </summary>
           <div className="mt-6">
-            <TipLibrary />
+            <TipLibrary tips={tipsFor(quitting)} />
           </div>
         </details>
       </section>

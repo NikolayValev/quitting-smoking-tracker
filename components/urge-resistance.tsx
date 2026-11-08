@@ -3,10 +3,11 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { copingStrategies } from "@/lib/data/wellness-tips"
 import { captureCraving } from "@/lib/analytics/posthog"
 import { CravingRecord } from "@/components/craving-record"
 import type { CravingTrigger } from "@/lib/cravings"
+import { strategiesFor } from "@/lib/substance-content"
+import type { Substance } from "@/lib/substances"
 import { ChevronRight, CheckCircle2 } from "lucide-react"
 
 /**
@@ -15,7 +16,17 @@ import { ChevronRight, CheckCircle2 } from "lucide-react"
  * `initialStrategy` opens one plan straight away. Only the dev screens use it,
  * so the open state can be looked at without clicking.
  */
-export function UrgeResistance({ initialStrategy = null }: { initialStrategy?: string | null }) {
+export function UrgeResistance({
+  initialStrategy = null,
+  substance = "cigarettes",
+}: {
+  initialStrategy?: string | null
+  /** Whose plans to offer, and which quit a recorded craving belongs to. */
+  substance?: Substance
+}) {
+  const copingStrategies = strategiesFor(substance)
+  // Only cigarette plan ids go to analytics; see captureCraving.
+  const signal = (id: string) => captureCraving(substance === "cigarettes" ? id : undefined)
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(initialStrategy)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
 
@@ -72,12 +83,20 @@ export function UrgeResistance({ initialStrategy = null }: { initialStrategy?: s
 
           {completedSteps.length === selectedStrategyData.steps.length && (
             <div className="mt-6 p-4 bg-primary/10 rounded-lg text-center">
-              <p className="font-medium text-primary">That one passed without a cigarette.</p>
+              <p className="font-medium text-primary">
+                {substance === "cannabis"
+                  ? "That one passed without using."
+                  : "That one passed without a cigarette."}
+              </p>
               <p className="text-sm text-muted-foreground mt-1">Next time this moment comes round, it will be a little easier.</p>
             </div>
           )}
 
-          <CravingRecord key={selectedStrategyData.id} trigger={selectedStrategyData.id as CravingTrigger} />
+          <CravingRecord
+            key={selectedStrategyData.id}
+            substance={substance}
+            trigger={selectedStrategyData.id as CravingTrigger}
+          />
         </CardContent>
       </Card>
     )
@@ -100,7 +119,7 @@ export function UrgeResistance({ initialStrategy = null }: { initialStrategy?: s
           </div>
         </CardHeader>
         <CardContent>
-          <CravingRecord key="other" trigger="other" />
+          <CravingRecord key="other" substance={substance} trigger="other" />
         </CardContent>
       </Card>
     )
@@ -117,7 +136,7 @@ export function UrgeResistance({ initialStrategy = null }: { initialStrategy?: s
             onClick={() => {
               // Reaching for a strategy is the craving signal. The id is
               // app-defined content, not anything the user wrote.
-              captureCraving(strategy.id)
+              signal(strategy.id)
               setSelectedStrategy(strategy.id)
             }}
             className="group flex w-full items-center justify-between gap-4 rounded-xl border border-border/60 bg-card px-5 py-4 text-left transition-colors hover:border-border hover:bg-muted/40"
@@ -139,7 +158,7 @@ export function UrgeResistance({ initialStrategy = null }: { initialStrategy?: s
         {/* Quieter than the plans: it has no plan, only the record. */}
         <button
           onClick={() => {
-            captureCraving("other")
+            signal("other")
             setSelectedStrategy("other")
           }}
           className="px-5 py-3 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"

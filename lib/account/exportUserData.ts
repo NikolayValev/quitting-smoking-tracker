@@ -5,7 +5,7 @@ import { eq, desc, inArray, or } from 'drizzle-orm';
 /**
  * Bumped whenever the shape below changes, so an old file stays interpretable.
  */
-export const EXPORT_FORMAT_VERSION = 5;
+export const EXPORT_FORMAT_VERSION = 6;
 
 /** The profile fields Clerk holds for us, passed in rather than fetched here. */
 export type ExportProfile = {
@@ -25,10 +25,28 @@ export type UserDataExport = {
     firstName: string | null;
     lastName: string | null;
   };
+  /**
+   * Format 6: what this person is quitting and what their savings are
+   * reckoned from. Null when there is no account row yet.
+   */
+  settings: {
+    quitting: string;
+    cigarettesPerDayBefore: number | null;
+    pricePerPack: string | null;
+    cigarettesPerPack: number | null;
+    cannabisSessionsPerDayBefore: number | null;
+    pricePerSession: string | null;
+    currency: string | null;
+  } | null;
+  /**
+   * Format 6: `cigarettes` and `sessions` (times cannabis was used) are each
+   * null on a day that did not record that substance.
+   */
   smokeLogs: Array<{
     id: string;
     ts: string;
-    cigarettes: number;
+    cigarettes: number | null;
+    sessions: number | null;
     note: string | null;
   }>;
   /** Who this person shares their streak with, and whose they can see. */
@@ -60,6 +78,8 @@ export type UserDataExport = {
   /** Format 5: every craving recorded from the wellness screen. */
   cravings: Array<{
     createdAt: string;
+    /** Format 6. */
+    substance: string;
     trigger: string;
     strength: number;
     outcome: string;
@@ -101,7 +121,18 @@ export async function exportUserData(
   profile: ExportProfile,
 ): Promise<UserDataExport> {
   const accountRows = await db
-    .select({ id: users.id, createdAt: users.createdAt, reminderTimeZone: users.reminderTimeZone })
+    .select({
+      id: users.id,
+      createdAt: users.createdAt,
+      reminderTimeZone: users.reminderTimeZone,
+      quitting: users.quitting,
+      baselinePerDay: users.baselinePerDay,
+      pricePerPack: users.pricePerPack,
+      cigarettesPerPack: users.cigarettesPerPack,
+      sessionsPerDay: users.sessionsPerDay,
+      pricePerSession: users.pricePerSession,
+      currency: users.currency,
+    })
     .from(users)
     .where(eq(users.clerkUserId, clerkUserId))
     .limit(1);
@@ -117,6 +148,7 @@ export async function exportUserData(
           id: smokeLogs.id,
           ts: smokeLogs.ts,
           cigarettes: smokeLogs.cigarettes,
+          sessions: smokeLogs.sessions,
           note: smokeLogs.note,
         })
         .from(smokeLogs)
@@ -165,6 +197,7 @@ export async function exportUserData(
     ? await db
         .select({
           createdAt: cravings.createdAt,
+          substance: cravings.substance,
           trigger: cravings.trigger,
           strength: cravings.strength,
           outcome: cravings.outcome,
@@ -188,10 +221,24 @@ export async function exportUserData(
       firstName: profile.firstName,
       lastName: profile.lastName,
     },
+    // Money stays the decimal string Postgres returned, so no float rounding
+    // creeps into the copy.
+    settings: account
+      ? {
+          quitting: account.quitting,
+          cigarettesPerDayBefore: account.baselinePerDay,
+          pricePerPack: account.pricePerPack,
+          cigarettesPerPack: account.cigarettesPerPack,
+          cannabisSessionsPerDayBefore: account.sessionsPerDay,
+          pricePerSession: account.pricePerSession,
+          currency: account.currency,
+        }
+      : null,
     smokeLogs: logs.map((log) => ({
       id: log.id,
       ts: log.ts.toISOString(),
       cigarettes: log.cigarettes,
+      sessions: log.sessions,
       note: log.note,
     })),
     shares: activeShares.map((share) => ({

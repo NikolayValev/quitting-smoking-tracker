@@ -13,10 +13,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { deleteLog, updateLog } from "@/app/app/actions"
+import { CountFields, parseCounts, type CountDraft } from "@/components/count-fields"
+import { SUBSTANCES, countFor, tracked, type Quitting } from "@/lib/substances"
 
 /**
  * Correcting or removing one check-in.
@@ -29,30 +30,45 @@ export function CheckInActions({
   id,
   date,
   cigarettes,
+  sessions,
   note,
+  quitting = "cigarettes",
 }: {
   id: string
   date: string
-  cigarettes: number
+  cigarettes: number | null
+  sessions: number | null
   note: string | null
+  quitting?: Quitting
 }) {
+  // What they quit now, plus anything this day already holds. A day logged
+  // before a change of quit keeps its count rather than being saved as blank.
+  const checkIn = { id, ts: "", cigarettes, sessions }
+  const substances = SUBSTANCES.filter(
+    (s) => tracked(quitting).includes(s) || countFor(checkIn, s) !== null,
+  )
+
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [count, setCount] = useState(String(cigarettes))
+  const [draft, setDraft] = useState<CountDraft>(() =>
+    Object.fromEntries(
+      substances.map((s) => [s, countFor(checkIn, s) === null ? "" : String(countFor(checkIn, s))]),
+    ),
+  )
   const [text, setText] = useState(note ?? "")
 
   const save = async () => {
-    const parsed = Number.parseInt(count, 10)
-    if (Number.isNaN(parsed) || parsed < 0) {
-      setError("Enter a number, 0 or more.")
+    const parsed = parseCounts(substances, draft)
+    if (!parsed.ok) {
+      setError(parsed.error)
       return
     }
 
     setBusy(true)
     setError(null)
-    const result = await updateLog({ id, cigarettes: parsed, note: text || undefined })
+    const result = await updateLog({ id, ...parsed.counts, note: text || undefined })
     setBusy(false)
 
     if (!result.success) {
@@ -108,16 +124,13 @@ export function CheckInActions({
         )}
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor={`edit-count-${id}`}>Cigarettes smoked</Label>
-            <Input
-              id={`edit-count-${id}`}
-              type="number"
-              min="0"
-              value={count}
-              onChange={(e) => { setCount(e.target.value); setError(null) }}
-            />
-          </div>
+          <CountFields
+            substances={substances}
+            draft={draft}
+            onChange={(next) => { setDraft(next); setError(null) }}
+            idPrefix={`edit-${id}`}
+            hint={false}
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor={`edit-note-${id}`}>

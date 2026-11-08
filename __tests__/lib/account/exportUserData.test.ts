@@ -67,8 +67,20 @@ describe("exportUserData", () => {
     const createdAt = new Date("2026-01-02T03:04:05.000Z")
     const ts = new Date("2026-02-03T04:05:06.000Z")
     await mockQueries(
-      [{ id: INTERNAL_USER_ID, createdAt }],
-      [{ id: LOG_ID, ts, cigarettes: 3, note: "after lunch" }],
+      [
+        {
+          id: INTERNAL_USER_ID,
+          createdAt,
+          quitting: "both",
+          baselinePerDay: 12,
+          pricePerPack: "11.50",
+          cigarettesPerPack: 20,
+          sessionsPerDay: 2,
+          pricePerSession: null,
+          currency: "GBP",
+        },
+      ],
+      [{ id: LOG_ID, ts, cigarettes: 3, sessions: 0, note: "after lunch" }],
     )
 
     const { exportUserData } = await import("@/lib/account/exportUserData")
@@ -82,8 +94,18 @@ describe("exportUserData", () => {
       firstName: PROFILE.firstName,
       lastName: PROFILE.lastName,
     })
+    expect(result.settings).toEqual({
+      quitting: "both",
+      cigarettesPerDayBefore: 12,
+      // Left as the decimal string Postgres returns, never a float.
+      pricePerPack: "11.50",
+      cigarettesPerPack: 20,
+      cannabisSessionsPerDayBefore: 2,
+      pricePerSession: null,
+      currency: "GBP",
+    })
     expect(result.smokeLogs).toEqual([
-      { id: LOG_ID, ts: ts.toISOString(), cigarettes: 3, note: "after lunch" },
+      { id: LOG_ID, ts: ts.toISOString(), cigarettes: 3, sessions: 0, note: "after lunch" },
     ])
     expect(result.counts).toEqual({ smokeLogs: 1, shares: 0, signals: 0, devices: 0, cravings: 0 })
   })
@@ -112,6 +134,7 @@ describe("exportUserData", () => {
     expect(result.account.id).toBeNull()
     expect(result.account.createdAt).toBeNull()
     expect(result.account.email).toBe(PROFILE.email)
+    expect(result.settings).toBeNull()
     expect(result.smokeLogs).toEqual([])
     expect(result.shares).toEqual([])
     expect(result.counts).toEqual({ smokeLogs: 0, shares: 0, signals: 0, devices: 0, cravings: 0 })
@@ -193,14 +216,14 @@ describe("exportUserData", () => {
   it("includes every craving, with the time it was recorded", async () => {
     const at = new Date("2026-03-01T19:30:00.000Z")
     await mockQueries([{ id: INTERNAL_USER_ID, createdAt: at }], [], [], [], [], [
-      { createdAt: at, trigger: "drink", strength: 4, outcome: "passed", localHour: 19 },
+      { createdAt: at, substance: "cannabis", trigger: "drink", strength: 4, outcome: "passed", localHour: 19 },
     ])
 
     const { exportUserData } = await import("@/lib/account/exportUserData")
     const result = await exportUserData(CLERK_USER_ID, PROFILE)
 
     expect(result.cravings).toEqual([
-      { createdAt: at.toISOString(), trigger: "drink", strength: 4, outcome: "passed", localHour: 19 },
+      { createdAt: at.toISOString(), substance: "cannabis", trigger: "drink", strength: 4, outcome: "passed", localHour: 19 },
     ])
     expect(result.counts.cravings).toBe(1)
   })

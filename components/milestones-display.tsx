@@ -32,9 +32,12 @@ function humanise(minutes: number): string {
 export function MilestonesDisplay({
   quitDate,
   now = new Date(),
+  title = "Milestones",
 }: {
   quitDate: Date
   now?: Date
+  /** Named for cigarettes when the page also shows a cannabis quit. */
+  title?: string
 }) {
   const elapsed = Math.max(0, Math.floor((now.getTime() - quitDate.getTime()) / 60000))
 
@@ -62,7 +65,7 @@ export function MilestonesDisplay({
       <MilestoneTracker achieved={reached.map((m) => m.type)} />
 
       <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-sm font-medium text-muted-foreground">Milestones</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
         <p className="text-sm text-muted-foreground">
           {reached.length} of {milestoneDefinitions.length} reached
         </p>

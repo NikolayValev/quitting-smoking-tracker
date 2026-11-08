@@ -12,18 +12,36 @@ import { revalidatePath } from 'next/cache';
 /** A calendar day, as the client's own local date. */
 const daySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected a YYYY-MM-DD date');
 
-const createLogSchema = z.object({
-  cigarettes: z.number().int().min(0),
-  note: z.string().optional(),
-  /** Which day this is about. Defaults to the server's today when omitted. */
-  date: daySchema.optional(),
-});
+/**
+ * A count per substance, each left out (or null) when the person is not
+ * quitting it. One of them has to be there: a check-in about nothing would
+ * fail the table's check constraint anyway, and should fail here first.
+ */
+const counts = {
+  cigarettes: z.number().int().min(0).nullable().optional(),
+  /** Times cannabis was used. */
+  sessions: z.number().int().min(0).nullable().optional(),
+};
+const hasACount = (data: { cigarettes?: number | null; sessions?: number | null }) =>
+  data.cigarettes != null || data.sessions != null;
+const NO_COUNT = { message: 'Expected a count for at least one substance' };
 
-const updateLogSchema = z.object({
-  id: z.string().uuid(),
-  cigarettes: z.number().int().min(0),
-  note: z.string().optional(),
-});
+const createLogSchema = z
+  .object({
+    ...counts,
+    note: z.string().optional(),
+    /** Which day this is about. Defaults to the server's today when omitted. */
+    date: daySchema.optional(),
+  })
+  .refine(hasACount, NO_COUNT);
+
+const updateLogSchema = z
+  .object({
+    id: z.string().uuid(),
+    ...counts,
+    note: z.string().optional(),
+  })
+  .refine(hasACount, NO_COUNT);
 
 const deleteLogSchema = z.object({
   id: z.string().uuid(),
@@ -77,18 +95,18 @@ export async function createLog(data: unknown) {
     // One check-in per day: logging a day twice replaces it rather than adding
     // a second entry, which is what anyone would expect and what the unique
     // index on (user_id, log_date) requires.
+    // Absent means "not asked", stored as null, never as zero.
+    const values = {
+      cigarettes: validated.cigarettes ?? null,
+      sessions: validated.sessions ?? null,
+      note: validated.note || null,
+    };
     const newLog = await db
       .insert(smokeLogs)
-      .values({
-        userId,
-        cigarettes: validated.cigarettes,
-        note: validated.note || null,
-        logDate,
-        ts,
-      })
+      .values({ userId, ...values, logDate, ts })
       .onConflictDoUpdate({
         target: [smokeLogs.userId, smokeLogs.logDate],
-        set: { cigarettes: validated.cigarettes, note: validated.note || null, ts },
+        set: { ...values, ts },
       })
       .returning();
 
@@ -120,7 +138,11 @@ export async function updateLog(data: unknown) {
     // followed by a write can be raced, and this cannot.
     const result = await db
       .update(smokeLogs)
-      .set({ cigarettes: validated.cigarettes, note: validated.note || null })
+      .set({
+        cigarettes: validated.cigarettes ?? null,
+        sessions: validated.sessions ?? null,
+        note: validated.note || null,
+      })
       .where(and(eq(smokeLogs.id, validated.id), eq(smokeLogs.userId, userId)))
       .returning();
 

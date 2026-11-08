@@ -44,9 +44,9 @@ export function AccountView({
       </section>
 
       <section className="mt-10 border-t border-border/60 pt-8">
-        <h2 className="text-sm font-medium text-muted-foreground">Savings</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">Your quit</h2>
         <p className="mt-2 max-w-[58ch] text-sm text-muted-foreground">
-          What the figures on your dashboard are worked out from.
+          What you are quitting, and what the figures on your dashboard are worked out from.
         </p>
         <div className="mt-5">
           <SettingsForm settings={settings} submitLabel="Save changes" />
