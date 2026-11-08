@@ -8,16 +8,20 @@ import { users } from '@/db/schema';
 import { getOrCreateUser } from '@/lib/auth/getOrCreateUser';
 import { consumeRateLimit } from '@/lib/rate-limit';
 import { logError } from '@/lib/observability/logger';
+import { QUITTING } from '@/lib/substances';
 
 const RATE_LIMITED = 'Too many requests. Please wait a moment and try again.';
 
 const settingsSchema = z.object({
+  quitting: z.enum(QUITTING).optional(),
   // Generous upper bounds rather than tight ones: the job here is to reject
   // nonsense that would corrupt the arithmetic, not to tell somebody their
   // habit is implausible.
   baselinePerDay: z.number().int().min(1).max(200).nullable().optional(),
   pricePerPack: z.number().min(0.01).max(1000).nullable().optional(),
   cigarettesPerPack: z.number().int().min(1).max(100).optional(),
+  sessionsPerDay: z.number().int().min(1).max(50).nullable().optional(),
+  pricePerSession: z.number().min(0.01).max(1000).nullable().optional(),
   currency: z
     .string()
     .regex(/^[A-Z]{3}$/, 'Expected a three-letter currency code')
@@ -39,6 +43,7 @@ export async function saveSettings(data: unknown) {
     await db
       .update(users)
       .set({
+        ...(validated.quitting !== undefined ? { quitting: validated.quitting } : {}),
         ...(validated.baselinePerDay !== undefined
           ? { baselinePerDay: validated.baselinePerDay }
           : {}),
@@ -53,12 +58,23 @@ export async function saveSettings(data: unknown) {
         ...(validated.cigarettesPerPack !== undefined
           ? { cigarettesPerPack: validated.cigarettesPerPack }
           : {}),
+        ...(validated.sessionsPerDay !== undefined
+          ? { sessionsPerDay: validated.sessionsPerDay }
+          : {}),
+        ...(validated.pricePerSession !== undefined
+          ? {
+              pricePerSession:
+                validated.pricePerSession === null ? null : validated.pricePerSession.toFixed(2),
+            }
+          : {}),
         ...(validated.currency !== undefined ? { currency: validated.currency } : {}),
       })
       .where(eq(users.id, userId));
 
     revalidatePath('/dashboard');
     revalidatePath('/account');
+    revalidatePath('/app');
+    revalidatePath('/wellness');
     return { success: true as const };
   } catch (error) {
     if (error instanceof z.ZodError) {

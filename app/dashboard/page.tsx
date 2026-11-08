@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import { deriveDashboardStats } from "@/lib/dashboard-stats"
 import { pickForToday } from "@/lib/daily"
-import { wellnessTips } from "@/lib/data/wellness-tips"
+import { tipsFor } from "@/lib/substance-content"
+import { combinedSeries } from "@/lib/substances"
 import { getOrCreateUser } from "@/lib/auth/getOrCreateUser"
 import { getUserSettings } from "@/lib/user-settings.server"
 import type { Metadata } from "next"
@@ -32,22 +33,23 @@ export default async function DashboardPage() {
 
   const settings = await getUserSettings(await getOrCreateUser())
 
-  const { hasLoggedToday } = deriveDashboardStats(logs)
+  const { hasLoggedToday } = deriveDashboardStats(combinedSeries(logs))
 
   // Chosen on the server so the client renders exactly what was sent, matching
   // how the wellness screen picks it — a client-side pick swaps the tip after
   // mount and trips hydration.
-  const tipOfTheDay = pickForToday(wellnessTips)
+  const tipOfTheDay = pickForToday(tipsFor(settings.quitting))
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="dashboard" />
       <DashboardView
-        logs={logs}
+        checkIns={logs}
         tip={tipOfTheDay}
         settings={settings}
         action={
           <DailyLogDialog
+            quitting={settings.quitting}
             defaultOpen={logs.length > 0 && !hasLoggedToday}
             trigger={
               <Button className="shrink-0 gap-1.5">

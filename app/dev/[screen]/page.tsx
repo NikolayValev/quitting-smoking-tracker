@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import type { NavKey } from "@/lib/nav"
 import { AppHeader } from "@/components/app-header"
 import { DashboardView } from "@/components/dashboard-view"
-import type { DashboardLog } from "@/lib/dashboard-stats"
+import type { CheckIn } from "@/lib/substances"
 import { WellnessView } from "@/components/wellness-view"
 import { CravingPatterns } from "@/components/craving-patterns"
 import { summariseCravings, type CravingRecord } from "@/lib/cravings"
@@ -17,6 +17,7 @@ import type { UserSettings } from "@/lib/user-settings"
 import { InvitePanel } from "@/components/invite-panel"
 import { wellnessTips } from "@/lib/data/wellness-tips"
 import { motivationalQuotes } from "@/lib/data/motivational-quotes"
+import { cannabisQuotes, cannabisTips } from "@/lib/data/cannabis"
 
 /**
  * Dev-only preview of the signed-in screens.
@@ -35,12 +36,15 @@ export const dynamic = "force-dynamic"
 const NOW = new Date("2025-03-01T09:00:00.000Z")
 const QUIT_DAY = new Date("2025-01-14T08:00:00.000Z")
 
+const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000)
+
 /**
  * A month of cravings with a shape to it: drinks come up most and are where
  * the one slip happened, and most arrive in the evening.
  */
 const CRAVINGS: CravingRecord[] = (
   [
+    // [days ago, trigger, strength, outcome, hour on their clock]
     [1, "drink", 4, "passed", 21],
     [3, "coffee", 2, "passed", 8],
     [4, "stress", 3, "passed", 18],
@@ -53,16 +57,36 @@ const CRAVINGS: CravingRecord[] = (
     [24, "other", 2, "passed", 15],
     [27, "coffee", 3, "passed", 8],
   ] as const
-).map(([daysAgo, trigger, strength, outcome, localHour]) => ({
-  createdAt: new Date(NOW.getTime() - daysAgo * 24 * 60 * 60 * 1000),
+).map(([ago, trigger, strength, outcome, localHour]) => ({
+  createdAt: daysAgo(ago),
+  substance: "cigarettes" as const,
   trigger,
   strength,
   outcome,
   localHour,
 }))
 
-function fixtureLogs(): DashboardLog[] {
-  const logs: DashboardLog[] = []
+/** Cannabis cravings for someone quitting both: evenings and bedtime. */
+const CANNABIS_CRAVINGS: CravingRecord[] = (
+  [
+    [1, "sleep", 4, "passed", 23],
+    [2, "wind-down", 3, "passed", 19],
+    [4, "friends", 5, "smoked", 22],
+    [5, "sleep", 4, "passed", 23],
+    [8, "wind-down", 2, "passed", 20],
+    [12, "boredom", 3, "passed", 15],
+  ] as const
+).map(([ago, trigger, strength, outcome, localHour]) => ({
+  createdAt: daysAgo(ago),
+  substance: "cannabis" as const,
+  trigger,
+  strength,
+  outcome,
+  localHour,
+}))
+
+function fixtureLogs(): CheckIn[] {
+  const logs: CheckIn[] = []
   const day = 86_400_000
   const cleanDays = Math.round((NOW.getTime() - QUIT_DAY.getTime()) / day)
   const smokingDays = 30
@@ -76,6 +100,7 @@ function fixtureLogs(): DashboardLog[] {
       id: `clean-${i}`,
       ts: new Date(NOW.getTime() - i * day),
       cigarettes: 0,
+      sessions: null,
       note: i === 0 ? "Still going." : null,
     })
   }
@@ -86,6 +111,7 @@ function fixtureLogs(): DashboardLog[] {
       ts: new Date(QUIT_DAY.getTime() - i * day),
       // Climbs back towards fifteen a day the further back you look.
       cigarettes: Math.min(15, Math.round(i / 2) + 1),
+      sessions: null,
       note: i === smokingDays ? "First day trying to cut down." : null,
     })
   }
@@ -93,33 +119,69 @@ function fixtureLogs(): DashboardLog[] {
   return logs
 }
 
+/**
+ * The same days for someone who stopped cannabis instead: nine days without,
+ * in the hardest stretch of it, after two or three times a day.
+ */
+function cannabisLogs(): CheckIn[] {
+  return fixtureLogs().map((log, i) => ({
+    ...log,
+    cigarettes: null,
+    sessions: i < 10 ? 0 : 2 + (i % 2),
+    note: i === 0 ? "Slept badly again, but did not use." : null,
+  }))
+}
+
+/**
+ * Quitting both: the cigarette history above, and cannabis stopped alongside
+ * it with a slip four days ago, so the two streaks differ.
+ */
+function bothLogs(): CheckIn[] {
+  return fixtureLogs().map((log, i) => ({
+    ...log,
+    sessions: i === 4 ? 1 : (log.cigarettes ?? 0) > 0 ? 2 : 0,
+    note: i === 4 ? "A party. Had one, but no cigarettes." : log.note,
+  }))
+}
+
 /** A person who has finished onboarding, so money renders in a real currency. */
 const SETTINGS: UserSettings = {
+  quitting: "cigarettes",
   baselinePerDay: 15,
   pricePerPack: 12.5,
   cigarettesPerPack: 20,
+  sessionsPerDay: null,
+  pricePerSession: null,
   currency: "GBP",
 }
+
+const CANNABIS_SETTINGS: UserSettings = {
+  ...SETTINGS,
+  quitting: "cannabis",
+  sessionsPerDay: 3,
+  pricePerSession: 6,
+}
+
+/** No session price, so the dashboard's "add a price" state shows. */
+const BOTH_SETTINGS: UserSettings = { ...SETTINGS, quitting: "both", sessionsPerDay: 2 }
+
+const logToday = (
+  <Button className="shrink-0 gap-1.5">
+    <PlusCircle className="h-4 w-4" />
+    Log today
+  </Button>
+)
 
 const SCREENS = {
   dashboard: {
     title: "Dashboard",
     render: () => (
       <DashboardView
-        logs={fixtureLogs()}
+        checkIns={fixtureLogs()}
         tip={wellnessTips[0]}
         now={NOW}
         settings={SETTINGS}
-        action={
-          <DailyLogDialog
-            trigger={
-              <Button className="shrink-0 gap-1.5">
-                <PlusCircle className="h-4 w-4" />
-                Log today
-              </Button>
-            }
-          />
-        }
+        action={<DailyLogDialog trigger={logToday} />}
       />
     ),
   },
@@ -127,28 +189,42 @@ const SCREENS = {
     title: "Dashboard, last check-in had cigarettes",
     render: () => (
       <DashboardView
-        logs={[
-          { id: "slip", ts: new Date(NOW.getTime() - 86_400_000), cigarettes: 3 },
+        checkIns={[
+          { id: "slip", ts: daysAgo(1), cigarettes: 3, sessions: null },
           ...fixtureLogs().slice(1),
         ]}
         now={NOW}
         settings={SETTINGS}
-        action={
-          <DailyLogDialog
-            trigger={
-              <Button className="shrink-0 gap-1.5">
-                <PlusCircle className="h-4 w-4" />
-                Log today
-              </Button>
-            }
-          />
-        }
+        action={<DailyLogDialog trigger={logToday} />}
       />
     ),
   },
   "dashboard-empty": {
     title: "Dashboard, no logs yet",
-    render: () => <DashboardView logs={[]} now={NOW} />,
+    render: () => <DashboardView checkIns={[]} now={NOW} />,
+  },
+  "dashboard-cannabis": {
+    title: "Dashboard, quitting cannabis",
+    render: () => (
+      <DashboardView
+        checkIns={cannabisLogs()}
+        tip={cannabisTips[0]}
+        now={NOW}
+        settings={CANNABIS_SETTINGS}
+        action={<DailyLogDialog quitting="cannabis" trigger={logToday} />}
+      />
+    ),
+  },
+  "dashboard-both": {
+    title: "Dashboard, quitting both",
+    render: () => (
+      <DashboardView
+        checkIns={bothLogs()}
+        now={NOW}
+        settings={BOTH_SETTINGS}
+        action={<DailyLogDialog quitting="both" trigger={logToday} />}
+      />
+    ),
   },
   journey: {
     title: "Journey",
@@ -174,10 +250,47 @@ const SCREENS = {
       />
     ),
   },
+  "journey-both": {
+    title: "Journey, quitting both",
+    render: () => (
+      <JourneyView
+        editable
+        entries={bothLogs()}
+        quitting="both"
+        intro="Every check-in you have logged, and the shape they make."
+        now={NOW}
+        cravings={
+          <>
+            <CravingPatterns
+              named
+              substance="cigarettes"
+              summary={summariseCravings(CRAVINGS, NOW)}
+            />
+            <CravingPatterns
+              named
+              substance="cannabis"
+              summary={summariseCravings(CANNABIS_CRAVINGS, NOW)}
+            />
+          </>
+        }
+      />
+    ),
+  },
   account: {
     title: "Account",
     render: () => (
       <AccountView name="Sam Rivera" email="sam@example.com" settings={SETTINGS} checkinReminder />
+    ),
+  },
+  "account-both": {
+    title: "Account, quitting both",
+    render: () => (
+      <AccountView
+        name="Sam Rivera"
+        email="sam@example.com"
+        settings={{ ...BOTH_SETTINGS, pricePerSession: 5 }}
+        checkinReminder={false}
+      />
     ),
   },
   buddies: {
@@ -227,9 +340,12 @@ const SCREENS = {
     render: () => (
       <OnboardingFlow
         settings={{
+          quitting: "cigarettes",
           baselinePerDay: null,
           pricePerPack: null,
           cigarettesPerPack: 20,
+          sessionsPerDay: null,
+          pricePerSession: null,
           currency: "GBP",
         }}
       />
@@ -273,6 +389,23 @@ const SCREENS = {
     title: "Wellness, a craving plan open",
     render: () => (
       <WellnessView quote={motivationalQuotes[0]} tip={wellnessTips[0]} openPlan="drink" />
+    ),
+  },
+  "wellness-cannabis": {
+    title: "Wellness, quitting cannabis",
+    render: () => (
+      <WellnessView quote={cannabisQuotes[0]} tip={cannabisTips[0]} quitting="cannabis" />
+    ),
+  },
+  "wellness-both": {
+    title: "Wellness, quitting both, a cannabis plan open",
+    render: () => (
+      <WellnessView
+        quote={cannabisQuotes[0]}
+        tip={cannabisTips[1]}
+        quitting="both"
+        openPlan="sleep"
+      />
     ),
   },
 } as const

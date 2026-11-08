@@ -2,9 +2,23 @@ import type { ReactNode } from "react"
 import { CheckCircle2 } from "lucide-react"
 import { JourneyChart, type JourneyPoint } from "@/components/journey-chart"
 import { CheckInActions } from "@/components/check-in-actions"
-import { deriveDashboardStats, type DashboardLog } from "@/lib/dashboard-stats"
+import { deriveDashboardStats } from "@/lib/dashboard-stats"
+import {
+  COUNT_FIELD,
+  SUBSTANCE_COPY,
+  combinedSeries,
+  countFor,
+  describeCheckIn,
+  streakLabel,
+  tracked,
+  type CheckIn,
+  type Quitting,
+} from "@/lib/substances"
 
-export type JourneyEntry = DashboardLog
+export type JourneyEntry = CheckIn
+
+/** Nothing used, by any count the day recorded. */
+const isClean = (entry: JourneyEntry) => (entry.cigarettes ?? 0) + (entry.sessions ?? 0) === 0
 
 type Row =
   | { kind: "entry"; entry: JourneyEntry }
@@ -21,7 +35,7 @@ function toRows(entries: JourneyEntry[]): Row[] {
   const rows: Row[] = []
 
   for (const entry of entries) {
-    const plain = entry.cigarettes === 0 && !entry.note
+    const plain = isClean(entry) && !entry.note
     const last = rows[rows.length - 1]
 
     if (plain && last?.kind === "run") {
@@ -70,9 +84,12 @@ export function JourneyView({
   now,
   editable = false,
   cravings,
+  quitting = "cigarettes",
   children,
 }: {
   entries: JourneyEntry[]
+  /** Which counts the history is read for. */
+  quitting?: Quitting
   intro?: ReactNode
   action?: ReactNode
   now?: Date
@@ -85,16 +102,30 @@ export function JourneyView({
   /** Rendered after the check-ins, for whatever the page wants to add. */
   children?: ReactNode
 }) {
-  const stats = deriveDashboardStats(entries, now)
+  // One streak across everything being quit: a day is clean only when
+  // nothing was used. The dashboard is where each substance has its own.
+  const stats = deriveDashboardStats(combinedSeries(entries), now)
+  const label = streakLabel(quitting)
+  const substances = tracked(quitting)
   const at = (e: JourneyEntry) => new Date(e.ts)
 
   // The chart reads left to right in time; the list reads newest first, which
   // is what a log is for.
   const chartData: JourneyPoint[] = [...entries]
     .sort((a, b) => at(a).getTime() - at(b).getTime())
-    .map((e) => ({ t: at(e).getTime(), cigarettes: e.cigarettes }))
+    .map((e) => {
+      const point: JourneyPoint = { t: at(e).getTime() }
+      for (const substance of substances) {
+        const count = countFor(e, substance)
+        if (count !== null) point[COUNT_FIELD[substance]] = count
+      }
+      return point
+    })
 
-  const peak = Math.max(...entries.map((e) => e.cigarettes), 0)
+  const peaks = substances.map((substance) => ({
+    substance,
+    peak: Math.max(...entries.map((e) => countFor(e, substance) ?? 0), 0),
+  }))
   const started = at(entries[entries.length - 1])
 
   // The page container lives here rather than in each route: it was duplicated
@@ -106,7 +137,7 @@ export function JourneyView({
           <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
             {stats.smokeFreeDays > 0 ? stats.smokeFreeDays.toLocaleString("en-GB") : "—"}
             <span className="ml-3 align-baseline text-xl font-normal text-muted-foreground sm:text-2xl">
-              days smoke-free
+              days {label}
             </span>
           </h1>
           {intro && <div className="mt-4 max-w-[58ch] text-muted-foreground">{intro}</div>}
@@ -115,11 +146,20 @@ export function JourneyView({
       </section>
 
       <section className="mt-10">
-        <h2 className="text-sm font-medium text-muted-foreground">Cigarettes a day</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">
+          {quitting === "both"
+            ? "Cigarettes, and times using cannabis, each day"
+            : quitting === "cannabis"
+              ? "Times using cannabis a day"
+              : "Cigarettes a day"}
+        </h2>
         <div className="mt-3">
           <JourneyChart
             data={chartData}
+            series={substances.map((s) => COUNT_FIELD[s])}
             quitAt={stats.quitDate ? stats.quitDate.getTime() : null}
+            // Short: the label sits on the chart near its right-hand edge.
+            quitLabel={quitting === "both" ? "Streak starts" : `First ${label} day`}
           />
         </div>
       </section>
@@ -133,10 +173,14 @@ export function JourneyView({
           <dt className="text-sm text-muted-foreground">Check-ins</dt>
           <dd className="mt-1 text-base font-medium">{entries.length}</dd>
         </div>
-        <div>
-          <dt className="text-sm text-muted-foreground">Most in a day</dt>
-          <dd className="mt-1 text-base font-medium">{peak}</dd>
-        </div>
+        {peaks.map(({ substance, peak }) => (
+          <div key={substance}>
+            <dt className="text-sm text-muted-foreground">
+              {substances.length > 1 ? `Most in a day, ${SUBSTANCE_COPY[substance].name.toLowerCase()}` : "Most in a day"}
+            </dt>
+            <dd className="mt-1 text-base font-medium">{peak}</dd>
+          </div>
+        ))}
       </section>
 
       {cravings}
@@ -170,7 +214,7 @@ export function JourneyView({
                   />
                   <div className="min-w-0 flex-1">
                     <span className="text-sm font-medium">
-                      {row.count} days smoke-free
+                      {row.count} days {label}
                     </span>
                     <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
                       {shortDate(row.from)} &ndash; {shortDate(row.to)}
@@ -182,7 +226,7 @@ export function JourneyView({
 
             const { entry } = row
             const date = at(entry)
-            const isClean = entry.cigarettes === 0
+            const clean = isClean(entry)
             const isQuitDay =
               stats.quitDate !== null && date.getTime() === stats.quitDate.getTime()
 
@@ -192,7 +236,7 @@ export function JourneyView({
                 <span
                   aria-hidden
                   className={
-                    isClean
+                    clean
                       ? "relative mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-primary bg-background"
                       : "relative mt-2 ml-[3px] h-2 w-2 shrink-0 rounded-full bg-border"
                   }
@@ -201,7 +245,7 @@ export function JourneyView({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <span className="text-sm font-medium">
-                      {isClean ? "Smoke-free" : `${entry.cigarettes} cigarettes`}
+                      {describeCheckIn(entry, quitting)}
                     </span>
                     <time
                       dateTime={date.toISOString()}
@@ -228,7 +272,9 @@ export function JourneyView({
                     id={entry.id}
                     date={shortDate(date)}
                     cigarettes={entry.cigarettes}
+                    sessions={entry.sessions}
                     note={entry.note ?? null}
+                    quitting={quitting}
                   />
                 )}
               </li>

@@ -20,6 +20,7 @@ export async function recentCravings(
   return db
     .select({
       createdAt: cravings.createdAt,
+      substance: cravings.substance,
       trigger: cravings.trigger,
       strength: cravings.strength,
       outcome: cravings.outcome,

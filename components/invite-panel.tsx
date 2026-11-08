@@ -76,8 +76,8 @@ export function InvitePanel({
         <div>
           <dt className="font-medium">They will not see</dt>
           <dd className="text-muted-foreground">
-            How many cigarettes you smoked on any day, your check-ins, or anything you
-            have written.
+            What you are quitting, how much you smoked or used on any day, your
+            check-ins, or anything you have written.
           </dd>
         </div>
       </dl>

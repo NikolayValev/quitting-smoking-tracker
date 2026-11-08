@@ -55,9 +55,9 @@ which now covers the sponsor cycle.
 Constraint: **no paid infrastructure.** Stay on free tiers (Vercel Hobby, Neon,
 PostHog, Clerk free) and prefer approaches that need no vendor at all.
 
-1. **Apply `0006`–`0009` to Neon** (`pnpm db:migrate`), then run
+1. **Apply `0006`–`0010` to Neon** (`pnpm db:migrate`), then run
    `pnpm verify:buddies`. Until then, `/buddies`, `/account`, account deletion,
-   export and recording a craving fail in production. Nobody uses it yet, but do this before inviting anyone.
+   export, recording a craving and every page that reads settings fail in production. Nobody uses it yet, but do this before inviting anyone.
 2. **Set the VAPID keys** in Vercel: run `pnpm exec web-push generate-vapid-keys`
    once, then set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Push stays
    off until both are set. Do not rotate them, since that drops every subscribed device.
@@ -82,16 +82,22 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
 7. ~~**Craving log**~~ — built 2026-11-07, needs `0009`. Recorded at the end of each
    plan on `/wellness` (`components/craving-record.tsx`), plus "Something else" for
    `other`: trigger, strength 1–5, passed/smoked, and the browser's local hour. No
-   free text. Triggers must match `copingStrategies` ids; a test checks the schema
-   enum too. Patterns (`lib/cravings.ts`, `components/craving-patterns.tsx`) show on
+   free text. Triggers must match the `copingStrategies` and `cannabisStrategies`
+   ids; a test checks the schema enum too. Patterns (`lib/cravings.ts`, `components/craving-patterns.tsx`) show on
    the journey page for the last 30 days. Never shared with buddies or sponsors;
    in the export (format 5) and in `deleteUserByClerkId`.
-8. **Marijuana support** (advertised as "coming soon" on the landing page and in
-   onboarding). Cannabis needs its own content rather than relabelled copy: a
-   different withdrawal course (irritability, poor sleep and vivid dreams that
-   peak in the first week and can last a few weeks), its own triggers, and grams
-   or sessions in place of cigarettes and packs. That means a substance on the
-   user or the log.
+8. ~~**Cannabis support**~~ — built 2026-11-07, needs `0010`. `users.quitting` is
+   `cigarettes` | `cannabis` | `both`, chosen first in onboarding and changeable on
+   `/account`. Each substance is tracked separately: `smoke_logs.sessions` (times
+   used) sits beside `cigarettes`, each null when that day did not record it (a
+   check constraint requires one), with its own streak, withdrawal and savings
+   (`sessions_per_day`, `price_per_session`; no guessed price, the dashboard asks
+   for one). `lib/substances.ts` turns check-ins into per-substance series;
+   cannabis content is in `lib/data/cannabis.ts` (DSM-5, Bahji 2020, Budney,
+   Cochrane strength). **Supporters never learn the substance**: buddies and
+   sponsors see one streak of days with nothing used (`combinedSeries`), and
+   analytics gets totals and cigarette plan ids only. No cannabis health
+   milestones, since that timeline is not established well enough to date.
 
 **Installable app and push** (2026-10-30): `app/manifest.ts`, icons in `public/icon-*`,
 `public/sw.js` (push only, deliberately no fetch handler or cache), migration

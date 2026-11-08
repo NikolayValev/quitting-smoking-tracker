@@ -12,22 +12,30 @@ export const metadata: Metadata = {
   // Social crawlers need absolute image URLs; without this the og:image
   // resolves relative and link previews come back blank.
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://smoking.nikolayvalev.com"),
-  title: "SmokeFree — Quit cigarettes, one day at a time",
+  title: "SmokeFree — Quit smoking, one day at a time",
   description:
-    "A quit-smoking tracker built for cigarettes: what withdrawal feels like day by day, plans for your triggers, money saved per pack, and a sponsor in your corner. Marijuana support coming soon.",
-  keywords: ["quit smoking", "quit cigarettes", "nicotine withdrawal", "smoking cessation", "stop smoking"],
+    "A quit tracker for cigarettes, cannabis, or both: what withdrawal feels like day by day, plans for your triggers, the money you keep, and a sponsor in your corner.",
+  keywords: [
+    "quit smoking",
+    "quit cigarettes",
+    "nicotine withdrawal",
+    "smoking cessation",
+    "stop smoking",
+    "quit cannabis",
+    "cannabis withdrawal",
+  ],
   authors: [{ name: "SmokeFree" }],
   openGraph: {
-    title: "SmokeFree — Quit cigarettes, one day at a time",
-    description: "A quit-smoking tracker built for cigarettes: what withdrawal feels like day by day, plans for your triggers, money saved per pack, and a sponsor in your corner. Marijuana support coming soon.",
+    title: "SmokeFree — Quit smoking, one day at a time",
+    description: "A quit tracker for cigarettes, cannabis, or both: what withdrawal feels like day by day, plans for your triggers, the money you keep, and a sponsor in your corner.",
     type: "website",
     locale: "en_US",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SmokeFree" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SmokeFree — Quit cigarettes, one day at a time",
-    description: "A quit-smoking tracker built for cigarettes: what withdrawal feels like day by day, plans for your triggers, money saved per pack, and a sponsor in your corner. Marijuana support coming soon.",
+    title: "SmokeFree — Quit smoking, one day at a time",
+    description: "A quit tracker for cigarettes, cannabis, or both: what withdrawal feels like day by day, plans for your triggers, the money you keep, and a sponsor in your corner.",
     images: ["/og-image.png"],
   },
   robots: {

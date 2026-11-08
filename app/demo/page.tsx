@@ -33,7 +33,13 @@ export default async function DemoPage() {
   // database returns, which is newest first.
   const entries: JourneyEntry[] = [...logs]
     .reverse()
-    .map((log) => ({ id: log.id, ts: log.ts, cigarettes: log.cigarettes, note: log.note ?? null }));
+    .map((log) => ({
+      id: log.id,
+      ts: log.ts,
+      cigarettes: log.cigarettes,
+      sessions: null,
+      note: log.note ?? null,
+    }));
 
   const peak = Math.max(...logs.map((l) => l.cigarettes));
 

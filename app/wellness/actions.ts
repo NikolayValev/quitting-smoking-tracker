@@ -7,10 +7,12 @@ import { consumeRateLimit } from '@/lib/rate-limit';
 import { logError } from '@/lib/observability/logger';
 import { CRAVING_OUTCOMES, CRAVING_TRIGGERS } from '@/lib/cravings';
 import { recordCraving as storeCraving } from '@/lib/cravings.server';
+import { SUBSTANCES } from '@/lib/substances';
 
 const RATE_LIMITED = 'Too many requests. Please wait a moment and try again.';
 
 const cravingSchema = z.object({
+  substance: z.enum(SUBSTANCES),
   trigger: z.enum(CRAVING_TRIGGERS),
   strength: z.number().int().min(1).max(5),
   outcome: z.enum(CRAVING_OUTCOMES),

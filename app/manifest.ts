@@ -13,7 +13,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "SmokeFree",
     short_name: "SmokeFree",
-    description: "Quit cigarettes, one day at a time.",
+    description: "Quit smoking, one day at a time.",
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",

@@ -1,4 +1,5 @@
 import type { StatsSettings } from '@/lib/dashboard-stats';
+import type { Quitting, Substance } from '@/lib/substances';
 
 /**
  * Pure. No database import lives in this file on purpose: the settings form is
@@ -11,17 +12,32 @@ import type { StatsSettings } from '@/lib/dashboard-stats';
 export const DEFAULT_CIGARETTES_PER_PACK = 20;
 export const DEFAULT_CURRENCY = 'USD';
 
+/**
+ * Cannabis use before quitting, assumed when nothing is stated or logged. Once
+ * a day is the low end for anyone using daily, so savings are understated
+ * rather than invented, and the dashboard says what they were reckoned at.
+ */
+export const ASSUMED_SESSIONS_PER_DAY = 1;
+
 export type UserSettings = {
+  quitting: Quitting;
+  /** Cigarettes a day before quitting. */
   baselinePerDay: number | null;
   pricePerPack: number | null;
   cigarettesPerPack: number;
+  /** Times a day cannabis was used before quitting. */
+  sessionsPerDay: number | null;
+  pricePerSession: number | null;
   currency: string;
 };
 
 export const EMPTY_SETTINGS: UserSettings = {
+  quitting: 'cigarettes',
   baselinePerDay: null,
   pricePerPack: null,
   cigarettesPerPack: DEFAULT_CIGARETTES_PER_PACK,
+  sessionsPerDay: null,
+  pricePerSession: null,
   currency: DEFAULT_CURRENCY,
 };
 
@@ -32,18 +48,32 @@ export const EMPTY_SETTINGS: UserSettings = {
  * documented default and can say so, instead of presenting an invented number
  * as though it were the person's own.
  */
-export function pricePerCigarette(settings: UserSettings): number | null {
+export function pricePerCigarette(
+  settings: Pick<UserSettings, 'pricePerPack' | 'cigarettesPerPack'>,
+): number | null {
   const { pricePerPack, cigarettesPerPack } = settings;
   if (!pricePerPack || pricePerPack <= 0) return null;
   if (!cigarettesPerPack || cigarettesPerPack <= 0) return null;
   return pricePerPack / cigarettesPerPack;
 }
 
-/** The shape deriveDashboardStats wants. */
-export function toStatsSettings(settings: UserSettings): StatsSettings {
+/** The shape deriveDashboardStats wants, for one substance. */
+export function toStatsSettings(
+  settings: UserSettings,
+  substance: Substance = 'cigarettes',
+): StatsSettings {
+  if (substance === 'cannabis') {
+    return {
+      baselinePerDay: settings.sessionsPerDay,
+      pricePerUnit: settings.pricePerSession,
+      assumedPerDay: ASSUMED_SESSIONS_PER_DAY,
+      // No guessed price: the dashboard asks for one instead.
+      fallbackPrice: null,
+    };
+  }
   return {
     baselinePerDay: settings.baselinePerDay,
-    pricePerCigarette: pricePerCigarette(settings),
+    pricePerUnit: pricePerCigarette(settings),
   };
 }
 

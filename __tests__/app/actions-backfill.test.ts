@@ -37,6 +37,48 @@ function captureInsert() {
   return { values, onConflictDoUpdate, chain: { values } }
 }
 
+describe("createLog, one count per substance", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("stores a substance not asked about as null, never as zero", async () => {
+    // A zero would claim a smoke-free day for someone only quitting cannabis.
+    await signedIn()
+    const { db } = await import("@/db")
+    const { values, onConflictDoUpdate } = captureInsert()
+    vi.mocked(db.insert).mockReturnValue({ values } as never)
+
+    const { createLog } = await import("@/app/app/actions")
+    await createLog({ sessions: 2, date: "2025-02-14" })
+
+    expect(values.mock.calls[0][0]).toMatchObject({ cigarettes: null, sessions: 2 })
+    // And a re-log of the day clears a count it no longer gives.
+    expect(onConflictDoUpdate.mock.calls[0][0].set).toMatchObject({ cigarettes: null, sessions: 2 })
+  })
+
+  it("stores both counts for someone quitting both", async () => {
+    await signedIn()
+    const { db } = await import("@/db")
+    const { values } = captureInsert()
+    vi.mocked(db.insert).mockReturnValue({ values } as never)
+
+    const { createLog } = await import("@/app/app/actions")
+    await createLog({ cigarettes: 0, sessions: 1 })
+
+    expect(values.mock.calls[0][0]).toMatchObject({ cigarettes: 0, sessions: 1 })
+  })
+
+  it("refuses a check-in with no count at all", async () => {
+    await signedIn()
+    const { db } = await import("@/db")
+
+    const { createLog } = await import("@/app/app/actions")
+    const result = await createLog({ note: "nothing to say", date: "2025-02-14" })
+
+    expect(result.success).toBe(false)
+    expect(db.insert).not.toHaveBeenCalled()
+  })
+})
+
 describe("createLog, backfilling a day", () => {
   beforeEach(() => vi.clearAllMocks())
 

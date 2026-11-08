@@ -9,7 +9,7 @@ function logs(counts: number[]): DashboardLog[] {
   return counts.map((cigarettes, i) => ({
     id: `log-${i}`,
     ts: new Date(NOW.getTime() - i * DAY),
-    cigarettes,
+    count: cigarettes,
   }))
 }
 
@@ -22,7 +22,7 @@ describe("deriveDashboardStats", () => {
     const stats = deriveDashboardStats(logs([...Array(10).fill(0), 20, 20]), NOW)
 
     expect(stats.smokeFreeDays).toBe(9)
-    expect(stats.cigarettesNotSmoked).toBeGreaterThan(0)
+    expect(stats.notUsed).toBeGreaterThan(0)
     expect(stats.moneySaved).toBeGreaterThan(0)
   })
 
@@ -31,7 +31,7 @@ describe("deriveDashboardStats", () => {
     const stats = deriveDashboardStats(logs([0, 0, 0, 0, 10, 10, 10]), NOW)
 
     expect(stats.smokeFreeDays).toBe(3)
-    expect(stats.cigarettesNotSmoked).toBe(30)
+    expect(stats.notUsed).toBe(30)
     expect(stats.moneySaved).toBeCloseTo(15, 5)
   })
 
@@ -39,7 +39,7 @@ describe("deriveDashboardStats", () => {
     const stats = deriveDashboardStats(logs([0, 0]), NOW)
 
     expect(stats.smokeFreeDays).toBe(1)
-    expect(stats.cigarettesNotSmoked).toBe(15)
+    expect(stats.notUsed).toBe(15)
   })
 
   it("reports no streak before the first smoke-free day", () => {
@@ -47,7 +47,7 @@ describe("deriveDashboardStats", () => {
 
     expect(stats.quitDate).toBeNull()
     expect(stats.smokeFreeDays).toBe(0)
-    expect(stats.cigarettesNotSmoked).toBe(0)
+    expect(stats.notUsed).toBe(0)
     expect(stats.moneySaved).toBe(0)
   })
 
@@ -75,12 +75,12 @@ describe("deriveDashboardStats", () => {
     // cigarettes, that quitting had saved them nothing.
     const stats = deriveDashboardStats(logs([5, 0, 0, 0, 0, 10, 10]), NOW, {
       baselinePerDay: 10,
-      pricePerCigarette: 0.5,
+      pricePerUnit: 0.5,
     })
 
     expect(stats.quitDate).toBeNull()
     // Four clean days at 10, plus the 5 not smoked on the slip day itself.
-    expect(stats.cigarettesNotSmoked).toBe(45)
+    expect(stats.notUsed).toBe(45)
     expect(stats.moneySaved).toBeCloseTo(22.5, 5)
   })
 
@@ -92,7 +92,7 @@ describe("deriveDashboardStats", () => {
     })
 
     expect(stats.smokeFreeDays).toBe(2)
-    expect(stats.cigarettesNotSmoked).toBe(44)
+    expect(stats.notUsed).toBe(44)
   })
 
   it("counts no streak at all when the most recent day was a smoking day", () => {
@@ -106,7 +106,7 @@ describe("deriveDashboardStats", () => {
     expect(deriveDashboardStats(logs([0, 0]), NOW).hasLoggedToday).toBe(true)
 
     const stale: DashboardLog[] = [
-      { id: "a", ts: new Date(NOW.getTime() - 2 * DAY), cigarettes: 0 },
+      { id: "a", ts: new Date(NOW.getTime() - 2 * DAY), count: 0 },
     ]
     expect(deriveDashboardStats(stale, NOW).hasLoggedToday).toBe(false)
   })
@@ -121,7 +121,7 @@ describe("deriveDashboardStats", () => {
 
     expect(inferred.baselinePerDay).toBe(4)
     expect(stated.baselinePerDay).toBe(20)
-    expect(stated.cigarettesNotSmoked).toBeGreaterThan(inferred.cigarettesNotSmoked)
+    expect(stated.notUsed).toBeGreaterThan(inferred.notUsed)
   })
 
   it("still infers a baseline when none was stated", () => {
@@ -133,10 +133,10 @@ describe("deriveDashboardStats", () => {
     // 2 days clean at 10 a day = 20 cigarettes. At 0.75 each that is 15.
     const stats = deriveDashboardStats(logs([0, 0, 0, 10]), NOW, {
       baselinePerDay: 10,
-      pricePerCigarette: 0.75,
+      pricePerUnit: 0.75,
     })
 
-    expect(stats.cigarettesNotSmoked).toBe(20)
+    expect(stats.notUsed).toBe(20)
     expect(stats.moneySaved).toBeCloseTo(15, 5)
   })
 
@@ -148,7 +148,7 @@ describe("deriveDashboardStats", () => {
   it("ignores a nonsensical price rather than showing a negative saving", () => {
     const stats = deriveDashboardStats(logs([0, 0, 0, 10]), NOW, {
       baselinePerDay: 10,
-      pricePerCigarette: -3,
+      pricePerUnit: -3,
     })
     expect(stats.moneySaved).toBeGreaterThanOrEqual(0)
   })
@@ -159,5 +159,23 @@ describe("deriveDashboardStats", () => {
     expect(stats.daysTracked).toBe(0)
     expect(stats.hasLoggedToday).toBe(false)
     expect(stats.moneySaved).toBe(0)
+  })
+
+  it("reports no saving rather than a guessed price when told to", () => {
+    // Cannabis prices vary too much for a fallback to mean anything.
+    const stats = deriveDashboardStats(logs([0, 0, 0, 2, 2]), NOW, {
+      fallbackPrice: null,
+      assumedPerDay: 1,
+    })
+
+    expect(stats.notUsed).toBe(4)
+    expect(stats.moneySaved).toBeNull()
+  })
+
+  it("uses the assumed rate it is given when there is no history", () => {
+    const stats = deriveDashboardStats(logs([0, 0, 0]), NOW, { assumedPerDay: 1, pricePerUnit: 5 })
+
+    expect(stats.notUsed).toBe(2)
+    expect(stats.moneySaved).toBe(10)
   })
 })

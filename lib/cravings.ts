@@ -1,4 +1,6 @@
 import { copingStrategies } from "@/lib/data/wellness-tips"
+import { cannabisStrategies } from "@/lib/data/cannabis"
+import type { Substance } from "@/lib/substances"
 
 /**
  * Cravings: the fixed vocabulary they are recorded in, and the patterns drawn
@@ -6,7 +8,7 @@ import { copingStrategies } from "@/lib/data/wellness-tips"
  * page can both import it. The query is in lib/cravings.server.ts.
  */
 
-/** The moments in copingStrategies, plus one for everything else. */
+/** The moments in copingStrategies and cannabisStrategies, plus one for everything else. */
 export const CRAVING_TRIGGERS = [
   "morning",
   "coffee",
@@ -15,6 +17,11 @@ export const CRAVING_TRIGGERS = [
   "drink",
   "break",
   "stress",
+  "wind-down",
+  "sleep",
+  "friends",
+  "boredom",
+  "low-mood",
   "other",
 ] as const
 export type CravingTrigger = (typeof CRAVING_TRIGGERS)[number]
@@ -25,7 +32,10 @@ export type CravingOutcome = (typeof CRAVING_OUTCOMES)[number]
 export const CRAVING_STRENGTHS = [1, 2, 3, 4, 5] as const
 
 export function triggerLabel(trigger: CravingTrigger): string {
-  return copingStrategies.find((s) => s.id === trigger)?.title ?? "Something else"
+  return (
+    [...copingStrategies, ...cannabisStrategies].find((s) => s.id === trigger)?.title ??
+    "Something else"
+  )
 }
 
 export type TimeOfDay = "morning" | "afternoon" | "evening" | "night"
@@ -40,6 +50,7 @@ export function timeOfDay(hour: number): TimeOfDay {
 
 export type CravingRecord = {
   createdAt: Date
+  substance: Substance
   trigger: CravingTrigger
   strength: number
   outcome: CravingOutcome
@@ -64,7 +75,11 @@ export type CravingSummary = {
 
 export const PATTERN_DAYS = 30
 
-/** What the last `days` days of cravings add up to, or null if there were none. */
+/**
+ * What the last `days` days of cravings add up to, or null if there were none.
+ * The caller passes one substance's cravings; someone quitting both has two
+ * patterns, and mixing them would hide both.
+ */
 export function summariseCravings(
   records: CravingRecord[],
   now: Date = new Date(),

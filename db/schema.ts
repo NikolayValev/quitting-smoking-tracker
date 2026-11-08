@@ -1,4 +1,5 @@
-import { pgTable, uuid, text, timestamp, integer, index, date, uniqueIndex, numeric } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { pgTable, uuid, text, timestamp, integer, index, date, uniqueIndex, numeric, check } from 'drizzle-orm/pg-core';
 
 /**
  * Settings are all nullable. Someone who never finishes onboarding still gets a
@@ -13,12 +14,24 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   clerkUserId: text('clerk_user_id').unique().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  /**
+   * What this person is quitting. Each substance is tracked separately: its
+   * own count in a check-in, its own streak, its own savings. Everyone who
+   * signed up before cannabis existed here was quitting cigarettes.
+   */
+  quitting: text('quitting', { enum: ['cigarettes', 'cannabis', 'both'] })
+    .default('cigarettes')
+    .notNull(),
   /** Cigarettes a day before quitting, as stated rather than inferred. */
   baselinePerDay: integer('baseline_per_day'),
   /** Numeric, not a float: money should not be stored in binary floating point. */
   pricePerPack: numeric('price_per_pack', { precision: 10, scale: 2 }),
   cigarettesPerPack: integer('cigarettes_per_pack').default(20),
-  /** ISO 4217, e.g. GBP. Drives Intl.NumberFormat, not a hardcoded symbol. */
+  /** Times a day they used cannabis before quitting, as stated. */
+  sessionsPerDay: integer('sessions_per_day'),
+  /** What one session cost them. Cannabis has no pack to price. */
+  pricePerSession: numeric('price_per_session', { precision: 10, scale: 2 }),
+  /** ISO 4217, e.g. GBP. Shared by both substances. */
   currency: text('currency'),
   /**
    * IANA zone (e.g. Europe/London) the browser reported when the person turned
@@ -44,6 +57,11 @@ export const users = pgTable('users', {
  * local day, which a UTC timestamp cannot be trusted to give back.
  *
  * `ts` remains the point on the timeline, used for ordering and the chart.
+ *
+ * `cigarettes` and `sessions` (times cannabis was used) are each null when the
+ * day says nothing about that substance: someone quitting only cannabis is
+ * never asked about cigarettes, and a zero there would claim a smoke-free day
+ * nobody recorded. A check-in has to say something, so one of them is set.
  */
 export const smokeLogs = pgTable(
   'smoke_logs',
@@ -52,10 +70,14 @@ export const smokeLogs = pgTable(
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     ts: timestamp('ts', { withTimezone: true }).defaultNow().notNull(),
     logDate: date('log_date').notNull(),
-    cigarettes: integer('cigarettes').notNull(),
+    cigarettes: integer('cigarettes'),
+    sessions: integer('sessions'),
     note: text('note'),
   },
-  (table) => [uniqueIndex('smoke_logs_user_day_idx').on(table.userId, table.logDate)],
+  (table) => [
+    uniqueIndex('smoke_logs_user_day_idx').on(table.userId, table.logDate),
+    check('smoke_logs_has_count', sql`${table.cigarettes} IS NOT NULL OR ${table.sessions} IS NOT NULL`),
+  ],
 );
 
 /**
@@ -170,8 +192,11 @@ export const pushSubscriptions = pgTable(
  * it was, and whether it passed.
  *
  * `trigger` is one of the moments in `copingStrategies` (lib/data/wellness-tips)
- * or `other`, and a test keeps the two lists in step. There is no free text, so
- * the table describes a pattern and never a person's words.
+ * or `cannabisStrategies` (lib/data/cannabis), or `other`, and a test keeps
+ * the lists in step. `substance` says which quit it belongs to, since someone
+ * quitting both can have a craving for either. `outcome` 'smoked' means they
+ * gave in, whichever substance and however it was taken. There is no free
+ * text, so the table describes a pattern and never a person's words.
  *
  * `localHour` is the hour on the person's own clock, sent by their browser. It
  * is stored rather than derived from `createdAt` because the server does not
@@ -189,8 +214,25 @@ export const cravings = pgTable(
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    substance: text('substance', { enum: ['cigarettes', 'cannabis'] })
+      .default('cigarettes')
+      .notNull(),
     trigger: text('trigger', {
-      enum: ['morning', 'coffee', 'after-meal', 'driving', 'drink', 'break', 'stress', 'other'],
+      enum: [
+        'morning',
+        'coffee',
+        'after-meal',
+        'driving',
+        'drink',
+        'break',
+        'stress',
+        'wind-down',
+        'sleep',
+        'friends',
+        'boredom',
+        'low-mood',
+        'other',
+      ],
     }).notNull(),
     /** 1 (a passing thought) to 5 (overwhelming). */
     strength: integer('strength').notNull(),

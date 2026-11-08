@@ -1,3 +1,6 @@
+import { CANNABIS_WITHDRAWAL } from "@/lib/data/cannabis"
+import type { Substance } from "@/lib/substances"
+
 /**
  * What nicotine withdrawal usually feels like on a given day of a quit.
  *
@@ -60,10 +63,14 @@ export const WITHDRAWAL_PHASES: WithdrawalPhase[] = [
   },
 ]
 
-/** The phase for someone `days` whole days into a smoke-free streak. */
-export function withdrawalPhase(days: number): WithdrawalPhase {
-  let phase = WITHDRAWAL_PHASES[0]
-  for (const candidate of WITHDRAWAL_PHASES) {
+/**
+ * The phase for someone `days` whole days into a streak. Cannabis runs on a
+ * different clock, so it has its own phases (lib/data/cannabis).
+ */
+export function withdrawalPhase(days: number, substance: Substance = "cigarettes"): WithdrawalPhase {
+  const phases = substance === "cannabis" ? CANNABIS_WITHDRAWAL : WITHDRAWAL_PHASES
+  let phase = phases[0]
+  for (const candidate of phases) {
     if (days >= candidate.fromDay) phase = candidate
   }
   return phase
