@@ -42,9 +42,11 @@ async function main() {
     .values({ clerkUserId: `${PREFIX}-buddy` })
     .returning();
 
-  // A short streak to summarise.
+  // A short streak to summarise. Six days, not five: each sits at midday UTC,
+  // so five only make a four-day streak after midday, and the check below
+  // failed whenever this ran in the morning.
   const day = 86_400_000;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 6; i++) {
     const d = new Date(Date.now() - i * day);
     await db.insert(smokeLogs).values({
       userId: owner.id,
