@@ -47,17 +47,18 @@ the top of `PRODUCTION_READINESS.md`; NIK-117 (production Clerk) is the gate.
 buddy one), never cigarette counts or notes. Signals are fixed presets only, no free
 text: an owner's "I'm struggling" goes to all active sponsors, and supporters send
 encouragement. Delivery is in-app on `/buddies`, plus web push once VAPID keys are set (see below).
-**`0006` is not yet applied to Neon**: run `pnpm db:migrate`, then `pnpm verify:buddies`,
-which now covers the sponsor cycle.
+**Migrations `0000`–`0010` are applied to Neon** (2026-11-08; `0006` and `0007` had
+already been applied). `pnpm verify:buddies` passes 28/28, sponsor cycle included.
 
 ## Todo (as of 2026-10-30)
 
 Constraint: **no paid infrastructure.** Stay on free tiers (Vercel Hobby, Neon,
 PostHog, Clerk free) and prefer approaches that need no vendor at all.
 
-1. **Apply `0006`–`0010` to Neon** (`pnpm db:migrate`), then run
-   `pnpm verify:buddies`. Until then, `/buddies`, `/account`, account deletion,
-   export, recording a craving and every page that reads settings fail in production. Nobody uses it yet, but do this before inviting anyone.
+1. ~~**Apply `0006`–`0010` to Neon**~~ — done 2026-11-08 from the dev machine:
+   `0008`–`0010` applied, 2 users and 5 check-ins intact, `pnpm verify:buddies` 28/28.
+   It had a morning-only failure (a five-day streak read as three before midday UTC),
+   fixed by logging six days.
 2. **Set the VAPID keys** in Vercel: run `pnpm exec web-push generate-vapid-keys`
    once, then set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Push stays
    off until both are set. Do not rotate them, since that drops every subscribed device.
