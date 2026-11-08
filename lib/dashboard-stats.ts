@@ -57,9 +57,11 @@ export function deriveDashboardStats(
   // would keep counting straight through a relapse and tell someone who smoked
   // yesterday that they are two hundred days clean.
   let streakStart: DashboardLog | null = null
+  let streakLength = 0
   for (const log of logs) {
     if (log.cigarettes !== 0) break
     streakStart = log
+    streakLength++
   }
   const quitDate = streakStart ? at(streakStart) : null
 
@@ -91,8 +93,18 @@ export function deriveDashboardStats(
       ? settings.pricePerCigarette
       : COST_PER_CIGARETTE_USD
 
-  const cigarettesNotSmoked =
-    smokeFreeMinutes > 0 ? Math.floor((smokeFreeMinutes / 1440) * avgPerDay) : 0
+  // A slip restarts the streak, not the savings: what was not smoked before it
+  // still was not smoked. Days logged before the current streak count what each
+  // fell short of the baseline, from the first smoke-free day on, so the taper
+  // before quitting is not counted as savings.
+  const firstSmokeFree = logs.findLastIndex((log) => log.cigarettes === 0)
+  const avoidedEarlier = logs
+    .slice(streakLength, firstSmokeFree + 1)
+    .reduce((sum, log) => sum + Math.max(0, avgPerDay - log.cigarettes), 0)
+
+  const cigarettesNotSmoked = Math.floor(
+    (smokeFreeMinutes / 1440) * avgPerDay + avoidedEarlier,
+  )
 
   return {
     quitDate,

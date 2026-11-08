@@ -23,6 +23,7 @@ async function mockQueries(
   shareRows: unknown[] = [],
   signalRows: unknown[] = [],
   deviceRows: unknown[] = [],
+  cravingRows: unknown[] = [],
 ) {
   const { db } = await import("@/db")
 
@@ -50,6 +51,9 @@ async function mockQueries(
   if (accountRows.length > 0) {
     select.mockReturnValueOnce({
       from: () => ({ where: () => Promise.resolve(deviceRows) }),
+    } as never)
+    select.mockReturnValueOnce({
+      from: () => ({ where: () => ({ orderBy: () => Promise.resolve(cravingRows) }) }),
     } as never)
   }
 }
@@ -81,7 +85,7 @@ describe("exportUserData", () => {
     expect(result.smokeLogs).toEqual([
       { id: LOG_ID, ts: ts.toISOString(), cigarettes: 3, note: "after lunch" },
     ])
-    expect(result.counts).toEqual({ smokeLogs: 1, shares: 0, signals: 0, devices: 0 })
+    expect(result.counts).toEqual({ smokeLogs: 1, shares: 0, signals: 0, devices: 0, cravings: 0 })
   })
 
   it("is self-describing so the file makes sense away from the app", async () => {
@@ -110,7 +114,7 @@ describe("exportUserData", () => {
     expect(result.account.email).toBe(PROFILE.email)
     expect(result.smokeLogs).toEqual([])
     expect(result.shares).toEqual([])
-    expect(result.counts).toEqual({ smokeLogs: 0, shares: 0, signals: 0, devices: 0 })
+    expect(result.counts).toEqual({ smokeLogs: 0, shares: 0, signals: 0, devices: 0, cravings: 0 })
   })
 
   it("does not query for logs when there is no local account", async () => {
@@ -175,5 +179,29 @@ describe("exportUserData", () => {
 
     expect(result.devices).toEqual([{ addedAt: at.toISOString() }])
     expect(result.counts.devices).toBe(1)
+  })
+
+  it("includes the reminder's time zone when it is on, and null when off", async () => {
+    await mockQueries([{ id: INTERNAL_USER_ID, createdAt: new Date(), reminderTimeZone: "Europe/Sofia" }], [])
+    const { exportUserData } = await import("@/lib/account/exportUserData")
+    expect((await exportUserData(CLERK_USER_ID, PROFILE)).checkinReminder).toEqual({ timeZone: "Europe/Sofia" })
+
+    await mockQueries([{ id: INTERNAL_USER_ID, createdAt: new Date(), reminderTimeZone: null }], [])
+    expect((await exportUserData(CLERK_USER_ID, PROFILE)).checkinReminder).toBeNull()
+  })
+
+  it("includes every craving, with the time it was recorded", async () => {
+    const at = new Date("2026-03-01T19:30:00.000Z")
+    await mockQueries([{ id: INTERNAL_USER_ID, createdAt: at }], [], [], [], [], [
+      { createdAt: at, trigger: "drink", strength: 4, outcome: "passed", localHour: 19 },
+    ])
+
+    const { exportUserData } = await import("@/lib/account/exportUserData")
+    const result = await exportUserData(CLERK_USER_ID, PROFILE)
+
+    expect(result.cravings).toEqual([
+      { createdAt: at.toISOString(), trigger: "drink", strength: 4, outcome: "passed", localHour: 19 },
+    ])
+    expect(result.counts.cravings).toBe(1)
   })
 })

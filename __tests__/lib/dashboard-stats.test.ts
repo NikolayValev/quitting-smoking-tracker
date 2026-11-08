@@ -69,6 +69,32 @@ describe("deriveDashboardStats", () => {
     expect(stats.smokeFreeDays).toBe(2)
   })
 
+  it("keeps what earlier clean days avoided when the latest day was a slip", () => {
+    // The streak restarts, but the cigarettes not smoked before the slip were
+    // still not smoked. Zeroing them told someone a month in, after three
+    // cigarettes, that quitting had saved them nothing.
+    const stats = deriveDashboardStats(logs([5, 0, 0, 0, 0, 10, 10]), NOW, {
+      baselinePerDay: 10,
+      pricePerCigarette: 0.5,
+    })
+
+    expect(stats.quitDate).toBeNull()
+    // Four clean days at 10, plus the 5 not smoked on the slip day itself.
+    expect(stats.cigarettesNotSmoked).toBe(45)
+    expect(stats.moneySaved).toBeCloseTo(22.5, 5)
+  })
+
+  it("adds earlier clean stretches to the current one", () => {
+    // Current streak: 2 days at 10. Before it: a slip of 6 (4 avoided) and two
+    // clean days (20). The tapering day before the first quit counts nothing.
+    const stats = deriveDashboardStats(logs([0, 0, 0, 6, 0, 0, 10]), NOW, {
+      baselinePerDay: 10,
+    })
+
+    expect(stats.smokeFreeDays).toBe(2)
+    expect(stats.cigarettesNotSmoked).toBe(44)
+  })
+
   it("counts no streak at all when the most recent day was a smoking day", () => {
     const stats = deriveDashboardStats(logs([3, 0, 0, 0]), NOW)
 

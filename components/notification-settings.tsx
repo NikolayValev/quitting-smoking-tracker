@@ -3,38 +3,16 @@
 import { useEffect, useState, useSyncExternalStore } from "react"
 import { Bell, BellOff, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { removePushSubscription, savePushSubscription } from "@/app/notifications/actions"
-
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+import { removePushSubscription } from "@/app/notifications/actions"
+import {
+  VAPID_PUBLIC_KEY,
+  noSubscribe,
+  readPushEnvironment as readEnvironment,
+  subscribeThisDevice,
+} from "@/lib/push-client"
 
 /** The install prompt Chrome and Edge fire. Not in the DOM types yet. */
 type InstallPromptEvent = Event & { prompt: () => Promise<void> }
-
-/**
- * What this browser can do, as one string so useSyncExternalStore sees a
- * stable value. Read on the client only. The server snapshot is "ssr", which
- * renders nothing, so there is no hydration mismatch and no set-state-in-effect.
- */
-function readEnvironment(): string {
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
-  const standalone =
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window
-  const permission = "Notification" in window ? Notification.permission : "unsupported"
-  return [ios ? "ios" : "other", standalone ? "app" : "browser", supported ? "push" : "nopush", permission].join("|")
-}
-
-const noSubscribe = () => () => {}
-
-/** VAPID keys are URL-safe base64; pushManager.subscribe wants bytes. */
-function keyBytes(base64: string): Uint8Array<ArrayBuffer> {
-  const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/")
-  const raw = atob(padded)
-  const bytes = new Uint8Array(new ArrayBuffer(raw.length))
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
-  return bytes
-}
 
 /**
  * Install the app, and get alerts on this device.
@@ -91,29 +69,10 @@ export function NotificationSettings() {
   const enable = async () => {
     setBusy(true)
     setError(null)
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" })
-      const granted = await Notification.requestPermission()
-      if (granted !== "granted") {
-        setError("Notifications were not allowed. You can change that in your browser's site settings.")
-        return
-      }
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: keyBytes(VAPID_PUBLIC_KEY!),
-      })
-      const result = await savePushSubscription(subscription.toJSON())
-      if (!result.success) {
-        await subscription.unsubscribe()
-        setError(result.error)
-        return
-      }
-      setSubscribed(true)
-    } catch {
-      setError("Could not turn on alerts in this browser.")
-    } finally {
-      setBusy(false)
-    }
+    const result = await subscribeThisDevice()
+    if (result.ok) setSubscribed(true)
+    else setError(result.error)
+    setBusy(false)
   }
 
   const disable = async () => {

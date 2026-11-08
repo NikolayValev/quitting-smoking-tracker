@@ -20,6 +20,18 @@ export const users = pgTable('users', {
   cigarettesPerPack: integer('cigarettes_per_pack').default(20),
   /** ISO 4217, e.g. GBP. Drives Intl.NumberFormat, not a hardcoded symbol. */
   currency: text('currency'),
+  /**
+   * IANA zone (e.g. Europe/London) the browser reported when the person turned
+   * on the daily check-in reminder. Null means the reminder is off. It is kept
+   * for that alone: it is what makes "today" their day rather than UTC's, and
+   * what keeps a reminder from arriving in their night.
+   */
+  reminderTimeZone: text('reminder_time_zone'),
+  /**
+   * Their local date when a reminder was last sent. Cron delivery is
+   * at-least-once, so this is what stops a repeated run reminding twice.
+   */
+  remindedOn: date('reminded_on'),
 });
 
 /**
@@ -153,6 +165,41 @@ export const pushSubscriptions = pgTable(
   (table) => [index('push_subscriptions_user_idx').on(table.userId)],
 );
 
+/**
+ * One craving, recorded from the wellness screen: what set it off, how strong
+ * it was, and whether it passed.
+ *
+ * `trigger` is one of the moments in `copingStrategies` (lib/data/wellness-tips)
+ * or `other`, and a test keeps the two lists in step. There is no free text, so
+ * the table describes a pattern and never a person's words.
+ *
+ * `localHour` is the hour on the person's own clock, sent by their browser. It
+ * is stored rather than derived from `createdAt` because the server does not
+ * know their time zone, and "evenings are the hardest" is only true of their
+ * evening.
+ *
+ * Never shared with buddies or sponsors. Cascades with the user, and
+ * `deleteUserByClerkId` also clears it explicitly.
+ */
+export const cravings = pgTable(
+  'cravings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    trigger: text('trigger', {
+      enum: ['morning', 'coffee', 'after-meal', 'driving', 'drink', 'break', 'stress', 'other'],
+    }).notNull(),
+    /** 1 (a passing thought) to 5 (overwhelming). */
+    strength: integer('strength').notNull(),
+    outcome: text('outcome', { enum: ['passed', 'smoked'] }).notNull(),
+    localHour: integer('local_hour').notNull(),
+  },
+  (table) => [index('cravings_user_created_idx').on(table.userId, table.createdAt)],
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SmokeLog = typeof smokeLogs.$inferSelect;
@@ -161,3 +208,4 @@ export type BuddyLink = typeof buddyLinks.$inferSelect;
 export type NewBuddyLink = typeof buddyLinks.$inferInsert;
 export type BuddySignal = typeof buddySignals.$inferSelect;
 export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;
+export type Craving = typeof cravings.$inferSelect;

@@ -60,6 +60,15 @@ export async function removeSubscription(userId: string, endpoint: string): Prom
 /** Status codes with which a push service says a subscription no longer exists. */
 const GONE = new Set([404, 410]);
 
+export type PushDelivery = {
+  /** How long a push service may hold the message for an unreachable device. */
+  ttlSeconds: number;
+  urgency: 'very-low' | 'low' | 'normal' | 'high';
+};
+
+/** An SOS a day late is worse than none; let it lapse after 12 hours. */
+const SIGNAL_DELIVERY: PushDelivery = { ttlSeconds: 12 * 60 * 60, urgency: 'high' };
+
 /**
  * Sends `message` to every device of every user in `userIds`.
  *
@@ -70,6 +79,7 @@ const GONE = new Set([404, 410]);
 export async function pushToUsers(
   userIds: string[],
   message: PushMessage,
+  delivery: PushDelivery = SIGNAL_DELIVERY,
 ): Promise<{ delivered: number; removed: number }> {
   const config = pushConfig();
   if (!config || userIds.length === 0) return { delivered: 0, removed: 0 };
@@ -86,9 +96,8 @@ export async function pushToUsers(
         JSON.stringify(message),
         {
           vapidDetails: config,
-          // An SOS a day late is worse than none; let it lapse after 12 hours.
-          TTL: 12 * 60 * 60,
-          urgency: 'high',
+          TTL: delivery.ttlSeconds,
+          urgency: delivery.urgency,
         },
       ),
     ),

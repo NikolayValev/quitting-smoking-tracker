@@ -5,12 +5,25 @@ import { AppHeader } from '@/components/app-header';
 import { Button } from '@/components/ui/button';
 import { JourneyView } from '@/components/journey-view';
 import { DailyLogDialog } from '@/components/daily-log-dialog';
+import { CravingPatterns } from '@/components/craving-patterns';
+import { getOrCreateUser } from '@/lib/auth/getOrCreateUser';
+import { summariseCravings } from '@/lib/cravings';
+import { recentCravings } from '@/lib/cravings.server';
+import { logError } from '@/lib/observability/logger';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AppPage() {
   const result = await getLogs();
   const logs = result.success ? result.data ?? [] : [];
+
+  // Patterns are an extra. If they cannot be read, the journey still shows.
+  const cravings = await getOrCreateUser()
+    .then((userId) => recentCravings(userId))
+    .catch((error) => {
+      logError('get_cravings_failed', error);
+      return [];
+    });
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,6 +45,7 @@ export default async function AppPage() {
         <JourneyView
           editable
           entries={logs}
+          cravings={<CravingPatterns summary={summariseCravings(cravings)} />}
           intro="Every check-in you have logged, and the shape they make."
           action={
             <DailyLogDialog

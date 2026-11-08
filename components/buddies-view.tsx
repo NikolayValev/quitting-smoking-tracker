@@ -295,7 +295,7 @@ export function BuddiesView({
                         {person.summary.slipDaysRecent !== undefined && (
                           <p className="text-xs text-muted-foreground">
                             {person.summary.lastSlipOn
-                              ? `Last slipped ${formatDay(person.summary.lastSlipOn)} · ${person.summary.slipDaysRecent} slip ${person.summary.slipDaysRecent === 1 ? "day" : "days"} in the last 30`
+                              ? `Last slipped ${formatDay(person.summary.lastSlipOn)} · ${person.summary.slipDaysRecent} slip ${person.summary.slipDaysRecent === 1 ? "day" : "days"} in the last 30 days`
                               : "No slips logged"}
                           </p>
                         )}

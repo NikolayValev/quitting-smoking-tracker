@@ -23,8 +23,14 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mb-3">What we collect</h2>
             <p className="text-muted-foreground">
               When you sign in with Google, we receive your name and email address from Google. We also store
-              information you provide during onboarding: your quit date, cigarettes smoked per day, pack cost,
-              cigarettes per pack, and your reason for quitting.
+              what you enter in the app: how many cigarettes you smoked a day before quitting, the price of a
+              pack and how many are in it, your daily check-ins and any note on them, and the cravings you
+              record (the moment it hit, how strong it was, whether it passed, and the hour on your clock).
+            </p>
+            <p className="text-muted-foreground mt-3">
+              If you turn on notifications, we store the address your browser gives us for delivering them. If
+              you turn on the daily reminder, we store your time zone, so that it arrives in your day rather
+              than ours.
             </p>
           </section>
 

@@ -5,6 +5,8 @@ import { getOrCreateUser } from '@/lib/auth/getOrCreateUser';
 import { consumeRateLimit } from '@/lib/rate-limit';
 import { logError } from '@/lib/observability/logger';
 import { removeSubscription, saveSubscription } from '@/lib/push';
+import { isValidTimeZone } from '@/lib/checkin-reminder';
+import { setCheckinReminder as storeCheckinReminder } from '@/lib/checkin-reminder.server';
 
 const RATE_LIMITED = 'Too many requests. Please wait a moment and try again.';
 
@@ -61,5 +63,30 @@ export async function removePushSubscription(data: unknown) {
   } catch (error) {
     logError('push_unsubscribe_failed', error, { userId });
     return { success: false as const, error: 'Could not turn off alerts' };
+  }
+}
+
+/** On with the browser's zone, or off with null. */
+const reminderSchema = z.object({
+  timeZone: z.string().max(64).refine(isValidTimeZone, 'unknown time zone').nullable(),
+});
+
+export async function setCheckinReminder(data: unknown) {
+  let userId: string | undefined;
+  try {
+    userId = await getOrCreateUser();
+
+    const rate = await consumeRateLimit(`user:${userId}`);
+    if (!rate.allowed) return { success: false as const, error: RATE_LIMITED };
+
+    const { timeZone } = reminderSchema.parse(data);
+    await storeCheckinReminder(userId, timeZone);
+    return { success: true as const };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false as const, error: 'This browser sent something unexpected.' };
+    }
+    logError('checkin_reminder_toggle_failed', error, { userId });
+    return { success: false as const, error: 'Could not change the reminder' };
   }
 }

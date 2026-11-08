@@ -4,6 +4,8 @@ import { AppHeader } from "@/components/app-header"
 import { DashboardView } from "@/components/dashboard-view"
 import type { DashboardLog } from "@/lib/dashboard-stats"
 import { WellnessView } from "@/components/wellness-view"
+import { CravingPatterns } from "@/components/craving-patterns"
+import { summariseCravings, type CravingRecord } from "@/lib/cravings"
 import { JourneyView } from "@/components/journey-view"
 import { AccountView } from "@/components/account-view"
 import { BuddiesView } from "@/components/buddies-view"
@@ -32,6 +34,32 @@ export const dynamic = "force-dynamic"
 /** A fixed clock, so screenshots of this page do not change by the day. */
 const NOW = new Date("2025-03-01T09:00:00.000Z")
 const QUIT_DAY = new Date("2025-01-14T08:00:00.000Z")
+
+/**
+ * A month of cravings with a shape to it: drinks come up most and are where
+ * the one slip happened, and most arrive in the evening.
+ */
+const CRAVINGS: CravingRecord[] = (
+  [
+    [1, "drink", 4, "passed", 21],
+    [3, "coffee", 2, "passed", 8],
+    [4, "stress", 3, "passed", 18],
+    [6, "drink", 5, "smoked", 22],
+    [9, "after-meal", 2, "passed", 19],
+    [11, "drink", 4, "passed", 20],
+    [14, "coffee", 3, "passed", 9],
+    [17, "stress", 4, "passed", 17],
+    [20, "drink", 3, "passed", 21],
+    [24, "other", 2, "passed", 15],
+    [27, "coffee", 3, "passed", 8],
+  ] as const
+).map(([daysAgo, trigger, strength, outcome, localHour]) => ({
+  createdAt: new Date(NOW.getTime() - daysAgo * 24 * 60 * 60 * 1000),
+  trigger,
+  strength,
+  outcome,
+  localHour,
+}))
 
 function fixtureLogs(): DashboardLog[] {
   const logs: DashboardLog[] = []
@@ -105,6 +133,16 @@ const SCREENS = {
         ]}
         now={NOW}
         settings={SETTINGS}
+        action={
+          <DailyLogDialog
+            trigger={
+              <Button className="shrink-0 gap-1.5">
+                <PlusCircle className="h-4 w-4" />
+                Log today
+              </Button>
+            }
+          />
+        }
       />
     ),
   },
@@ -120,13 +158,26 @@ const SCREENS = {
         entries={fixtureLogs()}
         intro="Every check-in you have logged, and the shape they make."
         now={NOW}
+        cravings={<CravingPatterns summary={summariseCravings(CRAVINGS, NOW)} />}
+      />
+    ),
+  },
+  "journey-no-cravings": {
+    title: "Journey, no cravings recorded",
+    render: () => (
+      <JourneyView
+        editable
+        entries={fixtureLogs()}
+        intro="Every check-in you have logged, and the shape they make."
+        now={NOW}
+        cravings={<CravingPatterns summary={null} />}
       />
     ),
   },
   account: {
     title: "Account",
     render: () => (
-      <AccountView name="Sam Rivera" email="sam@example.com" settings={SETTINGS} />
+      <AccountView name="Sam Rivera" email="sam@example.com" settings={SETTINGS} checkinReminder />
     ),
   },
   buddies: {
@@ -218,6 +269,12 @@ const SCREENS = {
       <WellnessView quote={motivationalQuotes[0]} tip={wellnessTips[0]} />
     ),
   },
+  "wellness-craving": {
+    title: "Wellness, a craving plan open",
+    render: () => (
+      <WellnessView quote={motivationalQuotes[0]} tip={wellnessTips[0]} openPlan="drink" />
+    ),
+  },
 } as const
 
 type Screen = keyof typeof SCREENS
@@ -244,9 +301,11 @@ export default async function DevPreviewPage({
       {chrome && (
         <AppHeader
           currentPage={
-            (["wellness", "journey", "account", "buddies"].includes(screen)
-              ? screen
-              : "dashboard") as NavKey
+            // By prefix, so "buddies-empty" and "wellness-craving" light up
+            // their own section rather than the dashboard.
+            (["wellness", "journey", "account", "buddies"].find(
+              (page) => screen === page || screen.startsWith(`${page}-`),
+            ) ?? "dashboard") as NavKey
           }
         />
       )}

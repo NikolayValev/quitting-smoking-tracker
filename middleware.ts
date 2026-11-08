@@ -51,6 +51,9 @@ export const config = {
     // proxy for PostHog (see rewrites in next.config.mjs). Running Clerk on every
     // analytics request is wasted middleware invocations, and it also stopped
     // events reaching PostHog (NIK-111) — do not put "ingest" back in the matcher.
-    "/((?!_next/static|_next/image|favicon.ico|ingest|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // "api/cron" is excluded too: Vercel Cron calls it with a bearer secret,
+    // which Clerk would otherwise try to read as a session token. The route
+    // checks that secret itself.
+    "/((?!_next/static|_next/image|favicon.ico|ingest|api/cron|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
