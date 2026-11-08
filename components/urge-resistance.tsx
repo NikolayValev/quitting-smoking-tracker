@@ -5,11 +5,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { copingStrategies } from "@/lib/data/wellness-tips"
 import { captureCraving } from "@/lib/analytics/posthog"
+import { CravingRecord } from "@/components/craving-record"
+import type { CravingTrigger } from "@/lib/cravings"
 import { ChevronRight, CheckCircle2 } from "lucide-react"
 
-export function UrgeResistance() {
-  const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null)
+/**
+ * A plan for the moment a craving is tied to, and a place to record it.
+ *
+ * `initialStrategy` opens one plan straight away. Only the dev screens use it,
+ * so the open state can be looked at without clicking.
+ */
+export function UrgeResistance({ initialStrategy = null }: { initialStrategy?: string | null }) {
+  const [selectedStrategy, setSelectedStrategy] = useState<string | null>(initialStrategy)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
+
+  const back = () => {
+    setSelectedStrategy(null)
+    setCompletedSteps([])
+  }
 
   const selectedStrategyData = copingStrategies.find((s) => s.id === selectedStrategy)
 
@@ -30,7 +43,7 @@ export function UrgeResistance() {
               <CardTitle>{selectedStrategyData.title}</CardTitle>
               <CardDescription>{selectedStrategyData.description}</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setSelectedStrategy(null)}>
+            <Button variant="ghost" size="sm" onClick={back}>
               Back
             </Button>
           </div>
@@ -63,6 +76,31 @@ export function UrgeResistance() {
               <p className="text-sm text-muted-foreground mt-1">Next time this moment comes round, it will be a little easier.</p>
             </div>
           )}
+
+          <CravingRecord key={selectedStrategyData.id} trigger={selectedStrategyData.id as CravingTrigger} />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (selectedStrategy === "other") {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Something else</CardTitle>
+              <CardDescription>
+                Breathe through it with the exercise above. It passes either way.
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={back}>
+              Back
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <CravingRecord key="other" trigger="other" />
         </CardContent>
       </Card>
     )
@@ -97,6 +135,18 @@ export function UrgeResistance() {
           </button>
         </li>
       ))}
+      <li>
+        {/* Quieter than the plans: it has no plan, only the record. */}
+        <button
+          onClick={() => {
+            captureCraving("other")
+            setSelectedStrategy("other")
+          }}
+          className="px-5 py-3 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+        >
+          Something else? Record it anyway
+        </button>
+      </li>
     </ul>
   )
 }

@@ -26,9 +26,12 @@ import type { MotivationalQuote } from "@/lib/data/motivational-quotes"
 export function WellnessView({
   quote,
   tip,
+  openPlan,
 }: {
   quote: MotivationalQuote
   tip: WellnessTip
+  /** Dev screens only: a craving plan to show already open. */
+  openPlan?: string
 }) {
   return (
     <main className="container mx-auto max-w-3xl px-4 py-12 sm:py-16">
@@ -50,7 +53,7 @@ export function WellnessView({
       <section className="mt-14">
         <h2 className="text-sm font-medium text-muted-foreground">When does it usually hit?</h2>
         <div className="mt-4">
-          <UrgeResistance />
+          <UrgeResistance initialStrategy={openPlan} />
         </div>
       </section>
 

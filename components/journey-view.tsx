@@ -69,6 +69,7 @@ export function JourneyView({
   action,
   now,
   editable = false,
+  cravings,
   children,
 }: {
   entries: JourneyEntry[]
@@ -78,6 +79,9 @@ export function JourneyView({
   /** Whether these entries belong to the person reading them. The demo shows
    *  the same list to a stranger and must stay read-only. */
   editable?: boolean
+  /** Craving patterns, placed above the check-in list so a long history does
+   *  not bury them. Left out on the demo, which has no cravings to show. */
+  cravings?: ReactNode
   /** Rendered after the check-ins, for whatever the page wants to add. */
   children?: ReactNode
 }) {
@@ -134,6 +138,8 @@ export function JourneyView({
           <dd className="mt-1 text-base font-medium">{peak}</dd>
         </div>
       </section>
+
+      {cravings}
 
       <section className="mt-12">
         <h2 className="text-sm font-medium text-muted-foreground">Check-ins</h2>

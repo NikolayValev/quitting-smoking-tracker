@@ -64,6 +64,13 @@
       "when": 1794075280337,
       "tag": "0008_checkin_reminder",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794094940213,
+      "tag": "0009_craving_log",
+      "breakpoints": true
     }
   ]
 }
