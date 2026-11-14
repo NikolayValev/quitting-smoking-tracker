@@ -59,11 +59,11 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
    `0008`–`0010` applied, 2 users and 5 check-ins intact, `pnpm verify:buddies` 28/28.
    It had a morning-only failure (a five-day streak read as three before midday UTC),
    fixed by logging six days.
-2. **Set the VAPID keys** in Vercel: run `pnpm exec web-push generate-vapid-keys`
-   once, then set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Push stays
-   off until both are set. Do not rotate them, since that drops every subscribed device.
-   Also set `CRON_SECRET` (any long random string): until it is set the reminder
-   cron endpoint refuses every caller, Vercel included.
+2. ~~**Set the VAPID keys and `CRON_SECRET`**~~ — done: the VAPID pair was set
+   2026-10-31, `CRON_SECRET` 2026-11-13, all Production-only, and production
+   redeployed. **Do not rotate the VAPID keys**, since that drops every subscribed
+   device. Without `CRON_SECRET` the reminder cron endpoint refuses every caller,
+   Vercel included.
 3. ~~**Look at the screens**~~ — done 2026-11-05, all 49 captures reviewed locally.
    Fixed what they showed: a slip zeroed money saved and cigarettes not smoked
    (now only the streak restarts), the `dashboard-slip` fixture had no "Log today",
