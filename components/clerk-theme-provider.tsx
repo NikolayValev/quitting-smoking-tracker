@@ -31,6 +31,13 @@ export function ClerkThemeProvider({ children }: { children: React.ReactNode }) 
       afterSignUpUrl="/onboarding"
       // Returning visitors want the summary, not the raw log.
       afterSignInUrl="/dashboard"
+      // One Clerk application serves every app on nikolayvalev.com, and its
+      // default strings name that shared application ("Sign in to …"). These
+      // are the ones that interpolate it, so the card names this app instead.
+      localization={{
+        signIn: { start: { title: "Sign in to SmokeFree", titleCombined: "Continue to SmokeFree" } },
+        signUp: { start: { titleCombined: "Continue to SmokeFree" } },
+      }}
       appearance={{
         ...(isDark ? { baseTheme: dark } : {}),
         layout: {

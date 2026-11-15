@@ -49,7 +49,8 @@ export default function PrivacyPage() {
             <p className="text-muted-foreground">
               Your data is stored securely in Neon (PostgreSQL), accessed through Drizzle ORM. Every database query
               is scoped to your account at the application level, so only your own records are ever read or written.
-              Authentication is handled by Clerk.
+              Sign-in is handled by Clerk and is shared with the other apps on nikolayvalev.com: one sign-in works
+              across them, but each app keeps its own data, and none of them can read what you record here.
             </p>
           </section>
 
@@ -63,10 +64,15 @@ export default function PrivacyPage() {
               . The export is a JSON file containing your profile and every log you have recorded.
             </p>
             <p className="text-muted-foreground mt-3">
-              You can also delete your account from the same page. Deleting your account permanently removes all your
-              data from our systems, including your profile, quit attempts, and milestones. We show you a deletion
+              You can also delete your data from the same page. That permanently removes everything SmokeFree holds
+              about you, including your settings, check-ins, cravings and buddy shares. We show you a deletion
               receipt when it completes, noting how many logs were erased; the receipt is yours alone and is not
               stored by us, so save it if you want a record.
+            </p>
+            <p className="text-muted-foreground mt-3">
+              Deleting your SmokeFree data leaves your sign-in in place, because the other apps use it too. You can
+              delete the sign-in itself from Manage account, under your profile picture; when you do, every app
+              that uses it, SmokeFree included, erases what it holds about you.
             </p>
           </section>
 
@@ -84,7 +90,7 @@ export default function PrivacyPage() {
             <p className="text-muted-foreground mt-3">
               Sharing is off unless you create an invite. Invite links expire after seven
               days if unused, work once, and either of you can end the share at any time from
-              the Buddies page. Ending it takes effect immediately. Deleting your account
+              the Buddies page. Ending it takes effect immediately. Deleting your data
               removes every share on both sides.
             </p>
           </section>

@@ -13,9 +13,7 @@ import { DeleteAccountButton } from "@/app/account/delete-account-button"
 const RECEIPT = {
   id: "receipt-abc-123",
   deletedAt: "2026-09-13T12:00:00.000Z",
-  accountErased: true,
   smokeLogsErased: 12,
-  complete: true,
 }
 
 function mockDelete(body: unknown, ok = true) {
@@ -24,8 +22,8 @@ function mockDelete(body: unknown, ok = true) {
 
 /** Opens the confirmation dialog and confirms. */
 async function confirmDelete() {
-  fireEvent.click(screen.getByRole("button", { name: /delete account/i }))
-  const confirm = await screen.findByRole("button", { name: /yes, delete my account/i })
+  fireEvent.click(screen.getByRole("button", { name: /delete my data/i }))
+  const confirm = await screen.findByRole("button", { name: /yes, delete my data/i })
   fireEvent.click(confirm)
 }
 
@@ -46,6 +44,18 @@ describe("DeleteAccountButton", () => {
     expect(push).not.toHaveBeenCalled()
   })
 
+  it("says the SmokeFree data went, not the sign-in", async () => {
+    // The sign-in is shared with the other apps and survives this, so the
+    // confirmation must not claim the account is gone.
+    mockDelete({ success: true, receipt: RECEIPT })
+
+    render(<DeleteAccountButton />)
+    await confirmDelete()
+
+    expect(await screen.findByText(/your smokefree data has been deleted/i)).toBeTruthy()
+    expect(screen.queryByText(/account has been deleted/i)).toBeNull()
+  })
+
   it("leaves for the home page only once the user is done with the receipt", async () => {
     mockDelete({ success: true, receipt: RECEIPT })
 
@@ -56,29 +66,15 @@ describe("DeleteAccountButton", () => {
     expect(push).toHaveBeenCalledWith("/")
   })
 
-  it("says erasure is still finishing when local cleanup did not complete", async () => {
-    mockDelete({
-      success: true,
-      receipt: { ...RECEIPT, smokeLogsErased: null, complete: false },
-    })
+  it("surfaces an error and lets the user try again when deletion fails", async () => {
+    mockDelete({ error: "Failed to delete your data" }, false)
 
     render(<DeleteAccountButton />)
     await confirmDelete()
 
-    expect(await screen.findByText(/still being erased/i)).toBeTruthy()
-    // No count is known, so none is claimed.
-    expect(screen.queryByText(/logs erased/i)).toBeNull()
-  })
-
-  it("surfaces an error and keeps the account intact when deletion fails", async () => {
-    mockDelete({ error: "Failed to delete account" }, false)
-
-    render(<DeleteAccountButton />)
-    await confirmDelete()
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to delete account/i)
+    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to delete your data/i)
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: /delete account/i })).not.toBeDisabled(),
+      expect(screen.getByRole("button", { name: /delete my data/i })).not.toBeDisabled(),
     )
     expect(push).not.toHaveBeenCalled()
   })

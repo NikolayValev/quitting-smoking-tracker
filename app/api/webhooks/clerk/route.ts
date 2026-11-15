@@ -6,11 +6,12 @@ import { logError, logWarn } from '@/lib/observability/logger';
 /**
  * Clerk webhook receiver.
  *
- * `POST /api/account/delete` deletes the Clerk user but cannot clean up our
- * tables, and it is not the only way an account disappears — a user can delete
- * themselves from Clerk directly, and so can an admin from the Clerk dashboard.
- * This endpoint is the single place where all of those converge, so the local
- * data is erased no matter which path removed the account.
+ * The Clerk instance is shared by every app on nikolayvalev.com, so the sign-in
+ * is deleted outside this app: from Clerk's own account screen in any of them,
+ * or by an admin in the Clerk dashboard. (`POST /api/account/delete` erases only
+ * this app's data and leaves the sign-in alone.) This endpoint is where those
+ * deletions reach us, so the local data is erased whichever path removed the
+ * account. Each app sharing the instance needs its own endpoint registered.
  *
  * Requires CLERK_WEBHOOK_SIGNING_SECRET; `verifyWebhook` reads it directly.
  * The route is intentionally outside `isProtectedRoute` in middleware.ts —
