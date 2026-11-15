@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">What we collect</h2>
             <p className="text-muted-foreground">
-              When you sign in with Google, we receive your name and email address from Google. We also store
+              When you sign in, we receive your email address, and your name if you have given one. We also store
               what you enter in the app: whether you are quitting cigarettes, cannabis or both; how much you
               smoked or used a day before quitting and what it cost; your daily check-ins, with how many
               cigarettes you smoked and how many times you used cannabis, and any note on them; and the

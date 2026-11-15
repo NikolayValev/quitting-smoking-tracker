@@ -76,9 +76,12 @@ Cutover, in order (dashboard and DNS work, except where noted):
 1. **NIK-117**: rename the existing Clerk application to something neutral, then
    create its production instance on `nikolayvalev.com`. Add the CNAMEs it lists
    to Vercel DNS (the zone lives there), then deploy certificates.
-2. **NIK-118**: own Google OAuth client, needed *at the same time* if Google
-   sign-in is on, because production instances cannot use Clerk's shared
-   credentials. Redirect URI `https://clerk.nikolayvalev.com/v1/oauth_callback`.
+2. **Email only at launch** (decided 2026-11-15); make sure Google is off in the
+   production instance. **NIK-118** is deferred: production instances cannot use
+   Clerk's shared Google credentials, so turning Google on later needs our own
+   OAuth client first, with redirect URI
+   `https://clerk.nikolayvalev.com/v1/oauth_callback`. The privacy page then
+   needs its "we receive your email address" line to mention Google again.
 3. **NIK-116**: webhook endpoint `https://smoking.nikolayvalev.com/api/webhooks/clerk`
    for `user.deleted`; its `whsec_` goes in `CLERK_WEBHOOK_SIGNING_SECRET`.
 4. Production-only `pk_live_` / `sk_live_` / `whsec_` in Vercel, then redeploy.
