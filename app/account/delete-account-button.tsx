@@ -18,9 +18,7 @@ import { Button } from "@/components/ui/button"
 type Receipt = {
   id: string
   deletedAt: string
-  accountErased: boolean
-  smokeLogsErased: number | null
-  complete: boolean
+  smokeLogsErased: number
 }
 
 export function DeleteAccountButton() {
@@ -37,7 +35,7 @@ export function DeleteAccountButton() {
     const data = await res.json()
 
     if (!res.ok) {
-      setError(data.error ?? "Failed to delete account")
+      setError(data.error ?? "Failed to delete your data")
       setIsDeleting(false)
       return
     }
@@ -53,7 +51,7 @@ export function DeleteAccountButton() {
     return (
       <div className="flex flex-col gap-3" role="status">
         <div>
-          <p className="text-sm font-medium">Your account has been deleted.</p>
+          <p className="text-sm font-medium">Your SmokeFree data has been deleted.</p>
           <p className="text-sm text-muted-foreground">
             This receipt is not stored anywhere. Save it if you want a record.
           </p>
@@ -68,20 +66,11 @@ export function DeleteAccountButton() {
             <dt className="text-muted-foreground">Deleted at</dt>
             <dd>{new Date(receipt.deletedAt).toLocaleString()}</dd>
           </div>
-          {receipt.smokeLogsErased !== null && (
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Logs erased</dt>
-              <dd>{receipt.smokeLogsErased}</dd>
-            </div>
-          )}
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">Logs erased</dt>
+            <dd>{receipt.smokeLogsErased}</dd>
+          </div>
         </dl>
-
-        {!receipt.complete && (
-          <p className="text-sm text-muted-foreground">
-            Your sign-in has been removed. The last of your logs are still being erased and will be
-            gone shortly.
-          </p>
-        )}
 
         <div>
           <Button onClick={() => router.push("/")}>Done</Button>
@@ -103,15 +92,15 @@ export function DeleteAccountButton() {
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="destructive" disabled={isDeleting}>
-            {isDeleting ? "Deleting..." : "Delete account"}
+            {isDeleting ? "Deleting..." : "Delete my data"}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Your account and all data — including your quit attempts, milestones, and
-              progress — will be permanently deleted. Download your data first if you want to keep a copy.
+              This cannot be undone. Every check-in, craving, setting and buddy share SmokeFree holds will be
+              permanently deleted. Download your data first if you want to keep a copy.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -120,7 +109,7 @@ export function DeleteAccountButton() {
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Yes, delete my account
+              Yes, delete my data
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

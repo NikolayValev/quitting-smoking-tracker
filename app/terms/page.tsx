@@ -39,8 +39,8 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">Your account</h2>
             <p className="text-muted-foreground">
-              You are responsible for maintaining the security of your Google account used to sign in. You own your
-              data and can delete your account at any time from your{" "}
+              You are responsible for keeping your sign-in secure. You own your data and can delete it at any time
+              from your{" "}
               <Link href="/account" className="underline underline-offset-4">
                 Account Settings
               </Link>

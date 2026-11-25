@@ -69,10 +69,14 @@ export function AccountView({
       {/* The only section that keeps a frame, because it is the only one where a
           mis-click cannot be undone. */}
       <section className="mt-10 rounded-xl border border-destructive/30 p-5">
-        <h2 className="text-sm font-medium text-destructive">Delete account</h2>
+        <h2 className="text-sm font-medium text-destructive">Delete your data</h2>
         <p className="mt-2 max-w-[58ch] text-sm text-muted-foreground">
-          Permanently deletes your account and every check-in. This cannot be undone.
+          Permanently deletes everything SmokeFree holds about you. This cannot be undone.
           Download your data first if you want to keep a copy.
+        </p>
+        <p className="mt-2 max-w-[58ch] text-sm text-muted-foreground">
+          Your sign-in is shared with the other apps on nikolayvalev.com, so it stays. To
+          remove it too, open Manage account from your profile picture at the top.
         </p>
         <div className="mt-4">
           <DeleteAccountButton />

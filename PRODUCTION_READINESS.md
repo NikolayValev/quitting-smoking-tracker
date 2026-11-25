@@ -1,5 +1,9 @@
 # Production Readiness
 
+> **2026-11-15: portfolio, on production Clerk.** Still not commercial, but the
+> dev instance goes: one production Clerk instance shared by every app on
+> nikolayvalev.com replaces it. See "Production Clerk" below.
+>
 > **2026-10-27: heading for real users.** The portfolio framing below is being
 > retired. Sponsors put a call for help and slip days in front of another
 > person, which is not something to run on a development instance capped at
@@ -42,17 +46,48 @@ The decision that shapes the rest: **staying on the Clerk development instance**
 - **Fonts are self-hosted** via the `geist` package so builds need no network
   access to Google. Do not reintroduce `next/font/google`.
 
-## Taking real users
+## Production Clerk: one instance shared across nikolayvalev.com
 
-In this order. Each needs the Clerk dashboard, Google Cloud or DNS, so none can
-be done from the codebase alone.
+**Decided 2026-11-15.** One Clerk application with a production instance on the
+root domain `nikolayvalev.com` (Frontend API at `clerk.nikolayvalev.com`) serves
+every app on a subdomain, so one sign-in works across them. The main reason is
+to get rid of the "Development mode" line on the sign-in card everywhere. No
+users were real at the switch, so the dev-instance rows were not carried over.
 
-1. **NIK-117** — a `pk_live_` instance on a custom Frontend API domain. This is
-   the gate; everything else is smaller.
-2. **NIK-116** — the webhook secret, so deletions started outside the app
-   propagate. It matters more now that buddy links and signals exist.
-3. **NIK-118** — own Google credentials, once there is a production instance to
-   attach them to.
+What sharing changes in this app:
+
+- **Deleting your data no longer deletes the sign-in.** `POST /api/account/delete`
+  erases only SmokeFree's rows. Deleting the Clerk user would sign the person
+  out of every other app and leave those apps' rows orphaned. The sign-in is
+  removed from Clerk's own Manage account screen, and the `user.deleted` webhook
+  then erases this app's rows. A failed erasure now returns 500 rather than a
+  partial receipt, since no webhook would finish it.
+- **The sign-in card is relabelled in code.** Clerk's default title names the
+  shared application, so `ClerkThemeProvider` overrides the strings that
+  interpolate it.
+- **Instance-wide settings are shared.** Sign-in methods, sign-up restrictions
+  and the "users can delete their account" toggle apply to every app. An app
+  that should not be fully public has to gate that in its own repo (for example
+  an env flag that turns off `/sign-up`), not in Clerk.
+- **Each app registers its own webhook endpoint** in the shared instance.
+
+Cutover, in order (dashboard and DNS work, except where noted):
+
+1. **NIK-117**: rename the existing Clerk application to something neutral, then
+   create its production instance on `nikolayvalev.com`. Add the CNAMEs it lists
+   to Vercel DNS (the zone lives there), then deploy certificates.
+2. **Email only at launch** (decided 2026-11-15); make sure Google is off in the
+   production instance. **NIK-118** is deferred: production instances cannot use
+   Clerk's shared Google credentials, so turning Google on later needs our own
+   OAuth client first, with redirect URI
+   `https://clerk.nikolayvalev.com/v1/oauth_callback`. The privacy page then
+   needs its "we receive your email address" line to mention Google again.
+3. **NIK-116**: webhook endpoint `https://smoking.nikolayvalev.com/api/webhooks/clerk`
+   for `user.deleted`; its `whsec_` goes in `CLERK_WEBHOOK_SIGNING_SECRET`.
+4. Production-only `pk_live_` / `sk_live_` / `whsec_` in Vercel, then redeploy.
+   Preview and Development keep the dev keys: live keys only work on the domain.
+5. Remove the two dev-instance rows with `deleteUserByClerkId`; nothing can sign
+   in as them any more.
 
 ## Still worth doing regardless
 

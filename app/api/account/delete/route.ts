@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server"
-import { auth, clerkClient } from "@clerk/nextjs/server"
+import { auth } from "@clerk/nextjs/server"
 import { deleteUserByClerkId } from "@/lib/auth/deleteUserByClerkId"
 import { logError } from "@/lib/observability/logger"
 
 /**
- * Deletes the caller's account and hands back a receipt (GDPR Art. 17).
+ * Erases everything SmokeFree holds about the caller and hands back a receipt
+ * (GDPR Art. 17).
+ *
+ * It deliberately leaves the Clerk user alone. One Clerk instance serves every
+ * app on nikolayvalev.com, so the sign-in is not SmokeFree's to delete: removing
+ * it here would sign the person out of the other apps for good and leave them
+ * holding rows for an identity that no longer exists. Deleting the sign-in
+ * itself happens in Clerk's own account screen, and the `user.deleted` webhook
+ * erases this app's rows when it does.
  *
  * The receipt is given to the user and deliberately not stored. Keeping a row
  * about someone who just asked to be erased would undercut the erasure itself,
@@ -22,36 +30,15 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  let smokeLogsErased: number
   try {
-    const client = await clerkClient()
-    await client.users.deleteUser(userId)
+    ;({ smokeLogsErased } = await deleteUserByClerkId(userId))
   } catch (err) {
+    // No webhook will finish this later, since the Clerk user still exists, so
+    // say it failed. deleteUserByClerkId is one transaction: nothing was
+    // half-erased, and trying again is safe.
     logError("account_delete_failed", err, { clerkUserId: userId })
-    return NextResponse.json({ error: "Failed to delete account" }, { status: 500 })
-  }
-
-  // Clerk is deleted first: if this request dies halfway, the account is gone
-  // and the local rows are the recoverable half, rather than the user losing
-  // their logs while still being able to sign in.
-  //
-  // Deleting locally here rather than relying only on the user.deleted webhook
-  // means the erasure completes within this request, so it holds even if the
-  // webhook is misconfigured or Clerk's delivery is delayed. The webhook stays
-  // the backstop for deletions that never pass through this route, and for the
-  // failure below. deleteUserByClerkId is idempotent, so both running is fine.
-  let smokeLogsErased: number | null = null
-  let complete = false
-
-  try {
-    const result = await deleteUserByClerkId(userId)
-    smokeLogsErased = result.smokeLogsErased
-    complete = true
-  } catch (err) {
-    // The Clerk account is already gone, so reporting failure here would tell
-    // the user their deletion did not happen when most of it did. Log it and
-    // let the webhook retry the remainder. The receipt below says so rather than
-    // claiming an erasure that has not finished.
-    logError("account_delete_local_cleanup_failed", err, { clerkUserId: userId })
+    return NextResponse.json({ error: "Failed to delete your data" }, { status: 500 })
   }
 
   return NextResponse.json({
@@ -61,9 +48,7 @@ export async function POST() {
       // Node runtime.
       id: crypto.randomUUID(),
       deletedAt: new Date().toISOString(),
-      accountErased: true,
       smokeLogsErased,
-      complete,
     },
   })
 }

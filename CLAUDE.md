@@ -68,9 +68,12 @@ PostHog, Clerk free) and prefer approaches that need no vendor at all.
    Fixed what they showed: a slip zeroed money saved and cigarettes not smoked
    (now only the streak restarts), the `dashboard-slip` fixture had no "Log today",
    "Packs not bought" read "Of 20", and the sponsor line ended "in the last 30".
-4. **NIK-117 → NIK-116 → NIK-118**: production Clerk instance, webhook secret, own
-   Google credentials. All free; all dashboard/DNS work. NIK-117 must be done
-   before inviting real users.
+4. **NIK-117 → NIK-116**: one production Clerk instance on `nikolayvalev.com`,
+   **shared by every app on a subdomain** (decided 2026-11-15), email sign-in only.
+   The code side is done: deleting your data leaves the shared sign-in alone, and
+   the sign-in card is relabelled SmokeFree in `ClerkThemeProvider`. Cutover steps
+   are in `PRODUCTION_READINESS.md`. NIK-118 (Google) is deferred; it needs our own
+   OAuth client first, since production instances cannot use Clerk's shared one.
 5. **Try push on real phones**: Android Chrome, and iPhone after Add to Home
    Screen. None of it could be exercised in the cloud container.
 6. ~~**Daily check-in reminder**~~ — built 2026-11-07, needs `0008` and `CRON_SECRET`.
